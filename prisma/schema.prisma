@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      Int       @id @default(autoincrement()) @map("user_id")
+  username                String    @unique @db.VarChar(50)
+  email                   String    @unique @db.VarChar(100)
+  password_hash           String    @db.VarChar(255)
+  total_play_count        Int       @default(0)
+  total_questions_attempted Int     @default(0)
+  total_correct_answers   Int       @default(0)
+  total_score             Int       @default(0)
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @default(now()) @updatedAt
+  quizzes                 Quiz[]
+  seen_questions          UserSeenQuestion[]
+}
+
+model Category {
+  id            Int       @id @default(autoincrement()) @map("category_id")
+  name          String    @unique @db.VarChar(50) @map("category_name")
+  questions     Question[]
+  quizzes       Quiz[]
+}
+
+model Question {
+  id            Int       @id @default(autoincrement()) @map("question_id")
+  category_id   Int
+  question_text String    @db.Text
+  option_a      String    @db.VarChar(255)
+  option_b      String    @db.VarChar(255)
+  option_c      String    @db.VarChar(255)
+  option_d      String    @db.VarChar(255)
+  correct_option String   @db.Char(1)
+  created_at    DateTime  @default(now())
+  category      Category  @relation(fields: [category_id], references: [id])
+  quiz_questions QuizQuestion[]
+  seen_by_users UserSeenQuestion[]
+}
+
+model Quiz {
+  id                Int       @id @default(autoincrement()) @map("quiz_id")
+  user_id          Int
+  category_id      Int
+  total_questions   Int
+  correct_answers   Int
+  incorrect_answers Int
+  score            Int
+  played_at        DateTime  @default(now())
+  user             User      @relation(fields: [user_id], references: [id])
+  category         Category  @relation(fields: [category_id], references: [id])
+  quiz_questions   QuizQuestion[]
+}
+
+model QuizQuestion {
+  id            Int       @id @default(autoincrement()) @map("quiz_question_id")
+  quiz_id       Int
+  question_id   Int
+  quiz          Quiz      @relation(fields: [quiz_id], references: [id])
+  question      Question  @relation(fields: [question_id], references: [id])
+}
+
+model UserSeenQuestion {
+  user_id     Int
+  question_id Int
+  seen_at     DateTime  @default(now())
+  user        User      @relation(fields: [user_id], references: [id])
+  question    Question  @relation(fields: [question_id], references: [id])
+
+  @@id([user_id, question_id])
+}
