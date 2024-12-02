@@ -35,7 +35,6 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
   const router = useRouter()
-
   const [error, setError] = useState<string>("")
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -76,10 +75,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-8 p-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
-          <h2 className="text-3xl font-bold">Kayıt Ol</h2>
+          <h2 className="text-3xl font-bold text-orange-600">Kayıt Ol</h2>
           <p className="mt-2 text-sm text-gray-600">
             Zaten hesabınız var mı?{" "}
             <Link href="/auth/login" className="text-blue-600 hover:underline">
@@ -148,7 +147,7 @@ export default function RegisterPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Kayıt Ol</Button>
+            <Button type="submit" className="bg-orange-600 hover:bg-orange-500">Kayıt Ol</Button>
           </form>
         </Form>
       </div>

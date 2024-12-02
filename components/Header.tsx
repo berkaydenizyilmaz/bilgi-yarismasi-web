@@ -11,7 +11,7 @@ function Header() {
         });
 
         if (response.ok) {
-            router.push('/');
+            router.push('/auth/login');
         }
     };
 

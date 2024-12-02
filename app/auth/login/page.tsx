@@ -1,6 +1,5 @@
 "use client"
 
-import AuthLayout from "../layout";
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -29,7 +28,6 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter()
-
   const searchParams = useSearchParams()
   const [error, setError] = useState<string>("")
   
@@ -70,10 +68,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-8 p-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
-          <h2 className="text-3xl font-bold">Giriş Yap</h2>
+          <h2 className="text-3xl font-bold text-orange-600">Giriş Yap</h2>
           <p className="mt-2 text-sm text-gray-600">
             Hesabınız yok mu?{" "}
             <Link href="/auth/register" className="text-blue-600 hover:underline">
@@ -122,9 +120,7 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Giriş Yap
-            </Button>
+            <Button type="submit" className="bg-orange-600 hover:bg-orange-500">Giriş Yap</Button>
           </form>
         </Form>
       </div>
