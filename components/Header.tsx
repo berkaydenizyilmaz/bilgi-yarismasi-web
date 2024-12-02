@@ -24,6 +24,7 @@ function Header() {
             <nav className="flex space-x-20 text-lg">
             <Link href="/" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">Ana Sayfa</Link>
                 <Link href="/dashboard/leaderboard" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">Lider Tablosu</Link>
+                <Link href="/dashboard/contact" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">İletişim</Link>
                 <Link href="/dashboard/profile" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">Profil</Link>
             </nav>
             <button 
