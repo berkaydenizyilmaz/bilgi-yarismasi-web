@@ -1,5 +1,6 @@
 "use client"
 
+import AuthLayout from "../layout";
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -75,7 +76,7 @@ export default function LoginPage() {
           <h2 className="text-3xl font-bold">Giriş Yap</h2>
           <p className="mt-2 text-sm text-gray-600">
             Hesabınız yok mu?{" "}
-            <Link href="/register" className="text-blue-600 hover:underline">
+            <Link href="/auth/register" className="text-blue-600 hover:underline">
               Kayıt Ol
             </Link>
           </p>

@@ -82,7 +82,7 @@ export default function RegisterPage() {
           <h2 className="text-3xl font-bold">Kayıt Ol</h2>
           <p className="mt-2 text-sm text-gray-600">
             Zaten hesabınız var mı?{" "}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/auth/login" className="text-blue-600 hover:underline">
               Giriş Yap
             </Link>
           </p>
@@ -103,7 +103,7 @@ export default function RegisterPage() {
                 <FormItem>
                   <FormLabel>Kullanıcı Adı</FormLabel>
                   <FormControl>
-                    <Input placeholder="kullanıcı adını girin..." {...field} />
+                    <Input placeholder="ornek" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
