@@ -1,6 +1,6 @@
 import React from 'react'
 
-const LeaderboardPage = () => {
+function LeaderboardPage() {
   return (
     <div>LeaderboardPage</div>
   )

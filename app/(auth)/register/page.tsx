@@ -35,6 +35,7 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
   const router = useRouter()
+
   const [error, setError] = useState<string>("")
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -102,7 +103,7 @@ export default function RegisterPage() {
                 <FormItem>
                   <FormLabel>Kullanıcı Adı</FormLabel>
                   <FormControl>
-                    <Input placeholder="johndoe" {...field} />
+                    <Input placeholder="kullanıcı adını girin..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
