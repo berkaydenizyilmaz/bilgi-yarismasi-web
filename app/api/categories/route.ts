@@ -11,6 +11,10 @@ export async function GET() {
       },
     });
 
+    if (!categories || categories.length === 0) {
+      throw new Error("Kategoriler bulunamadı.");
+    }
+
     return NextResponse.json(categories);
   } catch (error) {
     console.error("Kategorileri alma hatası:", error);
