@@ -17,7 +17,7 @@ export default function CategoriesPage() {
     useEffect(() => {
         async function fetchCategories() {
             try {
-                const response = await fetch("/api/categories"); // Kategorileri almak için API çağrısı
+                const response = await fetch("/api/categories");
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -61,7 +61,7 @@ export default function CategoriesPage() {
                 <div className="text-center mt-8">
                     <h2 className="text-3xl font-bold text-gray-800 mb-4">Seçilen Kategori: {selectedCategory.name}</h2>
                     <p className="text-gray-600 mb-4">Bu kategoride yarışmaya başlamak için aşağıdaki butona tıklayın.</p>
-                    <Link href={`/quiz/start/${selectedCategory.id}`}>
+                    <Link href={`/quiz/start/${selectedCategory.id}?name=${encodeURIComponent(selectedCategory.name)}`}>
                         <button className="bg-orange-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-orange-500 transition duration-200 transform hover:scale-105">
                             Başla
                         </button>

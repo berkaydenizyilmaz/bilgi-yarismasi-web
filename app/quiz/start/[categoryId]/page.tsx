@@ -1,75 +1,74 @@
 "use client"
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
-// Soru arayüzü
 interface Question {
     id: number;
-    question: string;
+    question_text: string;
     options: string[];
-    answer: string;
+    correct_option: string; // Doğru cevap
 }
-
-const defaultQuestions: Question[] = [
-    {
-        id: 1,
-        question: "Türkiye'nin başkenti neresidir?",
-        options: ["İstanbul", "Ankara", "İzmir", "Bursa"],
-        answer: "Ankara",
-    },
-    {
-        id: 2,
-        question: "Dünya'nın en yüksek dağı hangisidir?",
-        options: ["K2", "Everest", "Kilimanjaro", "Aconcagua"],
-        answer: "Everest",
-    },
-    {
-        id: 3,
-        question: "Hangi gezegen 'Kırmızı Gezegen' olarak bilinir?",
-        options: ["Venüs", "Mars", "Jüpiter", "Satürn"],
-        answer: "Mars",
-    },
-];
 
 export default function QuizPage() {
     const { categoryId } = useParams();
-    const [questions, setQuestions] = useState<Question[]>([]); // Soruların tipi
+    const searchParams = useSearchParams();
+    const categoryName = searchParams.get("name");
+
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
     useEffect(() => {
-        // Varsayılan soruları ayarla
-        setQuestions(defaultQuestions);
-    }, []);
+        const fetchQuestions = async () => {
+            const response = await fetch(`/api/questions?categoryId=${categoryId}`);
+            const data = await response.json();
 
-    const handleAnswer = (questionId: number, selectedOption: string) => {
-        const question = questions.find(q => q.id === questionId);
-        if (question && question.answer === selectedOption) {
+            if (response.ok) {
+                const formattedQuestions = data.map((question: any) => ({
+                    id: question.id,
+                    question_text: question.question_text,
+                    options: [question.option_a, question.option_b, question.option_c, question.option_d],
+                    correct_option: question.correct_option, // Doğru cevabı burada ayarlıyoruz
+                }));
+                setQuestions(formattedQuestions);
+            } else {
+                console.error("Soruları alırken hata:", data.error);
+            }
+        };
+
+        fetchQuestions();
+    }, [categoryId]);
+
+    const handleAnswer = (selectedOption: string) => {
+        const question = questions[currentQuestionIndex];
+        if (question && question.correct_option === selectedOption) { // Doğru cevabı kontrol et
             alert("Doğru cevap!");
         } else {
             alert("Yanlış cevap!");
         }
+        setCurrentQuestionIndex(prevIndex => prevIndex + 1);
     };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <h1 className="text-4xl font-bold text-orange-600 mb-6">Seçilen Kategori: {typeof categoryId === 'string' ? categoryId : 'Belirtilmedi'}</h1>
+            <h1 className="text-4xl font-bold text-orange-600 mb-6">Seçilen Kategori: {categoryName || 'Belirtilmedi'}</h1>
             <div className="w-full max-w-2xl">
-                {questions.map((question) => (
-                    <div key={question.id} className="border rounded-lg p-6 bg-white shadow-md mb-4">
-                        <h2 className="text-xl font-semibold mb-2">{question.question}</h2>
+                {currentQuestionIndex < questions.length && (
+                    <div key={questions[currentQuestionIndex].id} className="border rounded-lg p-6 bg-white shadow-md mb-4">
+                        <h2 className="text-xl font-semibold mb-2">{questions[currentQuestionIndex].question_text}</h2>
                         <div className="space-y-2">
-                            {question.options.map((option) => (
+                            {questions[currentQuestionIndex].options.map((option) => (
                                 <button
                                     key={option}
                                     className="w-full bg-gray-200 hover:bg-gray-300 text-left py-2 px-4 rounded"
-                                    onClick={() => handleAnswer(question.id, option)}
+                                    onClick={() => handleAnswer(option)}
                                 >
                                     {option}
                                 </button>
                             ))}
                         </div>
                     </div>
-                ))}
+                )}
             </div>
         </div>
     );
