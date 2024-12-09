@@ -51,14 +51,15 @@ export const useQuiz = (categoryId: string) => {
 
         const shuffledQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
         
-        setQuestions(shuffledQuestions);
+        // State güncellemelerini birlikte yapalım
         setCurrentQuestionIndex(0);
+        setQuestions(shuffledQuestions);
     } catch (err) {
         setError(err instanceof Error ? err.message : 'Bir hata oluştu');
     } finally {
         setIsLoading(false);
     }
-  };
+};
 
   const handleAnswer = async (selectedOption: string) => {
     const question = questions[currentQuestionIndex];
