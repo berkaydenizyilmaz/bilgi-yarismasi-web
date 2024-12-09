@@ -47,47 +47,50 @@ export default function QuizPage() {
     const handleAnswer = (selectedOption: string) => {
         const question = questions[currentQuestionIndex];
     
-        console.log("Seçilen Cevap:", selectedOption);
-        console.log("Doğru Cevap:", question.correct_option);
-    
-        // Doğru cevabı kontrol et
         if (question) {
             const selectedIndex = question.options.findIndex(option => option === selectedOption);
             const isCorrect = question.correct_option.toUpperCase() === String.fromCharCode(65 + selectedIndex);
     
-            // State güncellemelerini burada yap
+            // Önce cevabı kaydet
             if (isCorrect) {
-                setCorrectCount(prevCount => {
-                    const newCount = prevCount + 1;
-                    console.log("Yeni doğru sayısı:", newCount);
-                    return newCount;
-                });
+                setCorrectCount(prev => prev + 1);
                 alert("Doğru cevap!");
             } else {
-                setIncorrectCount(prevCount => {
-                    const newCount = prevCount + 1;
-                    console.log("Yeni yanlış sayısı:", newCount);
-                    return newCount;
-                });
+                setIncorrectCount(prev => prev + 1);
                 alert("Yanlış cevap!");
             }
     
-            // Sonraki soruya geç
+            // Sonraki soru indeksini hesapla
             const nextIndex = currentQuestionIndex + 1;
+            
             if (nextIndex === questions.length) {
-                saveQuizResults();
+                // Son soruya geldiğimizde, state güncellemelerinin tamamlanmasını bekle
+                Promise.resolve().then(() => {
+                    // State'in güncel değerlerini kullanarak sonuçları kaydet
+                    const finalCorrectCount = isCorrect ? correctCount + 1 : correctCount;
+                    const finalIncorrectCount = isCorrect ? incorrectCount : incorrectCount + 1;
+                    
+                    saveQuizResults(finalCorrectCount, finalIncorrectCount);
+                });
             }
+            
             setCurrentQuestionIndex(nextIndex);
         }
     };
-
-    const saveQuizResults = async () => {
+    
+    // saveQuizResults fonksiyonunu güncelleyelim
+    const saveQuizResults = async (finalCorrectCount: number, finalIncorrectCount: number) => {
         try {
-            // TODO: Gerçek kullanıcı ID'sini auth sisteminden almalısınız
-            const userId = 1; 
+            const userId = 1; // TODO: Gerçek kullanıcı ID'si
             const totalQuestions = questions.length;
-            const score = (correctCount / totalQuestions) * 100; // Yüzdelik skor hesaplama
-        
+            const score = Math.round((finalCorrectCount / totalQuestions) * 100);
+    
+            console.log("Quiz Sonuçları Gönderiliyor:");
+            console.log("Toplam Soru:", totalQuestions);
+            console.log("Doğru Cevap:", finalCorrectCount);
+            console.log("Yanlış Cevap:", finalIncorrectCount);
+            console.log("Skor:", score);
+    
             const response = await fetch('/api/quizzes', {
                 method: 'POST',
                 headers: {
@@ -97,22 +100,20 @@ export default function QuizPage() {
                     userId,
                     categoryId,
                     totalQuestions,
-                    correctAnswers: correctCount,
-                    incorrectAnswers: incorrectCount,
-                    score: Math.round(score), // Tam sayıya yuvarlama
+                    correctAnswers: finalCorrectCount,
+                    incorrectAnswers: finalIncorrectCount,
+                    score,
                 }),
             });
-        
+    
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.message || 'Quiz sonuçları kaydedilemedi');
             }
     
             const result = await response.json();
-            
-            // Quiz bittiğinde sonuç sayfasına yönlendir
             router.push(`/quiz/result?quizId=${result.id}`);
-            
+    
         } catch (error) {
             console.error("Quiz kaydetme hatası:", error);
             alert("Quiz sonuçları kaydedilirken bir hata oluştu!");
