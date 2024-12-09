@@ -23,10 +23,18 @@ export const useQuiz = (categoryId: string) => {
     return Math.round((correct / total) * 100);
   };
 
-  const fetchQuestions = async (userId: number) => {
+  const fetchQuestions = async () => {
     setIsLoading(true);
     setError(null);
     try {
+        const authResponse = await fetch('/api/auth');
+        const authData = await authResponse.json();
+        
+        if (!authResponse.ok || !authData.data.user) {
+            throw new Error('Kullanıcı bilgisi alınamadı');
+        }
+
+        const userId = authData.data.user.id;
         const response = await fetch(`/api/questions?categoryId=${categoryId}&userId=${userId}`);
         const data = await response.json();
 
@@ -90,11 +98,18 @@ export const useQuiz = (categoryId: string) => {
     finalIncorrectCount: number
   ) => {
     try {
+        const authResponse = await fetch('/api/auth');
+        const authData = await authResponse.json();
+        
+        if (!authResponse.ok || !authData.data.user) {
+            throw new Error('Kullanıcı bilgisi alınamadı');
+        }
+
         const response = await fetch("/api/quizzes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                userId: 1, // TODO: Gerçek kullanıcı ID'sini al
+                userId: authData.data.user.id,
                 categoryId: Number(categoryId),
                 totalQuestions: questions.length,
                 correctAnswers: finalCorrectCount,

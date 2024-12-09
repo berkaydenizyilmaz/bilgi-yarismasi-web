@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import Link from "next/link"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function QuizPage() {
   const { categoryId } = useParams<{ categoryId: string }>()
   const searchParams = useSearchParams()
   const categoryName = searchParams.get("name")
+  const { user } = useAuth()
 
   const {
     questions,
@@ -24,7 +26,7 @@ export default function QuizPage() {
 
   useEffect(() => {
     if (!isLoading) {
-        fetchQuestions(1) // TODO: Gerçek kullanıcı ID'sini kullan
+      fetchQuestions()
     }
   }, [categoryId])
 

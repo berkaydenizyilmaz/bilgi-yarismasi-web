@@ -49,12 +49,13 @@ export default function RegisterPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          type: "register",
           username: values.username,
           email: values.email,
           password: values.password,
@@ -68,7 +69,7 @@ export default function RegisterPage() {
       }
 
       // Başarılı kayıt sonrası login sayfasına yönlendir
-      router.push("/login?message=Kayıt başarılı! Giriş yapabilirsiniz.")
+      router.push("/auth/login?message=Kayıt başarılı! Giriş yapabilirsiniz.")
     } catch (error) {
       setError(error instanceof Error ? error.message : "Bir hata oluştu")
     }
