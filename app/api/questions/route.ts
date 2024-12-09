@@ -1,33 +1,32 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const categoryId = searchParams.get("categoryId");
-    const userId = searchParams.get("userId");
-
-    if (!categoryId || !userId) {
-        return NextResponse.json({ error: "Kategori ID'si veya Kullanıcı ID'si belirtilmedi." }, { status: 400 });
-    }
-
     try {
-        // Önce kategorideki toplam çözülmemiş soru sayısını kontrol et
+        const { searchParams } = new URL(request.url);
+        const categoryId = searchParams.get("categoryId");
+        const userId = searchParams.get("userId");
+
+        if (!categoryId || !userId) {
+            return NextResponse.json({ 
+                error: "Kategori ID'si veya Kullanıcı ID'si belirtilmedi." 
+            }, { status: 400 });
+        }
+
+        // Cevaplanmamış soruları kontrol et
         const totalUnansweredQuestions = await prisma.question.count({
             where: {
                 category_id: Number(categoryId),
-                AND: {
-                    NOT: {
-                        seen_by_users: {
-                            some: {
-                                user_id: Number(userId)
-                            }
+                NOT: {
+                    user_interactions: {
+                        some: {
+                            user_id: Number(userId)
                         }
                     }
                 }
             }
         });
 
-        // Eğer yeterli soru yoksa hata döndür
         if (totalUnansweredQuestions < 10) {
             return NextResponse.json({ 
                 error: "Bu kategoride yeterli sayıda cevaplanmamış soru bulunmamaktadır.",
@@ -35,31 +34,40 @@ export async function GET(request: Request) {
             }, { status: 404 });
         }
 
-        // Kullanıcının görmediği soruları rastgele seç
-        const questions = await prisma.$queryRaw`
-            SELECT 
-                q.id,
-                q.question_text,
-                q.option_a,
-                q.option_b,
-                q.option_c,
-                q.option_d,
-                q.correct_option
-            FROM "Question" q
-            WHERE q.category_id = ${Number(categoryId)}
-            AND NOT EXISTS (
-                SELECT 1 
-                FROM "UserSeenQuestion" usq 
-                WHERE usq.question_id = q.id 
-                AND usq.user_id = ${Number(userId)}
-            )
-            ORDER BY RANDOM()
-            LIMIT 10
-        `;
+        // Tüm cevaplanmamış soruları getir
+        const allQuestions = await prisma.question.findMany({
+            where: {
+                category_id: Number(categoryId),
+                NOT: {
+                    user_interactions: {
+                        some: {
+                            user_id: Number(userId)
+                        }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                question_text: true,
+                option_a: true,
+                option_b: true,
+                option_c: true,
+                option_d: true,
+                correct_option: true,
+            }
+        });
 
-        return NextResponse.json(questions);
+        // Soruları karıştır ve ilk 3'ünü al
+        const shuffledQuestions = allQuestions
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
+
+        return NextResponse.json(shuffledQuestions);
+
     } catch (error) {
         console.error("Soruları alma hatası:", error);
-        return NextResponse.json({ error: "Sorular alınamadı." }, { status: 500 });
+        return NextResponse.json({ 
+            error: "Beklenmeyen bir hata oluştu." 
+        }, { status: 500 });
     }
 }

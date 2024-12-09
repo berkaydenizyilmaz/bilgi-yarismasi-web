@@ -23,6 +23,16 @@ export async function GET(
                         name: true,
                     },
                 },
+                user_interactions: {
+                    include: {
+                        question: {
+                            select: {
+                                question_text: true,
+                                correct_option: true,
+                            }
+                        }
+                    }
+                }
             },
         });
 

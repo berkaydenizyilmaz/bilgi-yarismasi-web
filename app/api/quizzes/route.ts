@@ -6,14 +6,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { userId, categoryId, totalQuestions, correctAnswers, incorrectAnswers, score, questions } = body;
 
-        // Gelen verileri doğrula
-        if (!userId || !categoryId || totalQuestions === undefined || !questions) {
-            return NextResponse.json(
-                { error: "Gerekli alanlar eksik." }, 
-                { status: 400 }
-            );
-        }
-
         // Quiz kaydını oluştur
         const quiz = await prisma.quiz.create({
             data: {
@@ -23,21 +15,29 @@ export async function POST(request: NextRequest) {
                 correct_answers: correctAnswers,
                 incorrect_answers: incorrectAnswers,
                 score: score,
-                quiz_questions: {
-                    create: questions.map((questionId: number) => ({
-                        question_id: questionId
+                user_interactions: {
+                    create: questions.map((question: any) => ({
+                        user_id: userId,
+                        question_id: question.id,
+                        seen_at: new Date(),
+                        answered_at: new Date(),
+                        is_correct: question.isCorrect,
+                        user_answer: question.userAnswer
                     }))
                 }
             },
-        });
-
-        // Soruları görülmüş olarak işaretle
-        await prisma.userSeenQuestion.createMany({
-            data: questions.map((questionId: number) => ({
-                user_id: userId,
-                question_id: questionId,
-            })),
-            skipDuplicates: true, // Eğer daha önce kaydedilmişse atla
+            include: {
+                user_interactions: {
+                    include: {
+                        question: true
+                    }
+                },
+                category: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
         });
 
         return NextResponse.json(quiz, { status: 201 });

@@ -7,7 +7,9 @@ interface Question {
     id: number;
     question_text: string;
     options: string[];
-    correct_option: string; // Doğru cevap
+    correct_option: string;
+    isCorrect?: boolean;
+    userAnswer?: string;
 }
 
 export default function QuizPage() {
@@ -20,7 +22,7 @@ export default function QuizPage() {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [correctCount, setCorrectCount] = useState<number>(0);
     const [incorrectCount, setIncorrectCount] = useState<number>(0);
-    const categoryId = Number(categoryIdParam); // Kategori ID'sini buradan alıyoruz
+    const categoryId = Number(categoryIdParam);
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -55,84 +57,99 @@ export default function QuizPage() {
         fetchQuestions();
     }, [categoryId, router]);
 
-
-    const handleAnswer = (selectedOption: string) => {
+    const handleAnswer = async (selectedOption: string) => {
         const question = questions[currentQuestionIndex];
     
-        if (question) {
-            const selectedIndex = question.options.findIndex(option => option === selectedOption);
-            const isCorrect = question.correct_option.toUpperCase() === String.fromCharCode(65 + selectedIndex);
+        if (!question) return;
     
-            // Önce cevabı kaydet
-            if (isCorrect) {
-                setCorrectCount(prev => prev + 1);
-                alert("Doğru cevap!");
-            } else {
-                setIncorrectCount(prev => prev + 1);
-                alert("Yanlış cevap!");
-            }
+        const selectedIndex = question.options.findIndex(option => option === selectedOption);
+        const userAnswer = String.fromCharCode(65 + selectedIndex);
+        const isCorrect = question.correct_option.toUpperCase() === userAnswer;
     
-            // Sonraki soru indeksini hesapla
-            const nextIndex = currentQuestionIndex + 1;
-            
-            if (nextIndex === questions.length) {
-                // Son soruya geldiğimizde, state güncellemelerinin tamamlanmasını bekle
-                Promise.resolve().then(() => {
-                    // State'in güncel değerlerini kullanarak sonuçları kaydet
-                    const finalCorrectCount = isCorrect ? correctCount + 1 : correctCount;
-                    const finalIncorrectCount = isCorrect ? incorrectCount : incorrectCount + 1;
-                    
-                    saveQuizResults(finalCorrectCount, finalIncorrectCount);
-                });
+        // Soru nesnesini güncelle
+        const updatedQuestions = [...questions];
+        updatedQuestions[currentQuestionIndex] = {
+            ...question,
+            isCorrect,
+            userAnswer
+        };
+        setQuestions(updatedQuestions);
+    
+        // Doğru/yanlış sayısını güncelle
+        if (isCorrect) {
+            setCorrectCount(prev => prev + 1);
+        } else {
+            setIncorrectCount(prev => prev + 1);
+        }
+    
+        // Son soru kontrolü
+        if (currentQuestionIndex === questions.length - 1) {
+            // Son sorunun sonuçlarını da dahil ederek kaydet
+            const finalCorrectCount = isCorrect ? correctCount + 1 : correctCount;
+            const finalIncorrectCount = isCorrect ? incorrectCount : incorrectCount + 1;
+    
+            try {
+                await saveQuizResults(
+                    finalCorrectCount,
+                    finalIncorrectCount,
+                    updatedQuestions // Güncellenmiş soru listesini gönder
+                );
+            } catch (error) {
+                console.error("Quiz sonuçları kaydedilirken hata:", error);
             }
-            
-            setCurrentQuestionIndex(nextIndex);
+        } else {
+            // Sonraki soruya geç
+            setCurrentQuestionIndex(prev => prev + 1);
         }
     };
+
+    const calculateScore = (correctCount: number, totalQuestions: number): number => {
+        return Math.round((correctCount / totalQuestions) * 100);
+    };
     
-   const saveQuizResults = async (finalCorrectCount: number, finalIncorrectCount: number) => {
-    try {
-        const userId = 1; // TODO: Gerçek kullanıcı ID'si
-        const totalQuestions = questions.length;
-        const score = Math.round((finalCorrectCount / totalQuestions) * 100);
-
-        // Quiz sonuçlarını kaydet
-        const response = await fetch('/api/quizzes', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId,
-                categoryId,
-                totalQuestions,
-                correctAnswers: finalCorrectCount,
-                incorrectAnswers: finalIncorrectCount,
-                score,
-                questions: questions.map(q => q.id), // Soruların ID'lerini gönder
-            }),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Quiz sonuçları kaydedilemedi');
+    // saveQuizResults fonksiyonunu da güncelleyelim
+    const saveQuizResults = async (correctCount: number, incorrectCount: number, questionsList: Question[]) => {
+        try {
+            const response = await fetch("/api/quizzes", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    userId: 1,
+                    categoryId: Number(categoryId),
+                    totalQuestions: questions.length,
+                    correctAnswers: correctCount,
+                    incorrectAnswers: incorrectCount,
+                    score: calculateScore(correctCount, questions.length),
+                    questions: questionsList // Tüm soru listesini gönder
+                }),
+            });
+    
+            if (!response.ok) {
+                throw new Error("Quiz sonuçları kaydedilemedi");
+            }
+    
+            const result = await response.json();
+            router.push(`/quiz/result?quizId=${result.id}`);
+        } catch (error) {
+            console.error("Quiz kaydetme hatası:", error);
+            alert("Quiz sonuçları kaydedilirken bir hata oluştu!");
         }
+    };
 
-        const result = await response.json();
-        router.push(`/quiz/result?quizId=${result.id}`);
-
-    } catch (error) {
-        console.error("Quiz kaydetme hatası:", error);
-        alert("Quiz sonuçları kaydedilirken bir hata oluştu!");
-    }
-};
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <h1 className="text-4xl font-bold text-orange-600 mb-6">Seçilen Kategori: {categoryName || 'Belirtilmedi'}</h1>
+            <h1 className="text-4xl font-bold text-orange-600 mb-6">
+                Seçilen Kategori: {categoryName || 'Belirtilmedi'}
+            </h1>
             <div className="w-full max-w-2xl">
                 {currentQuestionIndex < questions.length && (
-                    <div key={questions[currentQuestionIndex].id} className="border rounded-lg p-6 bg-white shadow-md mb-4">
-                        <h2 className="text-xl font-semibold mb-2">{questions[currentQuestionIndex].question_text}</h2>
+                    <div key={questions[currentQuestionIndex].id} 
+                         className="border rounded-lg p-6 bg-white shadow-md mb-4">
+                        <h2 className="text-xl font-semibold mb-2">
+                            {questions[currentQuestionIndex].question_text}
+                        </h2>
                         <div className="space-y-2">
                             {questions[currentQuestionIndex].options.map((option) => (
                                 <button

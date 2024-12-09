@@ -25,7 +25,7 @@ model User {
   created_at              DateTime  @default(now())
   updated_at              DateTime  @default(now()) @updatedAt
   quizzes                 Quiz[]
-  seen_questions          UserSeenQuestion[]
+  question_interactions   UserQuestionInteraction[] // Güncellendi
 }
 
 model Category {
@@ -46,8 +46,7 @@ model Question {
   correct_option String   @db.Char(1)
   created_at    DateTime  @default(now())
   category      Category  @relation(fields: [category_id], references: [id])
-  quiz_questions QuizQuestion[]
-  seen_by_users UserSeenQuestion[]
+  user_interactions  UserQuestionInteraction[]
 }
 
 model Quiz {
@@ -61,23 +60,21 @@ model Quiz {
   played_at        DateTime  @default(now())
   user             User      @relation(fields: [user_id], references: [id])
   category         Category  @relation(fields: [category_id], references: [id])
-  quiz_questions   QuizQuestion[]
+  user_interactions UserQuestionInteraction[]
 }
 
-model QuizQuestion {
-  id            Int       @id @default(autoincrement()) @map("quiz_question_id")
-  quiz_id       Int
-  question_id   Int
-  quiz          Quiz      @relation(fields: [quiz_id], references: [id])
-  question      Question  @relation(fields: [question_id], references: [id])
-}
-
-model UserSeenQuestion {
+model UserQuestionInteraction {
+  id          Int       @id @default(autoincrement())
   user_id     Int
   question_id Int
+  quiz_id     Int?
   seen_at     DateTime  @default(now())
+  answered_at DateTime?
+  is_correct  Boolean?
+  user_answer String?   @db.Char(1)
   user        User      @relation(fields: [user_id], references: [id])
   question    Question  @relation(fields: [question_id], references: [id])
+  quiz        Quiz?     @relation(fields: [quiz_id], references: [id])
 
-  @@id([user_id, question_id])
+  @@unique([user_id, question_id, quiz_id])
 }
