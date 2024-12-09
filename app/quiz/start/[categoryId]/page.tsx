@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import Link from "next/link"
 
 export default function QuizPage() {
   const { categoryId } = useParams<{ categoryId: string }>()
@@ -37,8 +38,20 @@ export default function QuizPage() {
 
   if (error) {
     return (
-      <div className="text-center p-4">
-        <p className="text-red-500">{error}</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-700 mb-4">
+              Hata
+            </h2>
+            <p className="text-red-600 mb-6">{error}</p>
+            <Link href="/quiz/categories">
+              <Button variant="outline" className="bg-white hover:bg-gray-50">
+                Kategorilere Geri Dön
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     )
   }

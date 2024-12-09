@@ -27,29 +27,28 @@ export const useQuiz = (categoryId: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/questions?categoryId=${categoryId}&userId=${userId}`);
-      const data = await response.json();
+        const response = await fetch(`/api/questions?categoryId=${categoryId}&userId=${userId}`);
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Sorular alınamadı');
-      }
+        if (!response.ok) {
+            throw new Error(data.error || 'Sorular alınamadı');
+        }
 
-      const formattedQuestions = data.data.map((q: any) => ({
-        id: q.id,
-        question_text: q.question_text,
-        options: [q.option_a, q.option_b, q.option_c, q.option_d],
-        correct_option: q.correct_option,
-      }));
+        const formattedQuestions = data.data.map((q: any) => ({
+            id: q.id,
+            question_text: q.question_text,
+            options: [q.option_a, q.option_b, q.option_c, q.option_d],
+            correct_option: q.correct_option,
+        }));
 
-      const shuffledQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
-      
-      setQuestions(shuffledQuestions);
-      setCurrentQuestionIndex(0);
+        const shuffledQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
+        
+        setQuestions(shuffledQuestions);
+        setCurrentQuestionIndex(0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bir hata oluştu');
-      router.push('/quiz/categories');
+        setError(err instanceof Error ? err.message : 'Bir hata oluştu');
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
@@ -69,54 +68,55 @@ export const useQuiz = (categoryId: string) => {
     };
     setQuestions(updatedQuestions);
 
+    const newCorrectCount = isCorrect ? correctCount + 1 : correctCount;
+    const newIncorrectCount = !isCorrect ? incorrectCount + 1 : incorrectCount;
+
     if (isCorrect) {
-        setCorrectCount(prev => prev + 1);
+        setCorrectCount(newCorrectCount);
     } else {
-        setIncorrectCount(prev => prev + 1);
+        setIncorrectCount(newIncorrectCount);
     }
 
     if (currentQuestionIndex === questions.length - 1) {
-        await new Promise<void>(resolve => {
-            setTimeout(() => {
-                resolve();
-            }, 100);
-        });
-        
-        await saveQuizResults(updatedQuestions);
+        await saveQuizResults(updatedQuestions, newCorrectCount, newIncorrectCount);
     } else {
         setCurrentQuestionIndex(prev => prev + 1);
     }
   };
 
-  const saveQuizResults = async (questionsList: Question[]) => {
+  const saveQuizResults = async (
+    questionsList: Question[], 
+    finalCorrectCount: number, 
+    finalIncorrectCount: number
+  ) => {
     try {
-      const response = await fetch("/api/quizzes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: 1, // TODO: Gerçek kullanıcı ID'sini al
-          categoryId: Number(categoryId),
-          totalQuestions: questions.length,
-          correctAnswers: correctCount,
-          incorrectAnswers: incorrectCount,
-          score: calculateScore(correctCount, questions.length),
-          questions: questionsList.map(q => ({
-            id: q.id,
-            isCorrect: q.isCorrect,
-            userAnswer: q.userAnswer
-          }))
-        }),
-      });
+        const response = await fetch("/api/quizzes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: 1, // TODO: Gerçek kullanıcı ID'sini al
+                categoryId: Number(categoryId),
+                totalQuestions: questions.length,
+                correctAnswers: finalCorrectCount,
+                incorrectAnswers: finalIncorrectCount,
+                score: calculateScore(finalCorrectCount, questions.length),
+                questions: questionsList.map(q => ({
+                    id: q.id,
+                    isCorrect: q.isCorrect,
+                    userAnswer: q.userAnswer
+                }))
+            }),
+        });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error);
-      }
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error);
+        }
 
-      router.push(`/quiz/result?quizId=${result.data.id}`);
+        router.push(`/quiz/result?quizId=${result.data.id}`);
     } catch (error) {
-      setError('Quiz sonuçları kaydedilemedi');
+        setError('Quiz sonuçları kaydedilemedi');
     }
   };
 

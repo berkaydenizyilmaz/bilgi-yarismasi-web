@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 
 function Header() {
-  const { logout, user } = useAuth()
+  const { logout } = useAuth()
 
   return (
     <header className="bg-orange-600 text-white p-4 flex justify-between items-center shadow-lg">
@@ -23,7 +23,7 @@ function Header() {
           İletişim
         </Link>
         <Link href="/dashboard/profile" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">
-          {user?.username || "Profil"}
+          Profil
         </Link>
       </nav>
       <button
