@@ -11,8 +11,8 @@ export async function GET(request: Request) {
     }
 
     try {
-        // Kullanıcının görmediği soruları getir
-        const questions = await prisma.question.findMany({
+        // Önce kategorideki toplam çözülmemiş soru sayısını kontrol et
+        const totalUnansweredQuestions = await prisma.question.count({
             where: {
                 category_id: Number(categoryId),
                 AND: {
@@ -24,22 +24,38 @@ export async function GET(request: Request) {
                         }
                     }
                 }
-            },
-            select: {
-                id: true,
-                question_text: true,
-                option_a: true,
-                option_b: true,
-                option_c: true,
-                option_d: true,
-                correct_option: true,
-            },
-            take: 10, // Her seferinde 10 soru getir
+            }
         });
 
-        if (questions.length === 0) {
-            return NextResponse.json({ error: "Bu kategoride cevaplanmamış soru kalmadı." }, { status: 404 });
+        // Eğer yeterli soru yoksa hata döndür
+        if (totalUnansweredQuestions < 10) {
+            return NextResponse.json({ 
+                error: "Bu kategoride yeterli sayıda cevaplanmamış soru bulunmamaktadır.",
+                remainingQuestions: totalUnansweredQuestions 
+            }, { status: 404 });
         }
+
+        // Kullanıcının görmediği soruları rastgele seç
+        const questions = await prisma.$queryRaw`
+            SELECT 
+                q.id,
+                q.question_text,
+                q.option_a,
+                q.option_b,
+                q.option_c,
+                q.option_d,
+                q.correct_option
+            FROM "Question" q
+            WHERE q.category_id = ${Number(categoryId)}
+            AND NOT EXISTS (
+                SELECT 1 
+                FROM "UserSeenQuestion" usq 
+                WHERE usq.question_id = q.id 
+                AND usq.user_id = ${Number(userId)}
+            )
+            ORDER BY RANDOM()
+            LIMIT 10
+        `;
 
         return NextResponse.json(questions);
     } catch (error) {

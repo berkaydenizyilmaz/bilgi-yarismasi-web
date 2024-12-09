@@ -38,14 +38,20 @@ export default function QuizPage() {
                 setQuestions(formattedQuestions);
             } else {
                 if (response.status === 404) {
-                    alert("Bu kategoride cevaplanmamış soru kalmadı!");
+                    const message = data.remainingQuestions > 0 
+                        ? `Bu kategoride sadece ${data.remainingQuestions} adet cevaplanmamış soru kaldı. Quiz başlatmak için en az 10 soru gereklidir.`
+                        : "Bu kategorideki tüm soruları cevapladınız!";
+                        
+                    alert(message);
                     router.push("/quiz/categories");
                 } else {
                     console.error("Soruları alırken hata:", data.error);
+                    alert("Sorular alınırken bir hata oluştu!");
+                    router.push("/quiz/categories");
                 }
             }
         };
-
+    
         fetchQuestions();
     }, [categoryId, router]);
 
