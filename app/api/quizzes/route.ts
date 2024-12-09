@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { userId, categoryId, totalQuestions, correctAnswers, incorrectAnswers, score } = body;
+        const { userId, categoryId, totalQuestions, correctAnswers, incorrectAnswers, score, questions } = body;
 
         // Gelen verileri doğrula
-        if (!userId || !categoryId || totalQuestions === undefined) {
+        if (!userId || !categoryId || totalQuestions === undefined || !questions) {
             return NextResponse.json(
                 { error: "Gerekli alanlar eksik." }, 
                 { status: 400 }
@@ -23,10 +23,22 @@ export async function POST(request: NextRequest) {
                 correct_answers: correctAnswers,
                 incorrect_answers: incorrectAnswers,
                 score: score,
+                quiz_questions: {
+                    create: questions.map((questionId: number) => ({
+                        question_id: questionId
+                    }))
+                }
             },
         });
 
-        console.log("Quiz kaydedildi:", quiz);
+        // Soruları görülmüş olarak işaretle
+        await prisma.userSeenQuestion.createMany({
+            data: questions.map((questionId: number) => ({
+                user_id: userId,
+                question_id: questionId,
+            })),
+            skipDuplicates: true, // Eğer daha önce kaydedilmişse atla
+        });
 
         return NextResponse.json(quiz, { status: 201 });
     } catch (error) {

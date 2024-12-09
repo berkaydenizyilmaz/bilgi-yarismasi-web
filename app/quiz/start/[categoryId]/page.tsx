@@ -24,7 +24,8 @@ export default function QuizPage() {
 
     useEffect(() => {
         const fetchQuestions = async () => {
-            const response = await fetch(`/api/questions?categoryId=${categoryId}`);
+            const userId = 1; // TODO: Gerçek kullanıcı ID'sini al
+            const response = await fetch(`/api/questions?categoryId=${categoryId}&userId=${userId}`);
             const data = await response.json();
         
             if (response.ok) {
@@ -32,16 +33,21 @@ export default function QuizPage() {
                     id: question.id,
                     question_text: question.question_text,
                     options: [question.option_a, question.option_b, question.option_c, question.option_d],
-                    correct_option: question.correct_option, // Doğru cevap burada harf olarak geliyor (A, B, C, D)
+                    correct_option: question.correct_option,
                 }));
                 setQuestions(formattedQuestions);
             } else {
-                console.error("Soruları alırken hata:", data.error);
+                if (response.status === 404) {
+                    alert("Bu kategoride cevaplanmamış soru kalmadı!");
+                    router.push("/quiz/categories");
+                } else {
+                    console.error("Soruları alırken hata:", data.error);
+                }
             }
         };
 
         fetchQuestions();
-    }, [categoryId]);
+    }, [categoryId, router]);
 
 
     const handleAnswer = (selectedOption: string) => {
@@ -78,48 +84,42 @@ export default function QuizPage() {
         }
     };
     
-    // saveQuizResults fonksiyonunu güncelleyelim
-    const saveQuizResults = async (finalCorrectCount: number, finalIncorrectCount: number) => {
-        try {
-            const userId = 1; // TODO: Gerçek kullanıcı ID'si
-            const totalQuestions = questions.length;
-            const score = Math.round((finalCorrectCount / totalQuestions) * 100);
-    
-            console.log("Quiz Sonuçları Gönderiliyor:");
-            console.log("Toplam Soru:", totalQuestions);
-            console.log("Doğru Cevap:", finalCorrectCount);
-            console.log("Yanlış Cevap:", finalIncorrectCount);
-            console.log("Skor:", score);
-    
-            const response = await fetch('/api/quizzes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId,
-                    categoryId,
-                    totalQuestions,
-                    correctAnswers: finalCorrectCount,
-                    incorrectAnswers: finalIncorrectCount,
-                    score,
-                }),
-            });
-    
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Quiz sonuçları kaydedilemedi');
-            }
-    
-            const result = await response.json();
-            router.push(`/quiz/result?quizId=${result.id}`);
-    
-        } catch (error) {
-            console.error("Quiz kaydetme hatası:", error);
-            alert("Quiz sonuçları kaydedilirken bir hata oluştu!");
-        }
-    };
+   const saveQuizResults = async (finalCorrectCount: number, finalIncorrectCount: number) => {
+    try {
+        const userId = 1; // TODO: Gerçek kullanıcı ID'si
+        const totalQuestions = questions.length;
+        const score = Math.round((finalCorrectCount / totalQuestions) * 100);
 
+        // Quiz sonuçlarını kaydet
+        const response = await fetch('/api/quizzes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId,
+                categoryId,
+                totalQuestions,
+                correctAnswers: finalCorrectCount,
+                incorrectAnswers: finalIncorrectCount,
+                score,
+                questions: questions.map(q => q.id), // Soruların ID'lerini gönder
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Quiz sonuçları kaydedilemedi');
+        }
+
+        const result = await response.json();
+        router.push(`/quiz/result?quizId=${result.id}`);
+
+    } catch (error) {
+        console.error("Quiz kaydetme hatası:", error);
+        alert("Quiz sonuçları kaydedilirken bir hata oluştu!");
+    }
+};
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
             <h1 className="text-4xl font-bold text-orange-600 mb-6">Seçilen Kategori: {categoryName || 'Belirtilmedi'}</h1>
