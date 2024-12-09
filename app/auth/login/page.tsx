@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 const formSchema = z.object({
   email: z.string().email({
@@ -29,6 +30,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { login } = useAuth()
   const [error, setError] = useState<string>("")
   
   // URL'den mesaj parametresini al (register'dan yönlendirme için)
@@ -44,26 +46,9 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Bir hata oluştu")
-      }
-
-      // Başarılı giriş sonrası ana sayfaya yönlendir
-      router.push("/")
-      // Sayfayı yenile (auth state'ini güncellemek için)
-      router.refresh()
+      await login(values.email, values.password)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Bir hata oluştu")
+      setError(error instanceof Error ? error.message : "Giriş başarısız")
     }
   }
 
