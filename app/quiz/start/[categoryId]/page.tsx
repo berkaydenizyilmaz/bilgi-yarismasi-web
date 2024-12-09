@@ -22,7 +22,9 @@ export default function QuizPage() {
   } = useQuiz(categoryId)
 
   useEffect(() => {
-    fetchQuestions(1) // TODO: Gerçek kullanıcı ID'sini kullan
+    if (!isLoading) {
+        fetchQuestions(1) // TODO: Gerçek kullanıcı ID'sini kullan
+    }
   }, [categoryId])
 
   if (isLoading) {

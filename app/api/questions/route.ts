@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 
@@ -60,7 +59,7 @@ export async function GET(request: Request) {
 
         const shuffledQuestions = questions
             .sort(() => Math.random() - 0.5)
-            .slice(0, 3);
+            .slice(0, 10);
 
         return apiResponse.success(shuffledQuestions);
     } catch (error) {

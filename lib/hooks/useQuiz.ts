@@ -41,7 +41,10 @@ export const useQuiz = (categoryId: string) => {
         correct_option: q.correct_option,
       }));
 
-      setQuestions(formattedQuestions);
+      const shuffledQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
+      
+      setQuestions(shuffledQuestions);
+      setCurrentQuestionIndex(0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Bir hata oluştu');
       router.push('/quiz/categories');
@@ -60,22 +63,28 @@ export const useQuiz = (categoryId: string) => {
 
     const updatedQuestions = [...questions];
     updatedQuestions[currentQuestionIndex] = {
-      ...question,
-      isCorrect,
-      userAnswer
+        ...question,
+        isCorrect,
+        userAnswer
     };
     setQuestions(updatedQuestions);
 
     if (isCorrect) {
-      setCorrectCount(prev => prev + 1);
+        setCorrectCount(prev => prev + 1);
     } else {
-      setIncorrectCount(prev => prev + 1);
+        setIncorrectCount(prev => prev + 1);
     }
 
     if (currentQuestionIndex === questions.length - 1) {
-      await saveQuizResults(updatedQuestions);
+        await new Promise<void>(resolve => {
+            setTimeout(() => {
+                resolve();
+            }, 100);
+        });
+        
+        await saveQuizResults(updatedQuestions);
     } else {
-      setCurrentQuestionIndex(prev => prev + 1);
+        setCurrentQuestionIndex(prev => prev + 1);
     }
   };
 

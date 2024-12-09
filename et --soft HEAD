@@ -1,0 +1,16 @@
+[33mefbfc75[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Gereksiz kodlar kaldırıldı
+[33m35af59e[m Giriş yapılıp yapılmamasına göre sayfa koruması eklendi
+[33mb8d4df0[m Veri tabanındaki iki tablo birleştirildi bazı hatalar giderildi
+[33m95a848d[m Soruların rastgele getirilmesi sağlandı
+[33mdc2470d[m Kullanıcıların daha önce gördüğü soruları tekrar görmemesi sağlandı
+[33md5c4b4e[m Qiz sonucuna yanlış veri kaydetme düzeltildi
+[33m1ece3c2[m Quiz sonuçlarını kaydetme ve sonuç sayfası eklendi.
+[33m5b19608[m Quiz soruları veri tabanından çekilmeye başlandı.
+[33m834071a[m Kategori seçimi sonrası varasyılan sorularla quiz sayfası eklendi
+[33m7862094[m İletişim sayfası ve kategori seçme sayfası eklendi.
+[33m9b84070[m Footer eklendi, ana sayfa tasarımı değişti.
+[33mba9382d[m Header tasarımı değiştirildi.
+[33maf7775d[m Ana sayfa ve header tasarımı eklendi v0.1
+[33m0e466ae[m Kayıt ve giriş işlemleri yapıldı.
+[33mbe5ed69[m Initial Commit
+[33meaad8d7[m Initial commit from Create Next App
