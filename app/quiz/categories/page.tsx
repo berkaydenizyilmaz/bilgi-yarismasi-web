@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface Category {
     id: number;
@@ -12,26 +13,38 @@ interface Category {
 export default function CategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
     useEffect(() => {
         async function fetchCategories() {
             try {
                 const response = await fetch("/api/categories");
-                const data = await response.json();
+                const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || "Kategoriler alınamadı.");
+                    throw new Error(result.error || "Kategoriler alınamadı.");
                 }
 
-                setCategories(data);
+                // API yanıtından data özelliğini al
+                setCategories(result.data || []);
             } catch (error) {
                 setError(error instanceof Error ? error.message : "Bir hata oluştu");
+            } finally {
+                setIsLoading(false);
             }
         }
 
         fetchCategories();
     }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <LoadingSpinner />
+            </div>
+        );
+    }
 
     const handleSelectCategory = (category: Category) => {
         setSelectedCategory(category);
@@ -51,7 +64,11 @@ export default function CategoriesPage() {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-4xl">
                 {categories.map((category) => (
-                    <div key={category.id} className="border rounded-lg p-6 bg-white shadow-md hover:shadow-lg transition duration-200 cursor-pointer" onClick={() => handleSelectCategory(category)}>
+                    <div 
+                        key={category.id} 
+                        className="border rounded-lg p-6 bg-white shadow-md hover:shadow-lg transition duration-200 cursor-pointer" 
+                        onClick={() => handleSelectCategory(category)}
+                    >
                         <h3 className="text-2xl font-semibold text-gray-800 mb-2">{category.name}</h3>
                         <p className="text-gray-600">{category.description}</p>
                     </div>

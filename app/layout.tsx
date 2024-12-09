@@ -5,6 +5,7 @@ import "./globals.css"
 import Header from "@/components/Header"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { usePathname } from "next/navigation"
+import Footer from "@/components/Footer"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,8 +31,13 @@ export default function RootLayout({
     <html lang="tr">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <AuthProvider>
-          {!isAuthPage && <Header />}
-          <main>{children}</main>
+          <div className="flex flex-col min-h-screen">
+            {!isAuthPage && <Header />}
+            <main className="flex-grow">
+              {children}
+            </main>
+            {!isAuthPage && <Footer />}
+          </div>
         </AuthProvider>
       </body>
     </html>

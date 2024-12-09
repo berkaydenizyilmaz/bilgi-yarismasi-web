@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiResponse } from "@/lib/api-response";
 
 export async function GET(request: Request) {
     try {
@@ -8,12 +9,9 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId");
 
         if (!categoryId || !userId) {
-            return NextResponse.json({ 
-                error: "Kategori ID'si veya Kullanıcı ID'si belirtilmedi." 
-            }, { status: 400 });
+            return apiResponse.error("Kategori ID'si veya Kullanıcı ID'si belirtilmedi.");
         }
 
-        // Cevaplanmamış soruları kontrol et
         const totalUnansweredQuestions = await prisma.question.count({
             where: {
                 category_id: Number(categoryId),
@@ -28,14 +26,13 @@ export async function GET(request: Request) {
         });
 
         if (totalUnansweredQuestions < 10) {
-            return NextResponse.json({ 
-                error: "Bu kategoride yeterli sayıda cevaplanmamış soru bulunmamaktadır.",
-                remainingQuestions: totalUnansweredQuestions 
-            }, { status: 404 });
+            return apiResponse.error(
+                `Bu kategoride sadece ${totalUnansweredQuestions} adet cevaplanmamış soru kaldı.`,
+                404
+            );
         }
 
-        // Tüm cevaplanmamış soruları getir
-        const allQuestions = await prisma.question.findMany({
+        const questions = await prisma.question.findMany({
             where: {
                 category_id: Number(categoryId),
                 NOT: {
@@ -54,20 +51,20 @@ export async function GET(request: Request) {
                 option_c: true,
                 option_d: true,
                 correct_option: true,
+            },
+            take: 10,
+            orderBy: {
+                id: 'asc'
             }
         });
 
-        // Soruları karıştır ve ilk 3'ünü al
-        const shuffledQuestions = allQuestions
+        const shuffledQuestions = questions
             .sort(() => Math.random() - 0.5)
             .slice(0, 3);
 
-        return NextResponse.json(shuffledQuestions);
-
+        return apiResponse.success(shuffledQuestions);
     } catch (error) {
         console.error("Soruları alma hatası:", error);
-        return NextResponse.json({ 
-            error: "Beklenmeyen bir hata oluştu." 
-        }, { status: 500 });
+        return apiResponse.error("Beklenmeyen bir hata oluştu.");
     }
 }

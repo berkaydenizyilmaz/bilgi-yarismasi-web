@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiResponse } from "@/lib/api-response";
 
 export async function GET() {
   try {
-    // Kategorileri veritabanından al
     const categories = await prisma.category.findMany({
       select: {
         id: true,
@@ -11,16 +11,13 @@ export async function GET() {
       },
     });
 
-    if (!categories || categories.length === 0) {
-      throw new Error("Kategoriler bulunamadı.");
+    if (!categories?.length) {
+      return apiResponse.error("Kategoriler bulunamadı.", 404);
     }
 
-    return NextResponse.json(categories);
+    return apiResponse.success(categories);
   } catch (error) {
     console.error("Kategorileri alma hatası:", error);
-    return NextResponse.json(
-      { error: "Kategoriler alınamadı." },
-      { status: 500 }
-    );
+    return apiResponse.error("Kategoriler alınamadı.");
   }
 }

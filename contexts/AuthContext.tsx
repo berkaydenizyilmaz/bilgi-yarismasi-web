@@ -34,10 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/auth/me")
+      const response = await fetch("/api/auth")
       if (response.ok) {
         const userData = await response.json()
-        setUser(userData)
+        setUser(userData.data.user)
       }
     } catch (error) {
       console.error("Auth check error:", error)
@@ -48,10 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ type: "login", email, password }),
       })
 
       const data = await response.json()
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error)
       }
 
-      setUser(data.user)
+      setUser(data.data.user)
       router.push("/")
     } catch (error) {
       throw error
@@ -69,7 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "logout" }),
+      })
       setUser(null)
       router.push("/auth/login")
     } catch (error) {

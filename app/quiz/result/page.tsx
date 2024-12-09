@@ -1,144 +1,198 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+interface Question {
+    question_text: string;
+    correct_option: string;
+    option_a: string;
+    option_b: string;
+    option_c: string;
+    option_d: string;
+}
+
+interface UserInteraction {
+    question: Question;
+    user_answer: string;
+    is_correct: boolean;
+}
 
 interface QuizResult {
     id: number;
+    score: number;
     total_questions: number;
     correct_answers: number;
     incorrect_answers: number;
-    score: number;
-    played_at: string;
     category: {
         name: string;
     };
+    user_interactions: UserInteraction[];
+}
+
+interface StatCardProps {
+    title: string;
+    value: number | string;
+    className?: string;
+}
+
+function StatCard({ title, value, className = "" }: StatCardProps) {
+    return (
+        <Card className={`text-center p-4 ${className}`}>
+            <p className="text-gray-600">{title}</p>
+            <p className="text-3xl font-bold text-gray-800">{value}</p>
+        </Card>
+    );
+}
+
+interface QuestionCardProps {
+    questionNumber: number;
+    interaction: UserInteraction;
+}
+
+function QuestionCard({ questionNumber, interaction }: QuestionCardProps) {
+    const options = {
+        A: interaction.question.option_a,
+        B: interaction.question.option_b,
+        C: interaction.question.option_c,
+        D: interaction.question.option_d,
+    };
+
+    return (
+        <Card className="p-4">
+            <h3 className="font-semibold mb-2">
+                Soru {questionNumber}: {interaction.question.question_text}
+            </h3>
+            <div className="space-y-2">
+                {Object.entries(options).map(([key, value]) => (
+                    <div
+                        key={key}
+                        className={`p-2 rounded ${
+                            interaction.user_answer === key
+                                ? interaction.is_correct
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                : interaction.question.correct_option === key
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-50"
+                        }`}
+                    >
+                        {key}. {value}
+                        {interaction.user_answer === key && (
+                            <span className="ml-2 font-medium">
+                                {interaction.is_correct ? "✓" : "✗"}
+                            </span>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </Card>
+    );
 }
 
 export default function QuizResultPage() {
-    const [result, setResult] = useState<QuizResult | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string>("");
-    
     const searchParams = useSearchParams();
+    const router = useRouter();
     const quizId = searchParams.get("quizId");
+    const [result, setResult] = useState<QuizResult | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchQuizResult = async () => {
+        const fetchResult = async () => {
             try {
                 if (!quizId) {
                     throw new Error("Quiz ID bulunamadı");
                 }
 
                 const response = await fetch(`/api/quizzes/${quizId}`);
+                const data = await response.json();
+
                 if (!response.ok) {
-                    throw new Error("Quiz sonuçları alınamadı");
+                    throw new Error(data.error);
                 }
 
-                const data = await response.json();
-                setResult(data);
+                setResult(data.data);
             } catch (err) {
-                setError(err instanceof Error ? err.message : "Bir hata oluştu");
+                setError(err instanceof Error ? err.message : "Sonuçlar alınamadı");
+                setTimeout(() => {
+                    router.push('/quiz/categories');
+                }, 3000);
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
 
-        fetchQuizResult();
-    }, [quizId]);
+        fetchResult();
+    }, [quizId, router]);
 
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-2xl text-gray-600">Yükleniyor...</div>
+            <div className="flex justify-center items-center min-h-screen">
+                <LoadingSpinner />
             </div>
         );
     }
 
-    if (error) {
+    if (error || !result) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
-                <div className="text-red-500 mb-4">{error}</div>
-                <Link href="/quiz/categories" className="text-blue-500 hover:underline">
-                    Kategorilere Dön
-                </Link>
-            </div>
-        );
-    }
-
-    if (!result) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
-                <div className="text-gray-600 mb-4">Sonuç bulunamadı</div>
-                <Link href="/quiz/categories" className="text-blue-500 hover:underline">
-                    Kategorilere Dön
+            <div className="text-center p-4">
+                <p className="text-red-500 mb-4">{error || "Sonuç bulunamadı"}</p>
+                <Link href="/quiz/categories">
+                    <Button>Kategorilere Dön</Button>
                 </Link>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 py-8">
             <div className="max-w-3xl mx-auto">
-                <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div className="bg-orange-600 px-6 py-4">
-                        <h1 className="text-2xl font-bold text-white text-center">
-                            Quiz Sonuçları
-                        </h1>
-                    </div>
-                    
-                    <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                <p className="text-gray-600">Toplam Soru</p>
-                                <p className="text-3xl font-bold text-gray-800">
-                                    {result.total_questions}
-                                </p>
-                            </div>
-                            
-                            <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                <p className="text-gray-600">Başarı Oranı</p>
-                                <p className="text-3xl font-bold text-gray-800">
-                                    %{result.score}
-                                </p>
-                            </div>
-                            
-                            <div className="text-center p-4 bg-green-50 rounded-lg">
-                                <p className="text-green-600">Doğru Cevap</p>
-                                <p className="text-3xl font-bold text-green-800">
-                                    {result.correct_answers}
-                                </p>
-                            </div>
-                            
-                            <div className="text-center p-4 bg-red-50 rounded-lg">
-                                <p className="text-red-600">Yanlış Cevap</p>
-                                <p className="text-3xl font-bold text-red-800">
-                                    {result.incorrect_answers}
-                                </p>
-                            </div>
-                        </div>
+                <h1 className="text-3xl font-bold text-center mb-8">
+                    {result.category.name} Quiz Sonuçları
+                </h1>
 
-                        <div className="mt-8 text-center">
-                            <p className="text-gray-600 mb-6">
-                                Tebrikler! Quiz'i tamamladınız.
-                            </p>
-                            <div className="space-x-4">
-                                <Link 
-                                    href="/quiz/categories" 
-                                    className="inline-block bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-500 transition duration-200"
-                                >
-                                    Yeni Quiz Başlat
-                                </Link>
-                                <Link 
-                                    href="/dashboard/leaderboard" 
-                                    className="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-500 transition duration-200"
-                                >
-                                    Lider Tablosu
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <StatCard
+                        title="Toplam Soru"
+                        value={result.total_questions}
+                        className="bg-gray-50"
+                    />
+                    <StatCard
+                        title="Başarı Oranı"
+                        value={`%${result.score}`}
+                        className="bg-gray-50"
+                    />
+                    <StatCard
+                        title="Doğru Cevap"
+                        value={result.correct_answers}
+                        className="bg-green-50 text-green-700"
+                    />
+                    <StatCard
+                        title="Yanlış Cevap"
+                        value={result.incorrect_answers}
+                        className="bg-red-50 text-red-700"
+                    />
+                </div>
+
+                <div className="space-y-6">
+                    {result.user_interactions.map((interaction, index) => (
+                        <QuestionCard
+                            key={index}
+                            questionNumber={index + 1}
+                            interaction={interaction}
+                        />
+                    ))}
+                </div>
+
+                <div className="text-center mt-8">
+                    <Link href="/quiz/categories">
+                        <Button>Yeni Quiz Başlat</Button>
+                    </Link>
                 </div>
             </div>
         </div>
