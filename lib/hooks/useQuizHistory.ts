@@ -1,15 +1,16 @@
 import useSWR from 'swr';
 
-interface QuizHistory {
+export type QuizHistory = {
   id: number;
   category: {
     name: string;
   };
-  score: number;
-  correct_answers: number;
   total_questions: number;
+  correct_answers: number;
+  incorrect_answers: number;
+  score: number;
   played_at: string;
-}
+};
 
 export function useQuizHistory() {
   const { data, error, isLoading, mutate } = useSWR<{
@@ -24,5 +25,3 @@ export function useQuizHistory() {
     refreshHistory: mutate,
   };
 }
-
-export type { QuizHistory };
