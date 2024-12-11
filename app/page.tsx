@@ -6,6 +6,8 @@ import { Brain, Trophy, Users } from "lucide-react";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/lib/hooks/useCategories";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Category {
     id: number;
@@ -14,31 +16,24 @@ interface Category {
 }
 
 export default function HomePage() {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [error, setError] = useState<string>("");
-    const [isLoading, setIsLoading] = useState(true);
+    const { categories, isLoading, error } = useCategories();
     const { user } = useAuth();
 
-    useEffect(() => {
-        async function fetchCategories() {
-            try {
-                const response = await fetch("/api/categories");
-                const result = await response.json();
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <LoadingSpinner />
+            </div>
+        );
+    }
 
-                if (!response.ok) {
-                    throw new Error(result.error?.message || "Kategoriler alınamadı.");
-                }
-
-                setCategories(result.data || []);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "Bir hata oluştu");
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        fetchCategories();
-    }, []);
+    if (error) {
+        return (
+            <div className="text-center p-4">
+                <p className="text-red-500">{error}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -93,23 +88,35 @@ export default function HomePage() {
             </section>
 
             {/* Kategoriler Section */}
-            <section className="py-16 px-4 bg-orange-50">
-                <div className="max-w-6xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                        Quiz Kategorileri
-                    </h2>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {categories.map((category) => (
-                            <CategoryCard
-                                key={category.id}
-                                icon={<BookOpen className="h-8 w-8 text-orange-600" />}
-                                title={category.name}
-                                description={category.description || "Bu kategori hakkında daha fazla bilgi yakında eklenecek"}
-                            />
-                        ))}
+            {categories.length > 0 && (
+                <section className="py-16 px-4 bg-orange-50">
+                    <div className="max-w-6xl mx-auto">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                            Popüler Kategoriler
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {categories.slice(0, 6).map((category) => (
+                                <CategoryCard
+                                    key={category.id}
+                                    icon={<BookOpen className="h-8 w-8 text-orange-600" />}
+                                    title={category.name}
+                                    description={"Bu kategori hakkında daha fazla bilgi yakında eklenecek"}
+                                />
+                            ))}
+                        </div>
+                        {categories.length > 6 && (
+                            <div className="text-center mt-8">
+                                <Link href="/quiz/categories">
+                                    <Button variant="outline">
+                                        Tüm Kategorileri Gör
+                                        <ArrowRight className="ml-2 h-5 w-5" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* CTA Section */}
             <section className="py-20 px-4 bg-orange-600 text-white">
