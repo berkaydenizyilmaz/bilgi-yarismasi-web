@@ -6,18 +6,14 @@ import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
 
 interface JWTPayload {
-    id: number;
-}
-
-// Doğru Kullanım: Fonksiyonun ikinci argümanının tipi için
-interface RouteParams {
-    params: {
-        quizId: string;
-    };
+  id: number;
 }
 
 
-export async function GET(req: NextRequest, { params }: RouteParams) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { quizId: string } }
+) {
     try {
         logger.request(req);
 
