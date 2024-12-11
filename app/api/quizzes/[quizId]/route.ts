@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
@@ -9,9 +9,16 @@ interface JWTPayload {
   id: number;
 }
 
+// Route handler için context tipi tanımı
+interface RouteContext {
+  params: {
+    quizId: string;
+  };
+}
+
 export async function GET(
     request: NextRequest,
-    { params }: { params: { quizId: string } }
+    context: RouteContext
 ) {
     try {
         logger.request(request);
@@ -33,10 +40,10 @@ export async function GET(
         }
 
         // Quiz ID validasyonu
-        const quizId = parseInt(params.quizId);
+        const quizId = parseInt(context.params.quizId);
         if (isNaN(quizId)) {
             logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
-                quizId: params.quizId,
+                quizId: context.params.quizId,
                 userId: decoded.id 
             });
             throw new ValidationError("Geçersiz Quiz ID");
@@ -124,7 +131,7 @@ export async function GET(
     } catch (error) {
         logger.error(error as Error, {
             path: request.url,
-            quizId: params.quizId
+            quizId: context.params.quizId
         });
 
         if (error instanceof APIError) {
