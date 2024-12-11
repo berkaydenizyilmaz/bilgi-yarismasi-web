@@ -127,3 +127,4 @@ export async function GET(req: NextRequest, { params }: any) {
         return NextResponse.json(apiResponse.error(error instanceof APIError ? error : new APIError("Beklenmedik bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")));
     }
 }
+
