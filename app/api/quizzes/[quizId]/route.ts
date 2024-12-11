@@ -12,7 +12,7 @@ interface JWTPayload {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { quizId: string } }
+  { params }: { params: { quizId: number } }
 ) {
     try {
         logger.request(req);
@@ -34,7 +34,7 @@ export async function GET(
         }
 
         // Quiz ID validasyonu
-        const quizId = parseInt(params.quizId);
+        const quizId = params.quizId;
         if (isNaN(quizId)) {
             logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
                 quizId: params.quizId,
