@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
@@ -9,7 +9,7 @@ interface JWTPayload {
  id: number;
 }
 
-export async function GET(req: NextRequest, context: { params: { quizId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { quizId: string } }) {
    try {
        logger.request(req);
 
@@ -30,10 +30,10 @@ export async function GET(req: NextRequest, context: { params: { quizId: string 
        }
 
        // Quiz ID validasyonu
-       const quizId = parseInt(context.params.quizId);
+       const quizId = parseInt(params.quizId);
        if (isNaN(quizId)) {
            logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
-               quizId: context.params.quizId,
+               quizId: params.quizId,
                userId: decoded.id 
            });
            throw new ValidationError("Geçersiz Quiz ID");
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest, context: { params: { quizId: string 
                quizId,
                userId: decoded.id
            });
-           throw new APIError("Quiz bulunamadı", 404, "NOT_FOUND");
+           return NextResponse.json(apiResponse.error(new APIError("Quiz bulunamadı", 404, "NOT_FOUND")));
        }
 
        // Quiz verilerini formatla
@@ -114,26 +114,16 @@ export async function GET(req: NextRequest, context: { params: { quizId: string 
            totalQuestions: quiz.total_questions
        });
 
-       return apiResponse.success({
+       return NextResponse.json(apiResponse.success({
            data: formattedQuiz
-       });
+       }));
 
    } catch (error) {
        logger.error(error as Error, {
            path: req.url,
-           quizId: context.params.quizId
+           quizId: params.quizId
        });
 
-       if (error instanceof APIError) {
-           return apiResponse.error(error);
-       }
-
-       return apiResponse.error(
-           new APIError(
-               "Quiz detayları alınırken beklenmeyen bir hata oluştu",
-               500,
-               "INTERNAL_SERVER_ERROR"
-           )
-       );
+       return NextResponse.json(apiResponse.error(error instanceof APIError ? error : new APIError("Beklenmedik bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")));
    }
 }
