@@ -11,7 +11,7 @@ interface JWTPayload {
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { quizId: string } }
+    context: { params: { quizId: string } }
 ) {
     try {
         logger.request(request);
@@ -33,10 +33,10 @@ export async function GET(
         }
 
         // Quiz ID validasyonu
-        const quizId = parseInt(params.quizId);
+        const quizId = parseInt(context.params.quizId);
         if (isNaN(quizId)) {
             logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
-                quizId: params.quizId,
+                quizId: context.params.quizId,
                 userId: decoded.id 
             });
             throw new ValidationError("Geçersiz Quiz ID");
@@ -124,7 +124,7 @@ export async function GET(
     } catch (error) {
         logger.error(error as Error, {
             path: request.url,
-            quizId: params.quizId
+            quizId: context.params.quizId
         });
 
         if (error instanceof APIError) {
