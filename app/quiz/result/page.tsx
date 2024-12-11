@@ -151,50 +151,62 @@ export default function QuizResultPage() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="max-w-3xl mx-auto">
-                <h1 className="text-3xl font-bold text-center mb-8">
-                    {result.category.name} Quiz Sonuçları
-                </h1>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <StatCard
-                        title="Toplam Soru"
-                        value={result.total_questions}
-                        className="bg-gray-50"
-                    />
-                    <StatCard
-                        title="Başarı Oranı"
-                        value={`%${result.score}`}
-                        className="bg-gray-50"
-                    />
-                    <StatCard
-                        title="Doğru Cevap"
-                        value={result.correct_answers}
-                        className="bg-green-50 text-green-700"
-                    />
-                    <StatCard
-                        title="Yanlış Cevap"
-                        value={result.incorrect_answers}
-                        className="bg-red-50 text-red-700"
-                    />
-                </div>
-
-                <div className="space-y-6">
-                    {result.user_interactions.map((interaction, index) => (
-                        <QuestionCard
-                            key={index}
-                            questionNumber={index + 1}
-                            interaction={interaction}
-                        />
-                    ))}
-                </div>
-
-                <div className="text-center mt-8">
-                    <Link href="/quiz/categories">
-                        <Button>Yeni Quiz Başlat</Button>
-                    </Link>
-                </div>
+          <div className="max-w-3xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold">
+                {result.category.name} Quiz Sonuçları
+              </h1>
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                className="text-gray-600"
+              >
+                Geri Dön
+              </Button>
             </div>
+      
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatCard
+                title="Toplam Soru"
+                value={result.total_questions}
+                className="bg-gray-50"
+              />
+              <StatCard
+                title="Başarı Oranı"
+                value={`%${result.score}`}
+                className="bg-gray-50"
+              />
+              <StatCard
+                title="Doğru Cevap"
+                value={result.correct_answers}
+                className="bg-green-50 text-green-700"
+              />
+              <StatCard
+                title="Yanlış Cevap"
+                value={result.incorrect_answers}
+                className="bg-red-50 text-red-700"
+              />
+            </div>
+      
+            <div className="space-y-6">
+              {result.user_interactions.map((interaction, index) => (
+                <QuestionCard
+                  key={index}
+                  questionNumber={index + 1}
+                  interaction={interaction}
+                />
+              ))}
+            </div>
+      
+            <div className="text-center mt-8 space-x-4">
+              <Button variant="outline" onClick={() => router.back()}>
+                Geri Dön
+              </Button>
+              <Link href="/quiz/categories">
+                <Button>Yeni Quiz Başlat</Button>
+              </Link>
+            </div>
+          </div>
         </div>
-    );
+      );
 }
