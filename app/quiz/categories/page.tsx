@@ -1,90 +1,118 @@
 "use client"
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Brain, ChevronRight } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface Category {
-    id: number;
-    name: string;
-    description: string;
+  id: number
+  name: string
+  description: string | null
 }
 
 export default function CategoriesPage() {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [error, setError] = useState<string>("");
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        async function fetchCategories() {
-            try {
-                const response = await fetch("/api/categories");
-                const result = await response.json();
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories")
+        const data = await response.json()
 
-                if (!response.ok) {
-                    throw new Error(result.error || "Kategoriler alınamadı.");
-                }
-
-                // API yanıtından data özelliğini al
-                setCategories(result.data || []);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "Bir hata oluştu");
-            } finally {
-                setIsLoading(false);
-            }
+        if (!response.ok) {
+          throw new Error(data.error || "Kategoriler yüklenemedi")
         }
 
-        fetchCategories();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <LoadingSpinner />
-            </div>
-        );
+        setCategories(data.data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Bir hata oluştu")
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const handleSelectCategory = (category: Category) => {
-        setSelectedCategory(category);
-    };
+    fetchCategories()
+  }, [])
 
+  if (isLoading) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <h1 className="text-5xl font-bold text-orange-600 mb-6">Yarışma Kategorileri</h1>
-            <p className="text-lg text-center text-gray-700 mb-8 max-w-2xl">
-                Farklı kategorilerde bilgi yarışmalarına katılmak için aşağıdaki kategorilerden birini seçin. 
-                Her kategori, farklı zorluk seviyelerinde sorular sunarak bilgi dağarcığınızı genişletmenize yardımcı olur.
-            </p>
-            {error && (
-                <div className="rounded-md bg-red-50 p-4 text-sm text-red-500 mb-4">
-                    {error}
-                </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-4xl">
-                {categories.map((category) => (
-                    <div 
-                        key={category.id} 
-                        className="border rounded-lg p-6 bg-white shadow-md hover:shadow-lg transition duration-200 cursor-pointer" 
-                        onClick={() => handleSelectCategory(category)}
-                    >
-                        <h3 className="text-2xl font-semibold text-gray-800 mb-2">{category.name}</h3>
-                        <p className="text-gray-600">{category.description}</p>
-                    </div>
-                ))}
-            </div>
-            {selectedCategory && (
-                <div className="text-center mt-8">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-4">Seçilen Kategori: {selectedCategory.name}</h2>
-                    <p className="text-gray-600 mb-4">Bu kategoride yarışmaya başlamak için aşağıdaki butona tıklayın.</p>
-                    <Link href={`/quiz/start/${selectedCategory.id}?name=${encodeURIComponent(selectedCategory.name)}`}>
-                        <button className="bg-orange-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-orange-500 transition duration-200 transform hover:scale-105">
-                            Başla
-                        </button>
-                    </Link>
-                </div>
-            )}
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Quiz Kategorileri</h1>
+          <p className="text-lg text-gray-600">Kendini test etmek istediğin kategoriyi seç ve yarışmaya başla!</p>
         </div>
-    );
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((category) => (
+            <motion.div
+              key={category.id}
+              whileHover={{ scale: 1.03 }}
+              className={`
+                relative overflow-hidden rounded-xl shadow-lg transition-all
+                ${selectedCategory?.id === category.id ? 'ring-2 ring-orange-500' : ''}
+              `}
+              onClick={() => setSelectedCategory(category)}
+            >
+              <div className="bg-white p-6 cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <Brain className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{category.name}</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {category.description || `${category.name} kategorisinde kendini test et!`}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {selectedCategory && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-12 text-center"
+          >
+            <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {selectedCategory.name} kategorisinde yarışmaya hazır mısın?
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Bu kategoride en iyi skorunu elde etmeye çalış!
+              </p>
+              <Link 
+                href={`/quiz/start/${selectedCategory.id}`}
+                className="inline-block bg-orange-600 text-white py-3 px-8 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+              >
+                Yarışmaya Başla
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  )
 }

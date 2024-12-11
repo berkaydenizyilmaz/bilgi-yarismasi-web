@@ -46,18 +46,20 @@ export default function HomePage() {
             {/* Hero Section */}
             <section className="relative py-20 px-4">
                 <div className="max-w-6xl mx-auto text-center">
+                    <div className="flex justify-center mb-6">
+                        <Brain className="h-16 w-16 text-orange-600" />
+                    </div>
                     <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                        Bilgini Test Et, 
-                        <span className="text-orange-600"> Kendini Geliştir</span>
+                        QuizVerse'e
+                        <span className="text-orange-600"> Hoş Geldiniz</span>
                     </h1>
                     <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                        Farklı kategorilerde binlerce soru ile bilgini test et, 
-                        arkadaşlarınla yarış ve yeni şeyler öğren!
+                        Bilgi evreninde sınırları zorlayın! QuizVerse ile öğrenmeyi eğlenceye dönüştürün.
                     </p>
                     <div className="flex justify-center gap-4">
                         <Link href="/quiz/categories">
                             <Button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-6 text-lg rounded-xl transition-transform hover:scale-105">
-                                Yarışmaya Başla
+                                Keşfetmeye Başla
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
                         </Link>
@@ -69,23 +71,23 @@ export default function HomePage() {
             <section className="py-16 px-4 bg-white">
                 <div className="max-w-6xl mx-auto">
                     <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                        Neden Bilgi Yarışmamıza Katılmalısınız?
+                        QuizVerse'de Sizi Neler Bekliyor?
                     </h2>
                     <div className="grid md:grid-cols-3 gap-8">
                         <FeatureCard
                             icon={<Brain className="h-12 w-12 text-orange-600" />}
-                            title="Bilgini Geliştir"
-                            description="Her gün yeni sorularla bilgi dağarcığını genişlet"
+                            title="Sınırsız Bilgi"
+                            description="Farklı kategorilerde binlerce soru ile bilgi dağarcığınızı genişletin"
                         />
                         <FeatureCard
                             icon={<Trophy className="h-12 w-12 text-orange-600" />}
-                            title="Ödüller Kazan"
-                            description="Yüksek puanlar elde et ve sürpriz ödüller kazanma şansı yakala"
+                            title="Rekabet"
+                            description="Lider tablosunda yerinizi alın ve diğer QuizVerse üyeleriyle yarışın"
                         />
                         <FeatureCard
                             icon={<Users className="h-12 w-12 text-orange-600" />}
-                            title="Arkadaşlarınla Yarış"
-                            description="Lider tablosunda yerini al ve arkadaşlarınla rekabet et"
+                            title="Topluluk"
+                            description="QuizVerse topluluğuna katılın ve bilgi paylaşımının tadını çıkarın"
                         />
                     </div>
                 </div>
@@ -116,10 +118,10 @@ export default function HomePage() {
                     {!user ? (
                         <>
                             <h2 className="text-4xl font-bold mb-6">
-                                Hazır mısın?
+                                QuizVerse Topluluğuna Katılın!
                             </h2>
                             <p className="text-xl mb-8 opacity-90">
-                                Hemen üye ol ve bilgi yarışmasına başla!
+                                Hemen üye olun ve bilgi evreninin bir parçası olun.
                             </p>
                             <div className="flex justify-center gap-4">
                                 <Link href="/auth/register">
@@ -137,10 +139,10 @@ export default function HomePage() {
                     ) : (
                         <>
                             <h2 className="text-4xl font-bold mb-6">
-                                Hoş geldin, {user.username}!
+                                Yeni Bir Maceraya Hazır mısınız?
                             </h2>
                             <p className="text-xl mb-8 opacity-90">
-                                Yeni bir quiz'e başlamaya hazır mısın?
+                                QuizVerse'de keşfedilecek daha çok şey var!
                             </p>
                             <div className="flex justify-center gap-4">
                                 <Link href="/quiz/categories">

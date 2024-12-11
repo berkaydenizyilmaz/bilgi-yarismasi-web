@@ -4,56 +4,56 @@ import React from "react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "./ui/button"
+import { Brain } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 function Header() {
+  const pathname = usePathname()
   const { user, logout } = useAuth()
 
+  const navigation = [
+    { name: 'Ana Sayfa', href: '/' },
+    { name: 'Kategoriler', href: '/quiz/categories' },
+    { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
+    { name: 'Profil', href: '/dashboard/profile' },
+  ]
+
   return (
-    <header className="bg-orange-600 text-white p-4 flex justify-between items-center shadow-lg">
-      <div className="flex items-center">
-        <Link href="/">
-          <div className="text-2xl font-bold cursor-pointer">Bilgi Yarışması</div>
-        </Link>
+    <header className="bg-orange-600 text-white">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center space-x-2">
+            <Brain className="h-8 w-8" />
+            <span className="text-2xl font-bold">QuizVerse</span>
+          </Link>
+
+          <nav className="hidden md:flex items-center space-x-6">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  pathname === item.href
+                    ? "bg-orange-700 text-white"
+                    : "text-white hover:bg-orange-700"
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
+            {user && (
+              <button
+                onClick={logout}
+                className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Çıkış Yap
+              </button>
+            )}
+          </nav>
+        </div>
       </div>
-
-      <nav className="flex items-center space-x-6">
-        <Link href="/" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">
-          Ana Sayfa
-        </Link>
-
-        {user ? (
-          <>
-            <Link href="/dashboard/leaderboard" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">
-              Lider Tablosu
-            </Link>
-            <Link href="/quiz/categories" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">
-              Yarışmaya Başla
-            </Link>
-            <Link href="/dashboard/profile" className="transition duration-200 text-white py-2 px-4 rounded hover:bg-white hover:text-orange-600">
-              Profil
-            </Link>
-            <button
-              onClick={logout}
-              className="bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 rounded transition duration-200"
-            >
-              Çıkış Yap
-            </button>
-          </>
-        ) : (
-          <div className="flex items-center space-x-4">
-            <Link href="/auth/login">
-              <Button variant="ghost" className="text-white hover:bg-white hover:text-orange-600">
-                Giriş Yap
-              </Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button className="bg-white text-orange-600 hover:bg-gray-100">
-                Üye Ol
-              </Button>
-            </Link>
-          </div>
-        )}
-      </nav>
     </header>
   )
 }
