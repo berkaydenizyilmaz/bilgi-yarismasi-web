@@ -6,14 +6,17 @@ import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
 
 interface JWTPayload {
-  id: number;
+    id: number;
 }
 
+// Fonksiyonun ikinci parametresinin tipi
+type RouteHandlerParams = {
+  params: {
+    quizId: string
+  }
+};
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { quizId: number } }
-) {
+export async function GET(req: NextRequest,  { params } : RouteHandlerParams) {
     try {
         logger.request(req);
 
@@ -34,7 +37,7 @@ export async function GET(
         }
 
         // Quiz ID validasyonu
-        const quizId = params.quizId;
+        const quizId = parseInt(params.quizId);
         if (isNaN(quizId)) {
             logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
                 quizId: params.quizId,
