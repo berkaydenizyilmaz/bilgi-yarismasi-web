@@ -1,91 +1,84 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { useRouter } from "next/navigation"
+import { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface User {
   id: number
-  username: string
   email: string
+  username: string
 }
 
 interface AuthContextType {
   user: User | null
-  loading: boolean
+  isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  login: async () => {},
-  logout: async () => {},
-})
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
+  const refreshUser = async () => {
     try {
-      const response = await fetch("/api/auth")
-      if (response.ok) {
-        const userData = await response.json()
-        setUser(userData.data.user)
+      const response = await fetch('/api/auth')
+      const data = await response.json()
+
+      if (response.ok && data.data.user) {
+        setUser(data.data.user)
+      } else {
+        setUser(null)
       }
     } catch (error) {
-      console.error("Auth check error:", error)
+      setUser(null)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
+  useEffect(() => {
+    refreshUser()
+  }, [])
+
   const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "login", email, password }),
-      })
+    const response = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
 
-      const data = await response.json()
+    const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error)
-      }
-
-      setUser(data.data.user)
-      router.push("/")
-    } catch (error) {
-      throw error
+    if (!response.ok) {
+      throw new Error(data.error || 'Giriş başarısız')
     }
+
+    setUser(data.data.user)
+    router.push('/')
   }
 
   const logout = async () => {
-    try {
-      await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "logout" }),
-      })
-      setUser(null)
-      router.push("/auth/login")
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
+    await fetch('/api/auth/logout', { method: 'POST' })
+    setUser(null)
+    router.push('/')
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}

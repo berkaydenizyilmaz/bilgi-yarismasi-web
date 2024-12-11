@@ -7,16 +7,19 @@ import { Button } from "./ui/button"
 import { Brain } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { LoadingSpinner } from "./ui/loading-spinner"
 
 function Header() {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout, isLoading } = useAuth()
 
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
-    { name: 'Kategoriler', href: '/quiz/categories' },
-    { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
-    { name: 'Profil', href: '/dashboard/profile' },
+    ...(user ? [
+      { name: 'Kategoriler', href: '/quiz/categories' },
+      { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
+      { name: 'Profil', href: '/dashboard/profile' },
+    ] : [])
   ]
 
   return (
@@ -28,7 +31,7 @@ function Header() {
             <span className="text-3xl font-bold">QuizVerse</span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -43,13 +46,29 @@ function Header() {
                 {item.name}
               </Link>
             ))}
-            {user && (
-              <button
+            
+            {isLoading ? (
+              <LoadingSpinner className="w-6 h-6 text-white" />
+            ) : user ? (
+              <Button
                 onClick={logout}
-                className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-base font-medium transition-colors"
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 Çıkış Yap
-              </button>
+              </Button>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link href="/auth/login">
+                  <Button variant="ghost" className="text-white hover:bg-orange-700">
+                    Giriş Yap
+                  </Button>
+                </Link>
+                <Link href="/auth/register">
+                  <Button className="bg-black hover:bg-gray-800 text-white">
+                    Kayıt Ol
+                  </Button>
+                </Link>
+              </div>
             )}
           </nav>
         </div>
