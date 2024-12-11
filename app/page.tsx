@@ -3,6 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Brain, Trophy, Users } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Category {
     id: number;
@@ -14,6 +18,7 @@ export default function HomePage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState<string>("");
     const [isLoading, setIsLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
         async function fetchCategories() {
@@ -37,86 +42,159 @@ export default function HomePage() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <h1 className="text-5xl font-bold text-orange-600 mb-6">
-                Bilgi Yarışması
-            </h1>
-            <p className="text-lg text-center mb-8 max-w-2xl">
-                Bilgi Yarışması, genel kültürünüzü test etmek için harika bir fırsat!
-                Farklı kategorilerde sorularla dolu bu yarışmada, en yüksek puanı almak
-                için mücadele edin.
-            </p>
-            <Link href="/quiz/categories">
-                <button className="bg-orange-600 text-white font-bold py-3 px-6 rounded shadow-lg hover:bg-orange-500 transition duration-200 mb-10">
-                    Yarışmaya Başla
-                </button>
-            </Link>
+        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+            {/* Hero Section */}
+            <section className="relative py-20 px-4">
+                <div className="max-w-6xl mx-auto text-center">
+                    <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+                        Bilgini Test Et, 
+                        <span className="text-orange-600"> Kendini Geliştir</span>
+                    </h1>
+                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Farklı kategorilerde binlerce soru ile bilgini test et, 
+                        arkadaşlarınla yarış ve yeni şeyler öğren!
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <Link href="/quiz/categories">
+                            <Button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-6 text-lg rounded-xl transition-transform hover:scale-105">
+                                Yarışmaya Başla
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </section>
 
-            {/* Yarışmanın Özellikleri */}
-            <div className="bg-white shadow-md rounded-lg p-6 mb-10 max-w-2xl">
-                <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-                    Neden Katılmalısınız?
-                </h2>
-                <p className="text-gray-600 mb-4">
-                    Bilgi Yarışması, eğlenceli ve öğretici bir deneyim sunar.
-                    Arkadaşlarınızla yarışarak hem eğlenir hem de yeni bilgiler
-                    öğrenirsiniz.
-                </p>
-                <p className="text-gray-600 mb-4">
-                    En yüksek puanı alan yarışmacılarımız sürpriz ödüller kazanma şansına
-                    sahip!
-                </p>
+            {/* Özellikler Section */}
+            <section className="py-16 px-4 bg-white">
+                <div className="max-w-6xl mx-auto">
+                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+                        Neden Bilgi Yarışmamıza Katılmalısınız?
+                    </h2>
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <FeatureCard
+                            icon={<Brain className="h-12 w-12 text-orange-600" />}
+                            title="Bilgini Geliştir"
+                            description="Her gün yeni sorularla bilgi dağarcığını genişlet"
+                        />
+                        <FeatureCard
+                            icon={<Trophy className="h-12 w-12 text-orange-600" />}
+                            title="Ödüller Kazan"
+                            description="Yüksek puanlar elde et ve sürpriz ödüller kazanma şansı yakala"
+                        />
+                        <FeatureCard
+                            icon={<Users className="h-12 w-12 text-orange-600" />}
+                            title="Arkadaşlarınla Yarış"
+                            description="Lider tablosunda yerini al ve arkadaşlarınla rekabet et"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* Kategoriler Section */}
+            <section className="py-16 px-4 bg-orange-50">
+                <div className="max-w-6xl mx-auto">
+                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+                        Quiz Kategorileri
+                    </h2>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {categories.map((category) => (
+                            <CategoryCard
+                                key={category.id}
+                                icon={<BookOpen className="h-8 w-8 text-orange-600" />}
+                                title={category.name}
+                                description={category.description || "Bu kategori hakkında daha fazla bilgi yakında eklenecek"}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-20 px-4 bg-orange-600 text-white">
+                <div className="max-w-4xl mx-auto text-center">
+                    {!user ? (
+                        <>
+                            <h2 className="text-4xl font-bold mb-6">
+                                Hazır mısın?
+                            </h2>
+                            <p className="text-xl mb-8 opacity-90">
+                                Hemen üye ol ve bilgi yarışmasına başla!
+                            </p>
+                            <div className="flex justify-center gap-4">
+                                <Link href="/auth/register">
+                                    <Button className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl">
+                                        Üye Ol
+                                    </Button>
+                                </Link>
+                                <Link href="/auth/login">
+                                    <Button variant="outline" className="bg-transparent border-white text-white hover:bg-orange-700 px-8 py-6 text-lg rounded-xl">
+                                        Giriş Yap
+                                    </Button>
+                                </Link>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-4xl font-bold mb-6">
+                                Hoş geldin, {user.username}!
+                            </h2>
+                            <p className="text-xl mb-8 opacity-90">
+                                Yeni bir quiz'e başlamaya hazır mısın?
+                            </p>
+                            <div className="flex justify-center gap-4">
+                                <Link href="/quiz/categories">
+                                    <Button className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl">
+                                        Quiz'e Başla
+                                    </Button>
+                                </Link>
+                                <Link href="/dashboard/profile">
+                                    <Button variant="outline" className="bg-transparent border-white text-white hover:bg-orange-700 px-8 py-6 text-lg rounded-xl">
+                                        Profilim
+                                    </Button>
+                                </Link>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </section>
+        </div>
+    );
+}
+
+function FeatureCard({ icon, title, description }: {
+    icon: React.ReactNode
+    title: string
+    description: string
+}) {
+    return (
+        <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex flex-col items-center text-center">
+                <div className="mb-4">
+                    {icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
+                <p className="text-gray-600">{description}</p>
             </div>
+        </div>
+    );
+}
 
-            {/* Kategoriler Bölümü */}
-            <div className="bg-white shadow-md rounded-lg p-6 mb-10 max-w-2xl">
-                <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-                    Kategoriler
-                </h2>
-                <p className="text-gray-600 mb-4">
-                    Yarışmamızda çeşitli kategorilerde sorular bulunmaktadır. İşte
-                    bazıları:
-                </p>
-                <ul className="list-disc list-inside text-gray-600 mb-4">
-                    {categories.map((category) => (
-                        <li key={category.id}>{category.name}</li>
-                    ))}
-                </ul>
-                <p className="text-gray-600 mb-4">
-                    Her kategori, farklı zorluk seviyelerinde sorular sunarak bilgi
-                    dağarcığınızı genişletmenize yardımcı olur.
-                </p>
-            </div>
-
-            {/* Lider Tablosu Bölümü */}
-            <div className="bg-white shadow-md rounded-lg p-6 mb-10 max-w-2xl">
-                <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-                    Lider Tablosu
-                </h2>
-                <p className="text-gray-600 mb-4">
-                    Yarışmamızda en yüksek puanı alan yarışmacılar, lider tablosunda yer
-                    alır. Kendinizi diğer yarışmacılarla karşılaştırarak ne kadar
-                    ilerlediğinizi görebilirsiniz.
-                </p>
-                <Link href="/leaderboard">
-                    <button className="bg-orange-600 text-white font-bold py-2 px-4 rounded shadow-lg hover:bg-orange-500 transition duration-200">
-                        Lider Tablosuna Git
-                    </button>
-                </Link>
-            </div>
-
-            {/* İletişim Yönlendirmesi */}
-            <div className="bg-white shadow-md rounded-lg p-6 mb-10 max-w-2xl text-center">
-                <h2 className="text-3xl font-semibold text-gray-800 mb-4">İletişim</h2>
-                <p className="text-gray-600 mb-4">
-                    Herhangi bir sorunuz veya geri bildiriminiz mi var? Bizimle iletişime
-                    geçmek için aşağıdaki butona tıklayın.
-                </p>
-                <Link href="/dashboard/contact">
-                    <button className="bg-orange-600 text-white font-bold py-2 px-4 rounded shadow-lg hover:bg-orange-500 transition duration-200">
-                        İletişim Sayfasına Git
-                    </button>
-                </Link>
+function CategoryCard({ icon, title, description }: {
+    icon: React.ReactNode
+    title: string
+    description: string
+}) {
+    return (
+        <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex items-start space-x-4">
+                <div className="bg-orange-100 p-3 rounded-lg">
+                    {icon}
+                </div>
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+                    <p className="text-gray-600 text-sm">{description}</p>
+                </div>
             </div>
         </div>
     );
