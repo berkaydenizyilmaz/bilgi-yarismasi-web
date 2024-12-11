@@ -9,16 +9,9 @@ interface JWTPayload {
   id: number;
 }
 
-// Route handler için context tipi tanımı
-interface RouteContext {
-  params: {
-    quizId: string;
-  };
-}
-
 export async function GET(
     request: NextRequest,
-    context: RouteContext
+    { params }: { params: { quizId: string } }
 ) {
     try {
         logger.request(request);
@@ -40,10 +33,10 @@ export async function GET(
         }
 
         // Quiz ID validasyonu
-        const quizId = parseInt(context.params.quizId);
+        const quizId = parseInt(params.quizId);
         if (isNaN(quizId)) {
             logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
-                quizId: context.params.quizId,
+                quizId: params.quizId,
                 userId: decoded.id 
             });
             throw new ValidationError("Geçersiz Quiz ID");
@@ -131,7 +124,7 @@ export async function GET(
     } catch (error) {
         logger.error(error as Error, {
             path: request.url,
-            quizId: context.params.quizId
+            quizId: params.quizId
         });
 
         if (error instanceof APIError) {
