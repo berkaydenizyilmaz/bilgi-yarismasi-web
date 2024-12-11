@@ -13,9 +13,7 @@ export function useLeaderboard() {
   const { data, error, isLoading } = useSWR<{
     success: boolean;
     data: LeaderboardEntry[];
-  }>('/api/leaderboard', {
-    refreshInterval: 60000, // Her 60 saniyede bir güncelle
-  });
+  }>('/api/leaderboard');
 
   // Quiz sonrası liderlik tablosunu yenileme fonksiyonu
   const refreshLeaderboard = () => {
@@ -23,7 +21,7 @@ export function useLeaderboard() {
   };
 
   return {
-    leaderboard: data?.data ?? [],
+    leaderboard: Array.isArray(data?.data) ? data.data : [],
     isLoading,
     error: error?.message,
     refreshLeaderboard,

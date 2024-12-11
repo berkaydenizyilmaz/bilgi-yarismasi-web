@@ -2,9 +2,12 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
+    logger.request(request);
+
     const categories = await prisma.category.findMany({
       select: {
         id: true,
@@ -19,25 +22,35 @@ export async function GET(request: NextRequest) {
         name: 'asc'
       }
     }).catch((error) => {
-      console.error("Categories fetch error:", error);
-      throw new APIError("Kategoriler alınamadı", 500, "DATABASE_ERROR");
+      logger.error(error as Error, {
+        message: 'Kategoriler getirilirken veritabanı hatası oluştu'
+      });
+      throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
 
-    if (!categories?.length) {
-      throw new APIError("Henüz kategori bulunmuyor", 404, "NOT_FOUND");
-    }
+    // Soru sayısı 0 olan kategorileri filtrele
+    const availableCategories = categories.filter(cat => cat._count.questions > 0);
 
-    // Kategori ve soru sayılarını formatla
-    const formattedCategories = categories.map(category => ({
-      id: category.id,
-      name: category.name,
-      questionCount: category._count.questions
+    // Response formatını düzenle
+    const formattedCategories = availableCategories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      questionCount: cat._count.questions
     }));
 
-    return apiResponse.success(formattedCategories);
+    logger.info('Kategoriler başarıyla getirildi', {
+      totalCategories: categories.length,
+      availableCategories: availableCategories.length
+    });
+
+    return apiResponse.success({
+      data: formattedCategories
+    });
 
   } catch (error) {
-    console.error("Categories error:", error);
+    logger.error(error as Error, {
+      path: request.url
+    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);
@@ -45,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     return apiResponse.error(
       new APIError(
-        "Kategoriler alınırken beklenmeyen bir hata oluştu",
+        "Kategoriler getirilirken bir hata oluştu",
         500,
         "INTERNAL_SERVER_ERROR"
       )

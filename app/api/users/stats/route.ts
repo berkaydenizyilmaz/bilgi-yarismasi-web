@@ -4,6 +4,7 @@ import { apiResponse } from "@/lib/api-response";
 import { z } from "zod";
 import jwt from 'jsonwebtoken';
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 const statsSchema = z.object({
   totalQuestions: z.number(),
@@ -16,10 +17,15 @@ interface JWTPayload {
 }
 
 export async function PUT(request: NextRequest) {
+  let body: z.infer<typeof statsSchema> | undefined;
+  let validatedBody: z.infer<typeof statsSchema>;
+  
   try {
-    const token = request.cookies.get("token")?.value;
+    logger.request(request);
 
+    const token = request.cookies.get("token")?.value;
     if (!token) {
+      logger.warn('İstatistik güncelleme başarısız: Token bulunamadı');
       throw new AuthenticationError();
     }
 
@@ -28,22 +34,28 @@ export async function PUT(request: NextRequest) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     } catch (error) {
+      logger.warn('İstatistik güncelleme başarısız: Geçersiz token', { token });
       throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
     }
 
     // Request body'yi parse et
-    let body;
     try {
       body = await request.json();
     } catch (e) {
+      logger.warn('İstatistik güncelleme başarısız: Geçersiz istek formatı');
       throw new ValidationError("Geçersiz istek formatı");
     }
 
     // Zod validasyonu
     try {
       statsSchema.parse(body);
+      validatedBody = body as z.infer<typeof statsSchema>;
     } catch (error) {
       if (error instanceof z.ZodError) {
+        logger.warn('İstatistik güncelleme başarısız: Validasyon hatası', {
+          userId: decoded.id,
+          errors: error.errors
+        });
         throw new ValidationError(error.errors[0].message);
       }
       throw error;
@@ -54,9 +66,9 @@ export async function PUT(request: NextRequest) {
       where: { id: decoded.id },
       data: {
         total_play_count: { increment: 1 },
-        total_questions_attempted: { increment: body.totalQuestions },
-        total_correct_answers: { increment: body.correctAnswers },
-        total_score: { increment: body.score }
+        total_questions_attempted: { increment: validatedBody.totalQuestions },
+        total_correct_answers: { increment: validatedBody.correctAnswers },
+        total_score: { increment: validatedBody.score }
       },
       select: {
         id: true,
@@ -67,14 +79,37 @@ export async function PUT(request: NextRequest) {
         total_score: true
       }
     }).catch((error) => {
-      console.error("Stats update error:", error);
+      logger.error(error as Error, {
+        userId: decoded.id,
+        stats: validatedBody,
+        message: 'İstatistikler güncellenirken veritabanı hatası'
+      });
       throw new APIError("İstatistikler güncellenirken hata oluştu", 500, "DATABASE_ERROR");
+    });
+
+    logger.info('Kullanıcı istatistikleri güncellendi', {
+      userId: user.id,
+      username: user.username,
+      newStats: {
+        totalPlayCount: user.total_play_count,
+        totalQuestionsAttempted: user.total_questions_attempted,
+        totalCorrectAnswers: user.total_correct_answers,
+        totalScore: user.total_score
+      },
+      update: {
+        questions: validatedBody.totalQuestions,
+        correctAnswers: validatedBody.correctAnswers,
+        score: validatedBody.score
+      }
     });
 
     return apiResponse.success(user, "Kullanıcı istatistikleri güncellendi");
 
   } catch (error) {
-    console.error("Stats update error:", error);
+    logger.error(error as Error, {
+      path: request.url,
+      stats: body  // Ham veriyi logla
+    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);

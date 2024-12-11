@@ -2,53 +2,16 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-    // Önce sıralamayı güncelle
-    const users = await prisma.user.findMany({
-      where: {
-        total_play_count: {
-          gt: 0
-        }
-      },
-      orderBy: {
-        total_score: 'desc'
-      },
-      select: {
-        id: true
-      }
-    }).catch((error) => {
-      console.error("Users fetch error:", error);
-      throw new APIError("Kullanıcı listesi alınamadı", 500, "DATABASE_ERROR");
-    });
+    logger.request(request);
 
-    // Sıralamaları güncelle - transaction kullan
-    await prisma.$transaction(async (tx) => {
-      for (let i = 0; i < users.length; i++) {
-        await tx.leaderboard.upsert({
-          where: { 
-            user_id: users[i].id 
-          },
-          create: {
-            user_id: users[i].id,
-            rank: i + 1
-          },
-          update: {
-            rank: i + 1
-          }
-        });
-      }
-    }).catch((error) => {
-      console.error("Leaderboard update error:", error);
-      throw new APIError("Sıralama güncellenemedi", 500, "DATABASE_ERROR");
-    });
-
-    // Güncellenmiş lider tablosunu getir
     const leaderboard = await prisma.user.findMany({
       where: {
         total_play_count: {
-          gt: 0
+          gt: 0  // Sadece en az 1 quiz çözmüş kullanıcıları getir
         }
       },
       select: {
@@ -62,28 +25,38 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        total_score: 'desc'
+        leaderboard: {
+          rank: 'asc'
+        }
       },
-      take: 100
+      take: 100 // İlk 100 kullanıcı
     }).catch((error) => {
-      console.error("Leaderboard fetch error:", error);
-      throw new APIError("Lider tablosu alınamadı", 500, "DATABASE_ERROR");
+      logger.error(error as Error, {
+        message: 'Liderlik tablosu getirilirken veritabanı hatası oluştu'
+      });
+      throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
 
-    const formattedLeaderboard = leaderboard.map((user) => ({
-      username: user.username,
-      total_score: user.total_score,
-      quiz_count: user.total_play_count,
-      average_score: user.total_play_count > 0 
-        ? Math.round((user.total_score / user.total_play_count)) 
-        : 0,
-      rank: user.leaderboard?.rank ?? 0
-    }));
+    // Liderlik tablosu boş kontrolü
+    if (!Array.isArray(leaderboard) || leaderboard.length === 0) {
+      logger.warn('Liderlik tablosu boş');
+      return apiResponse.success({ data: [] });
+    }
 
-    return apiResponse.success(formattedLeaderboard);
+    logger.info('Liderlik tablosu başarıyla getirildi', {
+      totalUsers: leaderboard.length,
+      topScore: leaderboard[0]?.total_score,
+      lastRank: leaderboard[leaderboard.length - 1]?.leaderboard?.rank
+    });
+
+    return apiResponse.success({
+      data: leaderboard
+    });
 
   } catch (error) {
-    console.error("Leaderboard error:", error);
+    logger.error(error as Error, {
+      path: request.url
+    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);
@@ -91,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     return apiResponse.error(
       new APIError(
-        "Lider tablosu alınırken beklenmeyen bir hata oluştu",
+        "Liderlik tablosu getirilirken bir hata oluştu",
         500,
         "INTERNAL_SERVER_ERROR"
       )

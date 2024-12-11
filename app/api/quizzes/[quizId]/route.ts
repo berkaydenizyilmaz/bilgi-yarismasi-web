@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
 import jwt from 'jsonwebtoken';
+import { logger } from "@/lib/logger";
 
 interface JWTPayload {
   id: number;
@@ -13,9 +14,12 @@ export async function GET(
     { params }: { params: { quizId: string } }
 ) {
     try {
+        logger.request(request);
+
         // Token kontrolü
         const token = request.cookies.get("token")?.value;
         if (!token) {
+            logger.warn('Quiz detayı görüntüleme başarısız: Token bulunamadı');
             throw new AuthenticationError();
         }
 
@@ -24,12 +28,17 @@ export async function GET(
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
         } catch (error) {
+            logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz token', { token });
             throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
         }
 
         // Quiz ID validasyonu
         const quizId = parseInt(params.quizId);
         if (isNaN(quizId)) {
+            logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
+                quizId: params.quizId,
+                userId: decoded.id 
+            });
             throw new ValidationError("Geçersiz Quiz ID");
         }
 
@@ -37,7 +46,7 @@ export async function GET(
         const quiz = await prisma.quiz.findUnique({
             where: { 
                 id: quizId,
-                user_id: decoded.id // Sadece kendi quizlerini görebilir
+                user_id: decoded.id
             },
             include: {
                 category: {
@@ -61,11 +70,19 @@ export async function GET(
                 }
             },
         }).catch((error) => {
-            console.error("Quiz fetch error:", error);
+            logger.error(error as Error, {
+                quizId,
+                userId: decoded.id,
+                message: 'Quiz bilgileri alınamadı'
+            });
             throw new APIError("Quiz bilgileri alınamadı", 500, "DATABASE_ERROR");
         });
 
         if (!quiz) {
+            logger.warn('Quiz bulunamadı', {
+                quizId,
+                userId: decoded.id
+            });
             throw new APIError("Quiz bulunamadı", 404, "NOT_FOUND");
         }
 
@@ -92,10 +109,21 @@ export async function GET(
             }))
         };
 
+        logger.info('Quiz detayları başarıyla getirildi', {
+            quizId,
+            userId: decoded.id,
+            categoryName: quiz.category.name,
+            score: quiz.score,
+            totalQuestions: quiz.total_questions
+        });
+
         return apiResponse.success(formattedQuiz);
 
     } catch (error) {
-        console.error("Quiz detail error:", error);
+        logger.error(error as Error, {
+            path: request.url,
+            quizId: params.quizId
+        });
 
         if (error instanceof APIError) {
             return apiResponse.error(error);
