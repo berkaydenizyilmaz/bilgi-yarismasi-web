@@ -9,15 +9,8 @@ interface JWTPayload {
     id: number;
 }
 
-// Fonksiyonun ikinci parametresinin tipi
-type RouteHandlerParams = {
-  params: {
-    quizId: string
-  }
-};
-
-export async function GET(req: NextRequest,  { params } : RouteHandlerParams) {
-    try {
+export async function GET(req: NextRequest, { params }: any) {
+  try {
         logger.request(req);
 
         // Token kontrolü
