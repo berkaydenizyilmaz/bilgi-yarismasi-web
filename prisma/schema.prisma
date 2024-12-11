@@ -27,6 +27,7 @@ model User {
   quizzes                 Quiz[]
   question_interactions   UserQuestionInteraction[]
   leaderboard            Leaderboard?
+  last_login             DateTime?
 }
 
 model Category {

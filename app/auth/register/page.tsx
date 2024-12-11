@@ -15,7 +15,8 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import Link from "next/link"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 const formSchema = z.object({
   username: z.string().min(3, {
@@ -34,8 +35,8 @@ const formSchema = z.object({
 })
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [error, setError] = useState<string>("")
+  const { register, isLoading } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,109 +50,103 @@ export default function RegisterPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "register",
-          username: values.username,
-          email: values.email,
-          password: values.password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Bir hata oluştu")
-      }
-
-      // Başarılı kayıt sonrası login sayfasına yönlendir
-      router.push("/auth/login?message=Kayıt başarılı! Giriş yapabilirsiniz.")
+      setError("")
+      await register(values.username, values.email, values.password)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Bir hata oluştu")
+      setError(error instanceof Error ? error.message : "Kayıt olurken bir hata oluştu")
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-lg">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-orange-600">Kayıt Ol</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Zaten hesabınız var mı?{" "}
-            <Link href="/auth/login" className="text-blue-600 hover:underline">
-              Giriş Yap
-            </Link>
-          </p>
-        </div>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4 text-sm text-red-500">
-            {error}
-          </div>
-        )}
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kullanıcı Adı</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ornek" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="ornek@mail.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Şifre</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Şifre (Tekrar)</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="bg-orange-600 hover:bg-orange-500">Kayıt Ol</Button>
-          </form>
-        </Form>
+    <div className="container mx-auto max-w-md p-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold">Kayıt Ol</h1>
+        <p className="text-gray-600 mt-2">
+          Zaten hesabınız var mı?{" "}
+          <Link href="/auth/login" className="text-orange-600 hover:underline">
+            Giriş Yap
+          </Link>
+        </p>
       </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Kullanıcı Adı</FormLabel>
+                <FormControl>
+                  <Input placeholder="kullaniciadi" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="ornek@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Şifre</FormLabel>
+                <FormControl>
+                  <Input type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Şifre Tekrar</FormLabel>
+                <FormControl>
+                  <Input type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <LoadingSpinner className="w-5 h-5 mr-2" />
+                Kayıt Yapılıyor...
+              </div>
+            ) : (
+              "Kayıt Ol"
+            )}
+          </Button>
+        </form>
+      </Form>
     </div>
   )
 }
