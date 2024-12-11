@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
 
 interface Question {
     question_text: string;
@@ -101,6 +102,7 @@ export default function QuizResultPage() {
     const [result, setResult] = useState<QuizResult | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { refreshLeaderboard } = useLeaderboard();
 
     useEffect(() => {
         const fetchResult = async () => {
@@ -117,6 +119,7 @@ export default function QuizResultPage() {
                 }
 
                 setResult(data.data);
+                await refreshLeaderboard();
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Sonuçlar alınamadı");
                 setTimeout(() => {
@@ -128,7 +131,7 @@ export default function QuizResultPage() {
         };
 
         fetchResult();
-    }, [quizId, router]);
+    }, [quizId, router, refreshLeaderboard]);
 
     if (isLoading) {
         return (
