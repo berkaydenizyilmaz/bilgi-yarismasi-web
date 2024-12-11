@@ -99,40 +99,51 @@ export const useQuiz = (categoryId: string) => {
     finalIncorrectCount: number
   ) => {
     try {
-        const authResponse = await fetch('/api/auth');
-        const authData = await authResponse.json();
-        
-        if (!authResponse.ok || !authData.data.user) {
-            throw new Error('Kullanıcı bilgisi alınamadı');
-        }
-
-        const response = await fetch("/api/quizzes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                userId: authData.data.user.id,
-                categoryId: Number(categoryId),
-                totalQuestions: questions.length,
-                correctAnswers: finalCorrectCount,
-                incorrectAnswers: finalIncorrectCount,
-                score: calculateScore(finalCorrectCount, questions.length),
-                questions: questionsList.map(q => ({
-                    id: q.id,
-                    isCorrect: q.isCorrect,
-                    userAnswer: q.userAnswer
-                }))
-            }),
-        });
-
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.error);
-        }
-
-        router.push(`/quiz/result?quizId=${result.data.id}`);
+      const authResponse = await fetch('/api/auth');
+      const authData = await authResponse.json();
+      
+      if (!authResponse.ok || !authData.data.user) {
+        throw new Error('Kullanıcı bilgisi alınamadı');
+      }
+  
+      const response = await fetch("/api/quizzes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: authData.data.user.id,
+          categoryId: Number(categoryId),
+          totalQuestions: questions.length,
+          correctAnswers: finalCorrectCount,
+          incorrectAnswers: finalIncorrectCount,
+          score: calculateScore(finalCorrectCount, questions.length),
+          questions: questionsList.map(q => ({
+            id: q.id,
+            isCorrect: q.isCorrect,
+            userAnswer: q.userAnswer
+          }))
+        }),
+      });
+  
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error);
+      }
+  
+      // Kullanıcı istatistiklerini güncelle
+      await fetch("/api/users/stats", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          totalQuestions: questions.length,
+          correctAnswers: finalCorrectCount,
+          score: calculateScore(finalCorrectCount, questions.length)
+        }),
+      });
+  
+      router.push(`/quiz/result?quizId=${result.data.id}`);
     } catch (error) {
-        setError('Quiz sonuçları kaydedilemedi');
+      setError('Quiz sonuçları kaydedilemedi');
     }
   };
 
