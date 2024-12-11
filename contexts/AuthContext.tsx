@@ -1,7 +1,8 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 
 interface User {
   id: number
@@ -24,33 +25,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-
-  const refreshUser = async () => {
+  
+  const { data, error, isLoading, mutate } = useSWR('/api/auth', async (url) => {
     try {
-      const response = await fetch('/api/auth')
+      const response = await fetch(url)
       const data = await response.json()
-
-      if (response.ok && data.data.user) {
-        setUser(data.data.user)
-      } else {
-        setUser(null)
+      
+      if (!response.ok) {
+        return { user: null }
       }
+      
+      return { user: data.data.user }
     } catch (error) {
-      setUser(null)
-    } finally {
-      setIsLoading(false)
+      return { user: null }
     }
-  }
-
-  useEffect(() => {
-    refreshUser()
-  }, [])
+  })
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true)
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -58,21 +50,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
+      const responseData = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Giriş başarısız')
+        throw new Error(responseData.error?.message || 'Giriş başarısız')
       }
 
-      setUser(data.data.user)
+      await mutate() // Auth durumunu güncelle
       router.push('/')
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      throw error
     }
   }
 
   const register = async (username: string, email: string, password: string) => {
-    setIsLoading(true)
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -80,38 +71,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ username, email, password }),
       })
 
-      const data = await response.json()
+      const responseData = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Kayıt başarısız')
+        throw new Error(responseData.error?.message || 'Kayıt başarısız')
       }
 
-      setUser(data.data.user)
+      await mutate() // Auth durumunu güncelle
       router.push('/')
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      throw error
     }
   }
 
-  const logout = async () => {
-    setIsLoading(true)
+  const logout = useCallback(async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      setUser(null)
+      const response = await fetch('/api/auth/logout', { method: 'POST' })
+      
+      if (!response.ok) {
+        throw new Error('Çıkış yapılırken bir hata oluştu')
+      }
+
+      await mutate({ user: null }, false) // Cache'i temizle
       router.push('/')
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      console.error('Logout error:', error)
     }
-  }
+  }, [router, mutate])
+
+  const refreshUser = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   return (
     <AuthContext.Provider value={{ 
-      user, 
+      user: data?.user ?? null, 
       isLoading, 
       login, 
       register, 
-      logout, 
-      refreshUser 
+      logout,
+      refreshUser
     }}>
       {children}
     </AuthContext.Provider>
