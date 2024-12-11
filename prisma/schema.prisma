@@ -26,6 +26,7 @@ model User {
   updated_at              DateTime  @default(now()) @updatedAt
   quizzes                 Quiz[]
   question_interactions   UserQuestionInteraction[] // Güncellendi
+  leaderboard            Leaderboard?
 }
 
 model Category {
@@ -78,3 +79,17 @@ model UserQuestionInteraction {
 
   @@unique([user_id, question_id, quiz_id])
 }
+
+model Leaderboard {
+  id            Int      @id @default(autoincrement())
+  user_id       Int      @unique
+  username      String
+  total_score   Int      @default(0)
+  quiz_count    Int      @default(0)
+  average_score Decimal  @default(0) @db.Decimal(5,2)
+  updated_at    DateTime @default(now()) @updatedAt
+  user          User     @relation(fields: [user_id], references: [id])
+
+  @@index([total_score(sort: Desc)])
+}
+
