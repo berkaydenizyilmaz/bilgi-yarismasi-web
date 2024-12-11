@@ -1,4 +1,4 @@
-import { type NextRequest } from "next/server";
+import { NextRequest } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
@@ -9,15 +9,12 @@ interface JWTPayload {
  id: number;
 }
 
-export async function GET(
-   request: NextRequest,
-   { params }: { params: { quizId: string } }
-) {
+export async function GET(req: NextRequest, context: { params: { quizId: string } }) {
    try {
-       logger.request(request);
+       logger.request(req);
 
        // Token kontrolü
-       const token = request.cookies.get("token")?.value;
+       const token = req.cookies.get("token")?.value;
        if (!token) {
            logger.warn('Quiz detayı görüntüleme başarısız: Token bulunamadı');
            throw new AuthenticationError();
@@ -33,10 +30,10 @@ export async function GET(
        }
 
        // Quiz ID validasyonu
-       const quizId = parseInt(params.quizId);
+       const quizId = parseInt(context.params.quizId);
        if (isNaN(quizId)) {
            logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
-               quizId: params.quizId,
+               quizId: context.params.quizId,
                userId: decoded.id 
            });
            throw new ValidationError("Geçersiz Quiz ID");
@@ -123,8 +120,8 @@ export async function GET(
 
    } catch (error) {
        logger.error(error as Error, {
-           path: request.url,
-           quizId: params.quizId
+           path: req.url,
+           quizId: context.params.quizId
        });
 
        if (error instanceof APIError) {
