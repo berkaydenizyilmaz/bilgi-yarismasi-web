@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import jwt from 'jsonwebtoken';
 import { APIError, AuthenticationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 interface JWTPayload {
   id: number;
@@ -12,9 +13,12 @@ interface JWTPayload {
 
 export async function GET(request: NextRequest) {
   try {
+    logger.request(request);
+
     const token = request.cookies.get("token")?.value;
 
     if (!token) {
+      logger.warn('Oturum kontrolü başarısız: Token bulunamadı');
       throw new AuthenticationError("Oturum bulunamadı");
     }
 
@@ -22,6 +26,7 @@ export async function GET(request: NextRequest) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     } catch (error) {
+      logger.warn('Oturum kontrolü başarısız: Geçersiz token', { token });
       throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
     }
 
@@ -36,18 +41,33 @@ export async function GET(request: NextRequest) {
         created_at: true,
       },
     }).catch((error) => {
-      console.error("Database error:", error);
+      logger.error(error as Error, {
+        userId: decoded.id,
+        email: decoded.email
+      });
       throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
 
     if (!user) {
+      logger.warn('Oturum kontrolü başarısız: Kullanıcı bulunamadı', {
+        userId: decoded.id,
+        email: decoded.email
+      });
       throw new AuthenticationError("Kullanıcı bulunamadı");
     }
+
+    logger.info('Oturum kontrolü başarılı', {
+      userId: user.id,
+      email: user.email,
+      username: user.username
+    });
 
     return apiResponse.success({ user });
 
   } catch (error) {
-    console.error("Auth check error:", error);
+    logger.error(error as Error, {
+      path: request.url
+    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);

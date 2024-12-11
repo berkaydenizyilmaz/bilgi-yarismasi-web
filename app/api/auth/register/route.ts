@@ -5,6 +5,8 @@ import { signJWT } from "@/lib/jwt";
 import { apiResponse } from "@/lib/api-response";
 import { z } from "zod";
 import { APIError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+
 
 const registerSchema = z.object({
   username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır."),
@@ -13,84 +15,64 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  let body: z.infer<typeof registerSchema> | undefined;
+
   try {
-    // Request body'yi parse et
-    let body;
+    logger.request(request);
+
     try {
       body = await request.json();
     } catch (e) {
       throw new ValidationError("Geçersiz istek formatı");
     }
 
-    // Zod validasyonu
-    try {
-      registerSchema.parse(body);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new ValidationError(error.errors[0].message);
-      }
-      throw error;
-    }
+    registerSchema.parse(body);
+    const validatedBody = body as z.infer<typeof registerSchema>;
 
-    // Email ve kullanıcı adı kontrolü
+    // Email kontrolü
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: body.email },
-          { username: body.username }
+          { email: validatedBody.email },
+          { username: validatedBody.username }
         ]
-      },
-      select: {
-        email: true,
-        username: true
       }
-    }).catch((error) => {
-      console.error("Database error:", error);
-      throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
 
     if (existingUser) {
-      if (existingUser.email === body.email) {
-        throw new ValidationError("Bu email adresi zaten kullanımda");
-      }
-      if (existingUser.username === body.username) {
-        throw new ValidationError("Bu kullanıcı adı zaten kullanımda");
-      }
+      logger.warn('Kayıt denemesi başarısız: Email veya kullanıcı adı mevcut', {
+        email: validatedBody.email,
+        username: validatedBody.username
+      });
+      throw new ValidationError("Bu email veya kullanıcı adı zaten kullanımda");
     }
 
-    // Şifreyi hashle
-    const hashedPassword = await bcrypt.hash(body.password, 10).catch(() => {
-      throw new APIError("Şifre hashleme hatası", 500);
-    });
+    const hashedPassword = await bcrypt.hash(validatedBody.password, 10);
 
-    // Kullanıcıyı oluştur
     const user = await prisma.user.create({
       data: {
-        email: body.email,
-        username: body.username,
+        email: validatedBody.email,
+        username: validatedBody.username,
         password_hash: hashedPassword,
-        last_login: new Date(),
       },
       select: {
         id: true,
         email: true,
         username: true,
-      },
-    }).catch((error) => {
-      console.error("User creation error:", error);
-      throw new APIError("Kullanıcı oluşturma hatası", 500, "DATABASE_ERROR");
+      }
     });
 
-    // Token oluştur
-    const token = signJWT({
-      id: user.id,
+    logger.info('Yeni kullanıcı kaydı başarılı', {
+      userId: user.id,
       email: user.email,
-      username: user.username,
+      username: user.username
     });
+
+    const token = signJWT(user);
 
     return apiResponse.successWithCookie(
       { user },
-      "Kayıt başarıyla tamamlandı",
+      "Kayıt başarılı",
       [{
         name: "token",
         value: token,
@@ -105,7 +87,11 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error("Register error:", error);
+    logger.error(error as Error, {
+      path: request.url,
+      email: body?.email,
+      username: body?.username
+    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);

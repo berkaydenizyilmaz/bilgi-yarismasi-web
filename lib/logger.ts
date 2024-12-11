@@ -13,13 +13,23 @@ interface LogData {
 }
 
 class Logger {
+  private baseUrl: string;
+
+  constructor() {
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  }
+
   private async saveLog(logData: LogData) {
     try {
-      await fetch('/api/logs', {
+      const response = await fetch(`${this.baseUrl}/api/logs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData),
+        body: JSON.stringify(logData)
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     } catch (error) {
       console.error('Log kaydetme hatası:', error);
     }
