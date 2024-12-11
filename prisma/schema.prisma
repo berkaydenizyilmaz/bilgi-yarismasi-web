@@ -28,6 +28,7 @@ model User {
   question_interactions   UserQuestionInteraction[]
   leaderboard            Leaderboard?
   last_login             DateTime?
+  logs                   Log[]     // Yeni eklenen ilişki
 }
 
 model Category {
@@ -89,4 +90,21 @@ model Leaderboard {
   user       User     @relation(fields: [user_id], references: [id])
 
   @@index([rank])
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  level     String   // 'info' | 'warn' | 'error'
+  message   String
+  timestamp DateTime @default(now())
+  path      String?
+  user_id   Int?
+  error     Json?    // Hata detayları için
+  metadata  Json?    // Ek bilgiler için
+  
+  user      User?    @relation(fields: [user_id], references: [id])
+
+  @@index([timestamp])
+  @@index([level])
+  @@index([user_id])
 }
