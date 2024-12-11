@@ -10,6 +10,7 @@ interface LeaderboardEntry {
   total_score: number
   quiz_count: number
   average_score: number
+  rank: number
 }
 
 export default function LeaderboardPage() {

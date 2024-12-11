@@ -18,12 +18,40 @@ const quizSchema = z.object({
   }))
 });
 
+async function updateLeaderboardRanks(prisma: any) {
+  const users = await prisma.user.findMany({
+    where: {
+      total_play_count: {
+        gt: 0
+      }
+    },
+    orderBy: {
+      total_score: 'desc'
+    },
+    select: {
+      id: true
+    }
+  });
+
+  for (let i = 0; i < users.length; i++) {
+    await prisma.leaderboard.upsert({
+      where: { user_id: users[i].id },
+      create: {
+        user_id: users[i].id,
+        rank: i + 1
+      },
+      update: {
+        rank: i + 1
+      }
+    });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = quizSchema.parse(body);
 
-    // Transaction kullanarak hem quiz'i kaydet hem de lider tablosunu güncelle
     const quiz = await prisma.$transaction(async (prisma) => {
       // Quiz'i kaydet
       const savedQuiz = await prisma.quiz.create({
@@ -47,36 +75,8 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // Kullanıcı bilgilerini al
-      const user = await prisma.user.findUnique({
-        where: { id: validatedData.userId },
-        select: {
-          username: true,
-          total_score: true,
-          total_play_count: true,
-        }
-      });
-
-      if (!user) throw new Error("Kullanıcı bulunamadı");
-
-      // Lider tablosunu güncelle veya oluştur
-      await prisma.leaderboard.upsert({
-        where: { user_id: validatedData.userId },
-        create: {
-          user_id: validatedData.userId,
-          username: user.username,
-          total_score: validatedData.score,
-          quiz_count: 1,
-          average_score: validatedData.score
-        },
-        update: {
-          total_score: { increment: validatedData.score },
-          quiz_count: { increment: 1 },
-          average_score: {
-            set: ((user.total_score + validatedData.score) / (user.total_play_count + 1))
-          }
-        }
-      });
+      // Rank'leri güncelle
+      await updateLeaderboardRanks(prisma);
 
       return savedQuiz;
     });
