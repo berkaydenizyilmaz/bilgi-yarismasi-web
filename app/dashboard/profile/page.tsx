@@ -19,10 +19,10 @@ export default function ProfilePage() {
     );
   }
 
-  if (profileError || historyError) {
+  if (profileError || historyError || !profile) {
     return (
       <div className="text-center p-4">
-        <p className="text-red-500">{profileError || historyError}</p>
+        <p className="text-red-500">{profileError || historyError || 'Profil bilgileri alınamadı'}</p>
       </div>
     );
   }
@@ -36,19 +36,19 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-gray-600">Kullanıcı Adı</p>
-              <p className="font-medium">{profile?.username}</p>
+              <p className="font-medium">{profile.username}</p>
             </div>
             <div>
               <p className="text-gray-600">E-posta</p>
-              <p className="font-medium">{profile?.email}</p>
+              <p className="font-medium">{profile.email}</p>
             </div>
             <div>
               <p className="text-gray-600">Toplam Quiz</p>
-              <p className="font-medium">{profile?.total_play_count}</p>
+              <p className="font-medium">{profile.total_play_count}</p>
             </div>
             <div>
               <p className="text-gray-600">Toplam Puan</p>
-              <p className="font-medium">{profile?.total_score}</p>
+              <p className="font-medium">{profile.total_score}</p>
             </div>
           </div>
         </Card>
