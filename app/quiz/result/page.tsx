@@ -113,7 +113,7 @@ export default function QuizResultPage() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error);
+                    throw new Error(data.error.message || "Sonuçlar alınamadı");
                 }
 
                 setResult(data.data);

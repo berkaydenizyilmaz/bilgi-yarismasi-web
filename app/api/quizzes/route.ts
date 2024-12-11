@@ -2,10 +2,11 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { z } from "zod";
+import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
+import jwt from 'jsonwebtoken';
 
 // Validasyon şeması
 const quizSchema = z.object({
-  userId: z.number(),
   categoryId: z.number(),
   totalQuestions: z.number(),
   correctAnswers: z.number(),
@@ -19,74 +20,131 @@ const quizSchema = z.object({
 });
 
 async function updateLeaderboardRanks(prisma: any) {
-  const users = await prisma.user.findMany({
-    where: {
-      total_play_count: {
-        gt: 0
-      }
-    },
-    orderBy: {
-      total_score: 'desc'
-    },
-    select: {
-      id: true
-    }
-  });
-
-  for (let i = 0; i < users.length; i++) {
-    await prisma.leaderboard.upsert({
-      where: { user_id: users[i].id },
-      create: {
-        user_id: users[i].id,
-        rank: i + 1
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        total_play_count: {
+          gt: 0
+        }
       },
-      update: {
-        rank: i + 1
+      orderBy: {
+        total_score: 'desc'
+      },
+      select: {
+        id: true
       }
     });
+
+    for (let i = 0; i < users.length; i++) {
+      await prisma.leaderboard.upsert({
+        where: { user_id: users[i].id },
+        create: {
+          user_id: users[i].id,
+          rank: i + 1
+        },
+        update: {
+          rank: i + 1
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Leaderboard update error:", error);
+    throw new APIError("Lider tablosu güncellenirken hata oluştu", 500, "LEADERBOARD_ERROR");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const validatedData = quizSchema.parse(body);
+    // Token kontrolü
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      throw new AuthenticationError();
+    }
 
-    const quiz = await prisma.$transaction(async (prisma) => {
-      // Quiz'i kaydet
-      const savedQuiz = await prisma.quiz.create({
+    // Token'dan kullanıcı bilgisini al
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+    
+    // Request body'yi parse et
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      throw new ValidationError("Geçersiz istek formatı");
+    }
+
+    // Validasyon
+    try {
+      quizSchema.parse(body);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ValidationError(error.errors[0].message);
+      }
+      throw error;
+    }
+
+    // Transaction başlat
+    const result = await prisma.$transaction(async (tx) => {
+      // Quiz kaydını oluştur
+      const quiz = await tx.quiz.create({
         data: {
-          user_id: validatedData.userId,
-          category_id: validatedData.categoryId,
-          total_questions: validatedData.totalQuestions,
-          correct_answers: validatedData.correctAnswers,
-          incorrect_answers: validatedData.incorrectAnswers,
-          score: validatedData.score,
-          user_interactions: {
-            create: validatedData.questions.map(question => ({
-              user_id: validatedData.userId,
-              question_id: question.id,
-              seen_at: new Date(),
-              answered_at: new Date(),
-              is_correct: question.isCorrect,
-              user_answer: question.userAnswer
-            }))
-          }
+          user_id: decoded.id,
+          category_id: body.categoryId,
+          total_questions: body.totalQuestions,
+          correct_answers: body.correctAnswers,
+          incorrect_answers: body.incorrectAnswers,
+          score: body.score,
+          played_at: new Date(),
         }
       });
 
-      // Rank'leri güncelle
-      await updateLeaderboardRanks(prisma);
+      // Soru cevaplarını kaydet
+      await tx.userQuestionInteraction.createMany({
+        data: body.questions.map((q: any) => ({
+          quiz_id: quiz.id,
+          question_id: q.id,
+          user_answer: q.userAnswer,
+          is_correct: q.isCorrect
+        }))
+      });
 
-      return savedQuiz;
+      // Kullanıcı istatistiklerini güncelle
+      await tx.user.update({
+        where: { id: decoded.id },
+        data: {
+          total_score: { increment: body.score },
+          total_play_count: { increment: 1 },
+          total_questions_attempted: { increment: body.totalQuestions },
+          total_correct_answers: { increment: body.correctAnswers }
+        }
+      });
+
+      return quiz;
+    }).catch((error) => {
+      console.error("Transaction error:", error);
+      throw new APIError("Quiz kaydedilirken bir hata oluştu", 500, "DATABASE_ERROR");
     });
 
-    return apiResponse.success(quiz, "Quiz başarıyla kaydedildi.", 201);
+    // Lider tablosunu güncelle
+    await updateLeaderboardRanks(prisma);
+
+    return apiResponse.success({
+      quizId: result.id,
+      message: "Quiz başarıyla kaydedildi"
+    });
+
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return apiResponse.error(error.errors[0].message);
+    console.error("Quiz submission error:", error);
+
+    if (error instanceof APIError) {
+      return apiResponse.error(error);
     }
-    console.error("Quiz kaydetme hatası:", error);
-    return apiResponse.error("Quiz kaydedilemedi.");
+
+    return apiResponse.error(
+      new APIError(
+        "Quiz kaydedilirken beklenmeyen bir hata oluştu",
+        500,
+        "INTERNAL_SERVER_ERROR"
+      )
+    );
   }
 }

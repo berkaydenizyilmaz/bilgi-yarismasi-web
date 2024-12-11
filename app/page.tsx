@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Brain, Trophy, Users } from "lucide-react";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ export default function HomePage() {
                 const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.error || "Kategoriler alınamadı.");
+                    throw new Error(result.error?.message || "Kategoriler alınamadı.");
                 }
 
                 setCategories(result.data || []);

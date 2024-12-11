@@ -1,20 +1,44 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
+import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
+import jwt from 'jsonwebtoken';
+
+interface JWTPayload {
+  id: number;
+}
 
 export async function GET(
     request: NextRequest,
     { params }: { params: { quizId: string } }
 ) {
     try {
-        const quizId = parseInt(params.quizId);
-
-        if (isNaN(quizId)) {
-            return apiResponse.error("Geçersiz Quiz ID");
+        // Token kontrolü
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            throw new AuthenticationError();
         }
 
+        // Token'dan kullanıcı bilgisini al
+        let decoded: JWTPayload;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+        } catch (error) {
+            throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
+        }
+
+        // Quiz ID validasyonu
+        const quizId = parseInt(params.quizId);
+        if (isNaN(quizId)) {
+            throw new ValidationError("Geçersiz Quiz ID");
+        }
+
+        // Quiz'i getir
         const quiz = await prisma.quiz.findUnique({
-            where: { id: quizId },
+            where: { 
+                id: quizId,
+                user_id: decoded.id // Sadece kendi quizlerini görebilir
+            },
             include: {
                 category: {
                     select: {
@@ -36,14 +60,24 @@ export async function GET(
                     }
                 }
             },
+        }).catch((error) => {
+            console.error("Quiz fetch error:", error);
+            throw new APIError("Quiz bilgileri alınamadı", 500, "DATABASE_ERROR");
         });
 
         if (!quiz) {
-            return apiResponse.error("Quiz bulunamadı", 404);
+            throw new APIError("Quiz bulunamadı", 404, "NOT_FOUND");
         }
 
+        // Quiz verilerini formatla
         const formattedQuiz = {
-            ...quiz,
+            id: quiz.id,
+            category: quiz.category.name,
+            total_questions: quiz.total_questions,
+            correct_answers: quiz.correct_answers,
+            incorrect_answers: quiz.incorrect_answers,
+            score: quiz.score,
+            played_at: quiz.played_at,
             questions: quiz.user_interactions.map(interaction => ({
                 question: interaction.question.question_text,
                 userAnswer: interaction.user_answer,
@@ -59,8 +93,20 @@ export async function GET(
         };
 
         return apiResponse.success(formattedQuiz);
+
     } catch (error) {
-        console.error("Quiz getirme hatası:", error);
-        return apiResponse.error("Quiz sonuçları alınamadı");
+        console.error("Quiz detail error:", error);
+
+        if (error instanceof APIError) {
+            return apiResponse.error(error);
+        }
+
+        return apiResponse.error(
+            new APIError(
+                "Quiz detayları alınırken beklenmeyen bir hata oluştu",
+                500,
+                "INTERNAL_SERVER_ERROR"
+            )
+        );
     }
 }

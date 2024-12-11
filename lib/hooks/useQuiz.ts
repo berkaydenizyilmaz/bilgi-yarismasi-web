@@ -31,15 +31,14 @@ export const useQuiz = (categoryId: string) => {
         const authData = await authResponse.json();
         
         if (!authResponse.ok || !authData.data.user) {
-            throw new Error('Kullanıcı bilgisi alınamadı');
+            throw new Error(authData.error?.message || 'Kullanıcı bilgisi alınamadı');
         }
 
-        const userId = authData.data.user.id;
-        const response = await fetch(`/api/questions?categoryId=${categoryId}&userId=${userId}`);
+        const response = await fetch(`/api/questions?categoryId=${categoryId}`);
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'Sorular alınamadı');
+            throw new Error(data.error?.message || 'Sorular alınamadı');
         }
 
         const formattedQuestions = data.data.map((q: any) => ({
@@ -50,12 +49,11 @@ export const useQuiz = (categoryId: string) => {
         }));
 
         const shuffledQuestions = [...formattedQuestions].sort(() => Math.random() - 0.5);
-        
-        // State güncellemelerini birlikte yapalım
-        setCurrentQuestionIndex(0);
         setQuestions(shuffledQuestions);
+        setCurrentQuestionIndex(0);
     } catch (err) {
-        setError(err instanceof Error ? err.message : 'Bir hata oluştu');
+        const errorMessage = err instanceof Error ? err.message : 'Beklenmeyen bir hata oluştu';
+        setError(errorMessage);
     } finally {
         setIsLoading(false);
     }
@@ -99,51 +97,33 @@ export const useQuiz = (categoryId: string) => {
     finalIncorrectCount: number
   ) => {
     try {
-      const authResponse = await fetch('/api/auth');
-      const authData = await authResponse.json();
-      
-      if (!authResponse.ok || !authData.data.user) {
-        throw new Error('Kullanıcı bilgisi alınamadı');
-      }
-  
-      const response = await fetch("/api/quizzes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: authData.data.user.id,
-          categoryId: Number(categoryId),
-          totalQuestions: questions.length,
-          correctAnswers: finalCorrectCount,
-          incorrectAnswers: finalIncorrectCount,
-          score: calculateScore(finalCorrectCount, questions.length),
-          questions: questionsList.map(q => ({
-            id: q.id,
-            isCorrect: q.isCorrect,
-            userAnswer: q.userAnswer
-          }))
-        }),
-      });
-  
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error);
-      }
-  
-      // Kullanıcı istatistiklerini güncelle
-      await fetch("/api/users/stats", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          totalQuestions: questions.length,
-          correctAnswers: finalCorrectCount,
-          score: calculateScore(finalCorrectCount, questions.length)
-        }),
-      });
-  
-      router.push(`/quiz/result?quizId=${result.data.id}`);
+        const response = await fetch("/api/quizzes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                categoryId: Number(categoryId),
+                totalQuestions: questions.length,
+                correctAnswers: finalCorrectCount,
+                incorrectAnswers: finalIncorrectCount,
+                score: calculateScore(finalCorrectCount, questions.length),
+                questions: questionsList.map(q => ({
+                    id: q.id,
+                    isCorrect: q.isCorrect,
+                    userAnswer: q.userAnswer
+                }))
+            }),
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error?.message || 'Quiz sonuçları kaydedilemedi');
+        }
+
+        router.push(`/quiz/result?quizId=${result.data.quizId}`);
     } catch (error) {
-      setError('Quiz sonuçları kaydedilemedi');
+        const errorMessage = error instanceof Error ? error.message : 'Quiz sonuçları kaydedilemedi';
+        setError(errorMessage);
     }
   };
 

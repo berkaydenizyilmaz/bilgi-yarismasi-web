@@ -25,7 +25,7 @@ export default function CategoriesPage() {
         const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.error || "Kategoriler yüklenemedi")
+          throw new Error(data.error.message || "Kategoriler yüklenemedi")
         }
 
         setCategories(data.data)

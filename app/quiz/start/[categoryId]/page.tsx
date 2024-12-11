@@ -59,7 +59,7 @@ export default function QuizPage() {
         <div className="max-w-2xl mx-auto text-center">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-red-700 mb-4">
-              Hata
+              Hata Oluştu
             </h2>
             <p className="text-red-600 mb-6">{error}</p>
             <Link href="/quiz/categories">
