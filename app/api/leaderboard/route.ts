@@ -49,9 +49,7 @@ export async function GET(request: NextRequest) {
       lastRank: leaderboard[leaderboard.length - 1]?.leaderboard?.rank
     });
 
-    return apiResponse.success({
-      data: leaderboard
-    });
+    return apiResponse.success(leaderboard);
 
   } catch (error) {
     logger.error(error as Error, {
