@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import jwt, { JwtPayload } from 'jsonwebtoken';
+
+function verifyToken(token: string): JwtPayload | null {
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+        return decoded;
+    } catch (error) {
+        return null
+    }
+}
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get("token")?.value;
-
 
   const protectedPaths = [
     "/quiz/categories",
@@ -30,72 +39,51 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
+      const user = verifyToken(token);
 
-    // API'den kullanıcı bilgilerini çekme
-    try {
-      const apiUrl = `${request.nextUrl.origin}/api/auth`; 
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Cookie': `token=${token}`
-         },
-        cache: 'no-cache'
-      });
-
-      if (!response.ok) {
-        return NextResponse.redirect(new URL("/auth/login", request.url));
+      if(!user){
+          return NextResponse.redirect(new URL("/auth/login", request.url));
       }
 
-      const apiData = await response.json();
-
-        if (!apiData.success || !apiData.data || !apiData.data.user) {
-          return NextResponse.redirect(new URL("/auth/login", request.url));
-        }
-
-      const user = apiData.data.user;
-
-    } catch (error) {
-       return NextResponse.redirect(new URL("/auth/login", request.url));
-    }
   }
 
-
-   if (adminPaths.some((ap) => path.startsWith(ap))) {
-       if (!token) {
+  if (adminPaths.some((ap) => path.startsWith(ap))) {
+    if (!token) {
       return NextResponse.redirect(new URL("/auth/login", request.url));
-     }
-
-       try {
-           const apiUrl = `${request.nextUrl.origin}/api/auth`; 
-
-         const response = await fetch(apiUrl, {
+    }
+      // API'den kullanıcı bilgilerini çekme
+    try {
+      const apiUrl = `${request.nextUrl.origin}/api/auth`;
+       const response = await fetch(apiUrl, {
            headers: {
                'Cookie': `token=${token}`
             },
            cache: 'no-cache'
            });
 
-
            if (!response.ok) {
              return NextResponse.redirect(new URL("/auth/login", request.url));
            }
 
-          const apiData = await response.json();
+           const apiData = await response.json();
+
 
            if (!apiData.success || !apiData.data || !apiData.data.user) {
-               return NextResponse.redirect(new URL("/auth/login", request.url));
-           }
+              return NextResponse.redirect(new URL("/auth/login", request.url));
+          }
 
-          const user = apiData.data.user;
+
+           const user = apiData.data.user;
 
            if (user.role !== "admin") {
                return NextResponse.redirect(new URL("/", request.url));
            }
 
-         } catch (error) {
-           return NextResponse.redirect(new URL("/auth/login", request.url));
-         }
-   }
+
+     } catch (error) {
+        return NextResponse.redirect(new URL("/auth/login", request.url));
+       }
+  }
 
   if (authPaths.includes(path) && token) {
     return NextResponse.redirect(new URL("/", request.url));
