@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 interface Question {
     id: number;
@@ -95,7 +98,7 @@ export const useQuiz = (categoryId: string) => {
     questionsList: Question[], 
     finalCorrectCount: number, 
     finalIncorrectCount: number
-  ) => {
+) => {
     try {
         const response = await fetch("/api/quizzes", {
             method: "POST",
@@ -115,18 +118,18 @@ export const useQuiz = (categoryId: string) => {
         });
 
         const result = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(result.error?.message || 'Quiz sonuçları kaydedilemedi');
         }
 
-        router.push(`/quiz/result?quizId=${result.data.quizId}`);
+        router.push(`/quiz/result?quizId=${result.data.data.quizId}`);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Quiz sonuçları kaydedilemedi';
         setError(errorMessage);
     }
-  };
-
+};
+  
   return {
     questions,
     currentQuestionIndex,

@@ -118,23 +118,6 @@ export async function GET(request: NextRequest) {
       throw new APIError("Sorular alınamadı", 500, "DATABASE_ERROR");
     });
 
-    // Soruların görüntülenme kaydını tut
-    await prisma.userQuestionInteraction.createMany({
-      data: questions.map(question => ({
-        user_id: userId,
-        question_id: question.id,
-        seen_at: new Date()
-      }))
-    }).catch((error) => {
-      logger.warn('Soru görüntüleme kaydı oluşturulamadı', {
-        categoryId,
-        userId,
-        questionCount: questions.length,
-        error: error.message
-      });
-      // Bu hatayı yutuyoruz çünkü kritik değil
-    });
-
     logger.info('Sorular başarıyla getirildi', {
       categoryId,
       userId,
