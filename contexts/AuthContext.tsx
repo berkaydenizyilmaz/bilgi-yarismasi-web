@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Çıkış yapılırken bir hata oluştu')
       }
 
-      await mutate({ user: null }, false) // Cache'i temizle
+      await mutate({ user: null }, false) 
       router.push('/')
     } catch (error) {
       console.error('Logout error:', error)

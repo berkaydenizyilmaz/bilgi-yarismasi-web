@@ -27,6 +27,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname()
   const isAuthPage = pathname.startsWith('/auth/')
+  const isAdminPage = pathname.startsWith('/admin')
 
   return (
     <html lang="tr">
@@ -34,11 +35,11 @@ export default function RootLayout({
         <AuthProvider>
           <Providers>
             <div className="flex flex-col min-h-screen">
-              {!isAuthPage && <Header />}
+              {!isAuthPage && !isAdminPage && <Header />}
               <main className="flex-grow">
                 {children}
               </main>
-              {!isAuthPage && <Footer />}
+              {!isAuthPage && !isAdminPage && <Footer />}
             </div>
           </Providers>
         </AuthProvider>

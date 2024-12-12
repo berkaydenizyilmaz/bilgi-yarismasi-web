@@ -1,6 +1,5 @@
 "use client";
 
-import AdminHeader from "@/components/AdminHeader";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 
@@ -12,7 +11,6 @@ export default function AdminUsers() {
 
   return (
     <div>
-      <AdminHeader />
       <main className="p-6">
         <h2 className="text-2xl font-bold mb-4">Kullanıcı Yönetimi</h2>
         <table className="min-w-full bg-white border border-gray-300">
