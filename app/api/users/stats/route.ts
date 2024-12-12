@@ -79,22 +79,6 @@ export async function PUT(request: NextRequest) {
       throw new APIError("İstatistikler güncellenirken hata oluştu", 500, "DATABASE_ERROR");
     });
 
-    logger.info('Kullanıcı istatistikleri güncellendi', {
-      userId: user.id,
-      username: user.username,
-      newStats: {
-        totalPlayCount: user.total_play_count,
-        totalQuestionsAttempted: user.total_questions_attempted,
-        totalCorrectAnswers: user.total_correct_answers,
-        totalScore: user.total_score
-      },
-      update: {
-        questions: validatedBody.totalQuestions,
-        correctAnswers: validatedBody.correctAnswers,
-        score: validatedBody.score
-      }
-    });
-
     return apiResponse.success(user, "Kullanıcı istatistikleri güncellendi");
 
   } catch (error) {

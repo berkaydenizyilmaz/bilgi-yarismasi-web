@@ -69,10 +69,6 @@ export async function GET(req: NextRequest, { params }: any) {
         });
 
         if (!quiz) {
-            logger.warn('Quiz bulunamadı', {
-                quizId,
-                userId: decoded.id
-            });
             return NextResponse.json(apiResponse.error(new APIError("Quiz bulunamadı", 404, "NOT_FOUND")));
         }
 
@@ -92,14 +88,6 @@ export async function GET(req: NextRequest, { params }: any) {
                 }
             }))
         };
-
-        logger.info('Quiz detayları başarıyla getirildi', {
-            quizId,
-            userId: decoded.id,
-            categoryName: quiz.category.name,
-            score: quiz.score,
-            totalQuestions: quiz.total_questions
-        });
 
         return apiResponse.success(formattedQuiz);
 

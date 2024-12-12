@@ -52,13 +52,6 @@ export async function GET(request: NextRequest) {
       return apiResponse.success({ data: [] });
     }
 
-    logger.info('Quiz geçmişi başarıyla getirildi', {
-      userId,
-      totalQuizzes: quizHistory.length,
-      latestQuizDate: quizHistory[0].played_at,
-      totalScore: quizHistory.reduce((sum, quiz) => sum + quiz.score, 0)
-    });
-
     return apiResponse.success({
       data: quizHistory.map(quiz => ({
         id: quiz.id,

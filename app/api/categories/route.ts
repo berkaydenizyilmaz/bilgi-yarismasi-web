@@ -6,7 +6,7 @@ import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-    
+
     const categories = await prisma.category.findMany({
       select: {
         id: true,
@@ -36,11 +36,6 @@ export async function GET(request: NextRequest) {
       name: cat.name,
       questionCount: cat._count.questions
     }));
-
-    logger.info('Kategoriler başarıyla getirildi', {
-      totalCategories: categories.length,
-      availableCategories: availableCategories.length
-    });
 
     return apiResponse.success({
       data: formattedCategories

@@ -26,14 +26,9 @@ export async function POST(request: NextRequest) {
           username: decoded.username
         });
       } catch (error) {
-        // Token geçersiz olsa bile çıkış yapılabilir
-        logger.warn('Geçersiz token ile çıkış denemesi', {
-          token: token
-        });
+        console.log(error)
       }
-    } else {
-      logger.warn('Token olmadan çıkış denemesi');
-    }
+    } 
 
     // Cookie'yi temizle
     return apiResponse.successWithCookie(

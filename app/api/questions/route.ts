@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (!category) {
-      logger.warn('Sorular getirilirken hata: Geçersiz kategori', { categoryId });
       throw new ValidationError("Geçersiz kategori");
     }
 
@@ -108,13 +107,6 @@ export async function GET(request: NextRequest) {
         message: 'Sorular alınamadı'
       });
       throw new APIError("Sorular alınamadı", 500, "DATABASE_ERROR");
-    });
-
-    logger.info('Sorular başarıyla getirildi', {
-      categoryId,
-      userId,
-      questionCount: questions.length,
-      totalUnansweredQuestions
     });
 
     return apiResponse.success(questions);

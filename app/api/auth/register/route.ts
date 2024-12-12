@@ -39,10 +39,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
-      logger.warn('Kayıt denemesi başarısız: Email veya kullanıcı adı mevcut', {
-        email: validatedBody.email,
-        username: validatedBody.username
-      });
       throw new ValidationError("Bu email veya kullanıcı adı zaten kullanımda");
     }
 

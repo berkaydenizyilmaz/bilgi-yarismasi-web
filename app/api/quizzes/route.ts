@@ -112,13 +112,6 @@ export async function POST(request: NextRequest) {
     // Liderlik tablosunu güncelle
     await updateLeaderboardRanks(prisma);
 
-    logger.info('Quiz sonuçları başarıyla kaydedildi', {
-      userId,
-      quizId: quiz.id,
-      categoryId: validatedBody.categoryId,
-      score: validatedBody.score
-    });
-
     return apiResponse.success({
       message: "Quiz sonuçları kaydedildi",
       data: { quizId: quiz.id }

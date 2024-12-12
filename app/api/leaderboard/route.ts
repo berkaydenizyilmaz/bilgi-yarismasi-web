@@ -41,12 +41,6 @@ export async function GET(request: NextRequest) {
       return apiResponse.success({ data: [] });
     }
 
-    logger.info('Liderlik tablosu başarıyla getirildi', {
-      totalUsers: leaderboard.length,
-      topScore: leaderboard[0]?.total_score,
-      lastRank: leaderboard[leaderboard.length - 1]?.leaderboard?.rank
-    });
-
     return apiResponse.success(leaderboard);
 
   } catch (error) {

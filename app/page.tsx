@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Brain, Trophy, Users } from "lucide-react";
 import { ArrowRight, BookOpen } from "lucide-react";
