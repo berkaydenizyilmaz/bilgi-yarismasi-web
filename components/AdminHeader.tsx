@@ -11,10 +11,13 @@ function AdminHeader() {
               <Link href="/admin/logs" className="hover:underline">Loglar</Link>
             </li>
             <li>
-              <Link href="/admin/feedback" className="hover:underline">Geri Bildirimler</Link>
+              <Link href="/admin/feedbacks" className="hover:underline">Geri Bildirimler</Link>
             </li>
             <li>
-              <Link href="/admin/dashboard" className="hover:underline">Ana Sayfa</Link>
+              <Link href="/admin/users" className="hover:underline">Kullanıcılar</Link>
+            </li>
+            <li>
+              <Link href="/admin" className="hover:underline">Ana Sayfa</Link>
             </li>
           </ul>
         </nav>
