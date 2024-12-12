@@ -16,7 +16,7 @@ function Header() {
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
     ...(user ? [
-      { name: 'Kategoriler', href: '/quiz/categories' },
+      { name: 'Oyna', href: '/quiz/categories' },
       { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
       { name: 'Profil', href: '/dashboard/profile' },
       { name: 'İletişim ', href: '/dashboard/contact' },
@@ -54,7 +54,7 @@ function Header() {
             ) : user ? (
               <Button
                 onClick={logout}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-gray-900 hover:bg-gray-800 text-white"
               >
                 Çıkış Yap
               </Button>

@@ -17,9 +17,6 @@ function AdminHeader() {
               <Link href="/admin/users" className="hover:text-orange-400 transition-colors">Kullanıcılar</Link>
             </li>
             <li>
-              <Link href="/admin/statistics" className="hover:text-orange-400 transition-colors">İstatistikler</Link>
-            </li>
-            <li>
               <Link href="/admin" className="hover:text-orange-400 transition-colors">Ana Sayfa</Link>
             </li>
             <li>
