@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof registerSchema> | undefined;
 
   try {
-    logger.request(request);
 
     try {
       body = await request.json();

@@ -16,8 +16,7 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof loginSchema> | undefined;
 
   try {
-    logger.request(request);
-
+    
     try {
       body = await request.json();
     } catch (e) {
