@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         email: validatedBody.email,
         username: validatedBody.username,
         password_hash: hashedPassword,
+        last_login: new Date(),
       },
       select: {
         id: true,

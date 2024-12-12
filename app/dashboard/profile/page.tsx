@@ -84,8 +84,8 @@ export default function ProfilePage() {
       <div className="max-w-6xl mx-auto">
         {/* Profil Başlığı */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">{stats.username}</h1>
-          <p className="text-gray-600">Üyelik Tarihi: {formatDate(stats.created_at)}</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">{stats.username || "Kullanıcı Adı Yok"}</h1>
+          <p className="text-gray-600">Üyelik Tarihi: {formatDate(stats.created_at) || "Tarih Bilgisi Yok"}</p>
         </div>
 
         {/* İstatistik Kartları */}
@@ -93,19 +93,19 @@ export default function ProfilePage() {
           <StatCard
             icon={<Trophy className="w-8 h-8 text-yellow-500" />}
             title="Toplam Puan"
-            value={stats.total_score}
+            value={stats.total_score || 0}
             description="Tüm zamanlar"
           />
           <StatCard
             icon={<PieChart className="w-8 h-8 text-blue-500" />}
             title="Başarı Oranı"
-            value={`%${stats.averageScore}`}
+            value={`%${stats.averageScore || 0}`}
             description="Doğru cevap yüzdesi"
           />
           <StatCard
             icon={<BarChart className="w-8 h-8 text-green-500" />}
             title="Toplam Quiz"
-            value={stats.total_play_count}
+            value={stats.total_play_count || 0}
             description="Tamamlanan"
           />
         </div>
@@ -116,19 +116,19 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <DetailStat
               title="Toplam Soru"
-              value={stats.total_questions_attempted}
+              value={stats.total_questions_attempted || 0}
             />
             <DetailStat
               title="Doğru Cevap"
-              value={stats.total_correct_answers}
+              value={stats.total_correct_answers || 0}
             />
             <DetailStat
               title="Yanlış Cevap"
-              value={stats.total_questions_attempted - stats.total_correct_answers}
+              value={(stats.total_questions_attempted || 0) - (stats.total_correct_answers || 0)}
             />
             <DetailStat
               title="Ortalama Puan"
-              value={Math.round(stats.total_score / (stats.total_play_count || 1))}
+              value={Math.round((stats.total_score || 0) / (stats.total_play_count || 1))}
             />
           </div>
         </Card>

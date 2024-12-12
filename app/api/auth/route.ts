@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
         username: true,
         total_play_count: true,
         total_score: true,
+        total_correct_answers: true,
+        total_questions_attempted: true,
         created_at: true,
       },
     }).catch((error) => {
