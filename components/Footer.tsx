@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Brain, Github, Twitter } from "lucide-react"
+import { Brain, Github, Instagram } from "lucide-react"
 
 export function Footer() {
   return (
@@ -28,13 +28,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/leaderboard" className="hover:text-orange-500 transition-colors">
-                  Lider Tablosu
+                <Link href="/dashboard/profile" className="hover:text-orange-500 transition-colors">
+                  Profil
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/profile" className="hover:text-orange-500 transition-colors">
-                  Profil
+                <Link href="/dashboard/contact" className="hover:text-orange-500 transition-colors">
+                  İletişim
                 </Link>
               </li>
             </ul>
@@ -44,9 +44,12 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Bizi Takip Edin</h3>
             <div className="flex space-x-4">
-              <a href="#" className="hover:text-orange-500 transition-colors">
+              <Link href="https://github.com/berkaydenizyilmaz" target="_blank" className="hover:text-orange-500 transition-colors">
                 <Github className="h-6 w-6" />
-              </a>
+              </Link>
+              <Link href="https://instagram.com/berkaydeniz_" target="_blank" className="hover:text-orange-500 transition-colors">
+                <Instagram className="h-6 w-6" />
+              </Link>
             </div>
           </div>
         </div>
