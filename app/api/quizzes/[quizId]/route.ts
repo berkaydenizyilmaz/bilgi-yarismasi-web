@@ -4,6 +4,7 @@ import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
 import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
+import { format } from 'path';
 
 interface JWTPayload {
     id: number;
@@ -41,9 +42,9 @@ export async function GET(req: NextRequest, { params }: any) {
 
         // Quiz'i getir
         const quiz = await prisma.quiz.findUnique({
-            where: { 
-                id: quizId,
-                user_id: decoded.id
+            where : {
+                id : quizId,
+                user_id : decoded.id
             },
             include: {
                 category: {
@@ -85,13 +86,7 @@ export async function GET(req: NextRequest, { params }: any) {
 
         // Quiz verilerini formatla
         const formattedQuiz = {
-            id: quiz.id,
-            category: quiz.category.name,
-            total_questions: quiz.total_questions,
-            correct_answers: quiz.correct_answers,
-            incorrect_answers: quiz.incorrect_answers,
-            score: quiz.score,
-            played_at: quiz.played_at,
+            ...quiz,
             questions: quiz.user_interactions.map(interaction => ({
                 question: interaction.question.question_text,
                 userAnswer: interaction.user_answer,
@@ -114,9 +109,7 @@ export async function GET(req: NextRequest, { params }: any) {
             totalQuestions: quiz.total_questions
         });
 
-        return NextResponse.json(apiResponse.success({
-            data: formattedQuiz
-        }));
+        return apiResponse.success(formattedQuiz);
 
     } catch (error) {
         logger.error(error as Error, {
