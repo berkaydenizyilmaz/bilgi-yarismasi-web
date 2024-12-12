@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { formatDate } from "@/lib/utils"
-import { PieChart, BarChart, Trophy } from "lucide-react"
+import { PieChart, BarChart, Trophy, CornerRightDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
@@ -22,13 +22,11 @@ interface UserStats {
 
 interface QuizHistory {
   id: number
-  category: {
-    name: string
-  }
+  categoryName: string
   score: number
-  correct_answers: number
-  total_questions: number
-  played_at: string
+  correctAnswers: number
+  totalQuestions: number
+  playedAt: string
 }
 
 export default function ProfilePage() {
@@ -52,7 +50,8 @@ export default function ProfilePage() {
         if (!historyResponse.ok) throw new Error(historyData.error)
 
         setStats(statsData.data.user)
-        setQuizHistory(Array.isArray(historyData.data) ? historyData.data : [])
+        setQuizHistory(Array.isArray(historyData.data.data) ? historyData.data.data : [])
+
       } catch (err) {
         setError(err instanceof Error ? err.message : "Veriler alınamadı")
       } finally {
@@ -99,7 +98,9 @@ export default function ProfilePage() {
           <StatCard
             icon={<PieChart className="w-8 h-8 text-blue-500" />}
             title="Başarı Oranı"
-            value={`%${stats.averageScore || 0}`}
+            value={`%${stats.total_play_count > 0 
+              ? Math.round(stats.total_score / stats.total_play_count) 
+              : 0}`}
             description="Doğru cevap yüzdesi"
           />
           <StatCard
@@ -188,22 +189,22 @@ interface QuizHistoryItemProps {
 }
 
 function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
-  const router = useRouter()
-
+  const router = useRouter();
+  
   return (
     <div className="border-b border-gray-200 pb-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-semibold text-gray-800">{quiz.category.name}</h3>
+          <h3 className="font-semibold text-gray-800">{quiz.categoryName}</h3> 
           <p className="text-sm text-gray-600">
-            {formatDate(quiz.played_at)}
+            {formatDate(quiz.playedAt)} 
           </p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <p className="text-lg font-bold text-orange-600">%{quiz.score}</p>
+            <p className="text-lg font-bold text-orange-600">%{quiz.score}</p> 
             <p className="text-sm text-gray-600">
-              {quiz.correct_answers}/{quiz.total_questions} Doğru
+              {quiz.correctAnswers}/{quiz.totalQuestions} Doğru 
             </p>
           </div>
           <Button 
@@ -216,5 +217,5 @@ function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
