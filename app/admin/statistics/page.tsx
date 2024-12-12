@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 
-export default function AdminDashboard() {
+export default function AdminStatistcs() {
   const { data, error } = useSWR("/api/admin/statistics", fetcher);
 
   if (error) return <div>İstatistikleri yüklerken bir hata oluştu: {error.message}</div>;
@@ -12,7 +12,12 @@ export default function AdminDashboard() {
   return (
     <div>
       <main className="p-6">
-        main
+        <h2 className="text-2xl font-bold mb-4">İstatistikler</h2>
+        <ul>
+          <li>Toplam Kullanıcı: {data.data.totalUsers}</li>
+          <li>Toplam Geri Bildirim: {data.data.totalFeedback}</li>
+          <li>Toplam Log: {data.data.totalLogs}</li>
+        </ul>
       </main>
     </div>
   );
