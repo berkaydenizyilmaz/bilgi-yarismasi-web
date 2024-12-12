@@ -8,6 +8,7 @@ interface User {
   id: number
   email: string
   username: string
+  role: string
   total_play_count?: number
   total_score?: number
   created_at?: string
@@ -105,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ 
-      user: data?.user ?? null, 
+      user: data?.user as User ?? null, 
       isLoading, 
       login, 
       register, 

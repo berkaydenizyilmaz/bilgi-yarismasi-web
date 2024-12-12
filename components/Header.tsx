@@ -5,13 +5,13 @@ import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "./ui/button"
 import { Brain } from "lucide-react"
-import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { LoadingSpinner } from "./ui/loading-spinner"
+import { usePathname } from "next/navigation"
 
 function Header() {
-  const pathname = usePathname()
-  const { user, logout, isLoading } = useAuth()
+  const { user, logout, isLoading } = useAuth();
+  const pathname = usePathname();
 
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
@@ -19,8 +19,10 @@ function Header() {
       { name: 'Kategoriler', href: '/quiz/categories' },
       { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
       { name: 'Profil', href: '/dashboard/profile' },
+      { name: 'İletişim ', href: '/dashboard/contact' },
+      ...(user.role === 'admin' ? [{ name: 'Admin Paneli', href: '/admin' }] : []), // Admin rolü için link ekle
     ] : [])
-  ]
+  ];
 
   return (
     <header className="bg-orange-600 text-white py-6">
@@ -74,7 +76,7 @@ function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

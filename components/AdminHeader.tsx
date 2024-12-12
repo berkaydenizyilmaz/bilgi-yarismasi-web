@@ -22,6 +22,9 @@ function AdminHeader() {
             <li>
               <Link href="/admin" className="hover:text-orange-400 transition-colors">Ana Sayfa</Link>
             </li>
+            <li>
+              <Link href="/" className="hover:text-orange-400 transition-colors">Kullanıcı Arayüzüne Dön</Link> {/* Yeni link eklendi */}
+            </li>
           </ul>
         </nav>
       </div>
