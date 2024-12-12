@@ -6,7 +6,6 @@ import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-    logger.request(request);
 
     const leaderboard = await prisma.user.findMany({
       where: {
@@ -39,7 +38,6 @@ export async function GET(request: NextRequest) {
 
     // Liderlik tablosu boş kontrolü
     if (!Array.isArray(leaderboard) || leaderboard.length === 0) {
-      logger.warn('Liderlik tablosu boş');
       return apiResponse.success({ data: [] });
     }
 

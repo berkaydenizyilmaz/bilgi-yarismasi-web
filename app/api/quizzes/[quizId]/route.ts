@@ -4,7 +4,6 @@ import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
 import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
-import { format } from 'path';
 
 interface JWTPayload {
     id: number;
@@ -12,12 +11,10 @@ interface JWTPayload {
 
 export async function GET(req: NextRequest, { params }: any) {
   try {
-        logger.request(req);
 
         // Token kontrolü
         const token = req.cookies.get("token")?.value;
         if (!token) {
-            logger.warn('Quiz detayı görüntüleme başarısız: Token bulunamadı');
             throw new AuthenticationError();
         }
 
@@ -26,17 +23,12 @@ export async function GET(req: NextRequest, { params }: any) {
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
         } catch (error) {
-            logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz token', { token });
             throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
         }
 
         // Quiz ID validasyonu
         const quizId = parseInt(params.quizId);
         if (isNaN(quizId)) {
-            logger.warn('Quiz detayı görüntüleme başarısız: Geçersiz Quiz ID', { 
-                quizId: params.quizId,
-                userId: decoded.id 
-            });
             throw new ValidationError("Geçersiz Quiz ID");
         }
 

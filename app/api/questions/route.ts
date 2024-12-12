@@ -11,20 +11,17 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   try {
-    logger.request(request);
 
     // URL parametrelerini al ve kontrol et
     const categoryId = searchParams.get("categoryId");
 
     if (!categoryId) {
-      logger.warn('Sorular getirilirken hata: Kategori ID eksik');
       throw new ValidationError("Kategori ID'si belirtilmedi");
     }
 
     // Token kontrolü
     const token = request.cookies.get("token")?.value;
     if (!token) {
-      logger.warn('Sorular getirilirken hata: Token bulunamadı');
       throw new ValidationError("Oturum bulunamadı");
     }
 
@@ -71,11 +68,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (totalUnansweredQuestions < QUESTIONS_PER_QUIZ) {
-      logger.warn('Yetersiz soru sayısı', {
-        categoryId,
-        userId,
-        availableQuestions: totalUnansweredQuestions
-      });
       throw new APIError(
         `Bu kategoride sadece ${totalUnansweredQuestions} adet cevaplanmamış soru kaldı.`,
         404,

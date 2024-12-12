@@ -57,12 +57,10 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof quizSchema> | undefined;
 
   try {
-    logger.request(request);
 
     // Token kontrolü
     const token = request.cookies.get("token")?.value;
     if (!token) {
-      logger.warn('Quiz kaydı başarısız: Token bulunamadı');
       throw new AuthenticationError("Oturum bulunamadı");
     }
 

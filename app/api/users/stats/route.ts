@@ -21,11 +21,9 @@ export async function PUT(request: NextRequest) {
   let validatedBody: z.infer<typeof statsSchema>;
   
   try {
-    logger.request(request);
 
     const token = request.cookies.get("token")?.value;
     if (!token) {
-      logger.warn('İstatistik güncelleme başarısız: Token bulunamadı');
       throw new AuthenticationError();
     }
 
@@ -34,7 +32,6 @@ export async function PUT(request: NextRequest) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     } catch (error) {
-      logger.warn('İstatistik güncelleme başarısız: Geçersiz token', { token });
       throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
     }
 
@@ -42,7 +39,6 @@ export async function PUT(request: NextRequest) {
     try {
       body = await request.json();
     } catch (e) {
-      logger.warn('İstatistik güncelleme başarısız: Geçersiz istek formatı');
       throw new ValidationError("Geçersiz istek formatı");
     }
 
@@ -52,10 +48,6 @@ export async function PUT(request: NextRequest) {
       validatedBody = body as z.infer<typeof statsSchema>;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        logger.warn('İstatistik güncelleme başarısız: Validasyon hatası', {
-          userId: decoded.id,
-          errors: error.errors
-        });
         throw new ValidationError(error.errors[0].message);
       }
       throw error;

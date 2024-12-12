@@ -7,12 +7,10 @@ import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-    logger.request(request);
 
     // Token kontrolü
     const token = request.cookies.get("token")?.value;
     if (!token) {
-      logger.warn('Quiz geçmişi görüntüleme başarısız: Token bulunamadı');
       throw new AuthenticationError("Oturum bulunamadı");
     }
 
@@ -51,7 +49,6 @@ export async function GET(request: NextRequest) {
 
     // Quiz geçmişi boş kontrolü
     if (quizHistory.length === 0) {
-      logger.info('Quiz geçmişi boş', { userId });
       return apiResponse.success({ data: [] });
     }
 

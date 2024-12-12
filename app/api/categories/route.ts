@@ -6,8 +6,7 @@ import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-    logger.request(request);
-
+    
     const categories = await prisma.category.findMany({
       select: {
         id: true,
