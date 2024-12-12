@@ -30,7 +30,6 @@ const formSchema = z.object({
 })
 
 export default function ContactPage() {
-  const router = useRouter()
   const [error, setError] = useState<string>("")
   const [success, setSuccess] = useState<string>("")
 
