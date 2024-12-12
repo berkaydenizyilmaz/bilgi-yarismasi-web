@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
     const token = request.cookies.get("token")?.value;
 
     if (!token) {
-      logger.warn('Oturum kontrolü başarısız: Token bulunamadı');
       throw new AuthenticationError("Oturum bulunamadı");
     }
 
@@ -25,7 +24,6 @@ export async function GET(request: NextRequest) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     } catch (error) {
-      logger.warn('Oturum kontrolü başarısız: Geçersiz token', { token });
       throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
     }
 
@@ -50,18 +48,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      logger.warn('Oturum kontrolü başarısız: Kullanıcı bulunamadı', {
-        userId: decoded.id,
-        email: decoded.email
-      });
       throw new AuthenticationError("Kullanıcı bulunamadı");
     }
-
-    logger.info('Oturum kontrolü başarılı', {
-      userId: user.id,
-      email: user.email,
-      username: user.username
-    });
 
     return apiResponse.success({ user });
 
