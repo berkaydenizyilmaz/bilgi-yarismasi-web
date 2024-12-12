@@ -1,63 +1,102 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import jwt, { JwtPayload } from 'jsonwebtoken';
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  const token = request.cookies.get("token")?.value;
 
-  // Korunan yollar
+
   const protectedPaths = [
     "/quiz/categories",
     "/quiz/start",
     "/dashboard",
-    "/quiz/result"
+    "/quiz/result",
   ];
 
-  // Admin paneli için korunan yollar
   const adminPaths = [
     "/admin",
     "/admin/logs",
     "/admin/feedback",
-    "/admin/dashboard",
-    "/admin/users"
+    "/admin/users",
   ];
 
   const authPaths = ["/auth/login", "/auth/register"];
 
-  // Ana sayfa ve API rotaları için middleware'i atla
   if (path === "/" || path.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  // Korunan sayfalara erişim kontrolü
-  if (protectedPaths.some(pp => path.startsWith(pp))) {
-    if (!token) {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
-    }
-  }
-
-  // Admin paneline erişim kontrolü
-  if (adminPaths.some(ap => path.startsWith(ap))) {
+  if (protectedPaths.some((pp) => path.startsWith(pp))) {
     if (!token) {
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
-    // Token'dan kullanıcı bilgilerini al
-    let user: JwtPayload | string;
+    // API'den kullanıcı bilgilerini çekme
     try {
-      user = jwt.verify(token, process.env.JWT_SECRET!);
-    } catch (error) {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
-    }
+      const apiUrl = `${request.nextUrl.origin}/api/auth`; 
 
-    // Kullanıcının rolünü kontrol et
-    if (typeof user !== 'string' && user.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Cookie': `token=${token}`
+         },
+        cache: 'no-cache'
+      });
+
+      if (!response.ok) {
+        return NextResponse.redirect(new URL("/auth/login", request.url));
+      }
+
+      const apiData = await response.json();
+
+        if (!apiData.success || !apiData.data || !apiData.data.user) {
+          return NextResponse.redirect(new URL("/auth/login", request.url));
+        }
+
+      const user = apiData.data.user;
+
+    } catch (error) {
+       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
   }
 
-  // Giriş yapmış kullanıcıların auth sayfalarına erişim kontrolü
+
+   if (adminPaths.some((ap) => path.startsWith(ap))) {
+       if (!token) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+     }
+
+       try {
+           const apiUrl = `${request.nextUrl.origin}/api/auth`; 
+
+         const response = await fetch(apiUrl, {
+           headers: {
+               'Cookie': `token=${token}`
+            },
+           cache: 'no-cache'
+           });
+
+
+           if (!response.ok) {
+             return NextResponse.redirect(new URL("/auth/login", request.url));
+           }
+
+          const apiData = await response.json();
+
+           if (!apiData.success || !apiData.data || !apiData.data.user) {
+               return NextResponse.redirect(new URL("/auth/login", request.url));
+           }
+
+          const user = apiData.data.user;
+
+           if (user.role !== "admin") {
+               return NextResponse.redirect(new URL("/", request.url));
+           }
+
+         } catch (error) {
+           return NextResponse.redirect(new URL("/auth/login", request.url));
+         }
+   }
+
   if (authPaths.includes(path) && token) {
     return NextResponse.redirect(new URL("/", request.url));
   }
@@ -69,4 +108,5 @@ export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
+    runtime: 'nodejs'
 };

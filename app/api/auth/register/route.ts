@@ -64,7 +64,12 @@ export async function POST(request: NextRequest) {
       username: user.username
     });
 
-    const token = signJWT(user);
+    const token = signJWT({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: "user" 
+    });
 
     return apiResponse.successWithCookie(
       { user },

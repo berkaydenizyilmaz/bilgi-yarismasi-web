@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
         id: true,
         email: true,
         username: true,
+        role: true,
         password_hash: true,
       },
     });
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
       id: user.id,
       email: user.email,
       username: user.username,
+      role: user.role
     });
 
     await prisma.user.update({

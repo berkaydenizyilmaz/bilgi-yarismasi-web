@@ -9,6 +9,7 @@ interface JWTPayload {
   id: number;
   email: string;
   username: string;
+  role: string
 }
 
 export async function GET(request: NextRequest) {
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
         id: true,
         email: true,
         username: true,
+        role: true,
         total_play_count: true,
         total_score: true,
         total_correct_answers: true,
