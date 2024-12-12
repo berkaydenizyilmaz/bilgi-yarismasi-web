@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -95,7 +96,7 @@ function QuestionCard({ questionNumber, interaction }: QuestionCardProps) {
     );
 }
 
-export default function QuizResultPage() {
+function QuizResultContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const quizId = searchParams.get("quizId");
@@ -212,4 +213,12 @@ export default function QuizResultPage() {
           </div>
         </div>
       );
+}
+
+export default function QuizResult() {
+  return (
+    <Suspense fallback={<div>Yükleniyor...</div>}>
+      <QuizResultContent />
+    </Suspense>
+  );
 }
