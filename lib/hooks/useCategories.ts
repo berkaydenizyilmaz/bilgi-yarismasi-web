@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { fetcher } from '../swr-config';
 
 export interface Category {
   id: number;
@@ -12,12 +13,10 @@ interface CategoriesResponse {
 }
 
 export function useCategories() {
-  const { data, error, isLoading, mutate } = useSWR<CategoriesResponse>('/api/categories');
-
+  const { data, error, isLoading } = useSWR('/api/categories', fetcher);
   return {
-    categories: data?.data ?? [],
+    categories: data?.data?.data || [],
     isLoading,
-    error: error?.message,
-    mutate, // Veriyi manuel yenileme fonksiyonu
+    error,
   };
 } 

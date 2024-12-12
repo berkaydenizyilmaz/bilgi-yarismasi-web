@@ -38,13 +38,17 @@ export default function CategoriesPage() {
                     </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {categories.map((category) => (
-                        <CategoryCard
-                            key={category.id}
-                            category={category}
-                            onStart={() => router.push(`/quiz/start/${category.id}?name=${encodeURIComponent(category.name)}`)}
-                        />
-                    ))}
+                    {Array.isArray(categories) && categories.length > 0 ? (
+                        categories.map((category) => (
+                            <CategoryCard
+                                key={category.id}
+                                category={category}
+                                onStart={() => router.push(`/quiz/start/${category.id}?name=${encodeURIComponent(category.name)}`)}
+                            />
+                        ))
+                    ) : (
+                        <p className="text-center text-gray-600">Hiç kategori bulunamadı.</p>
+                    )}
                 </div>
             </div>
         </div>

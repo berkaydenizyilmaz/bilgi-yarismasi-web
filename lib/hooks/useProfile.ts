@@ -12,11 +12,11 @@ interface UserProfile {
 export function useProfile() {
   const { data, error, isLoading, mutate } = useSWR<{
     success: boolean;
-    data: UserProfile;
+    data: { user: UserProfile }; 
   }>('/api/auth');
 
   return {
-    profile: data?.data,
+    profile: data?.data?.user || null, 
     isLoading,
     error: error?.message,
     refreshProfile: mutate,
