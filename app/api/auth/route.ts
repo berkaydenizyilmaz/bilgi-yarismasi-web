@@ -13,7 +13,6 @@ interface JWTPayload {
 
 export async function GET(request: NextRequest) {
   try {
-    logger.request(request);
 
     const token = request.cookies.get("token")?.value;
 
