@@ -45,24 +45,24 @@ export default function ContactPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const response = await fetch("/api/contact", {
+      const response = await fetch("/api/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
-      })
-
-      const data = await response.json()
-
+      });
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        throw new Error(data.error || "Bir hata oluştu")
+        throw new Error(data.error || "Bir hata oluştu");
       }
-
-      setSuccess("Mesajınız başarıyla gönderildi!")
-      form.reset()
+  
+      setSuccess("Mesajınız başarıyla gönderildi!");
+      form.reset();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Bir hata oluştu")
+      setError(error instanceof Error ? error.message : "Bir hata oluştu");
     }
   }
 
