@@ -2,6 +2,7 @@
 
 import { useLeaderboard } from '@/lib/hooks/useLeaderboard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Trophy, Star, Medal } from 'lucide-react'; // İkonları içe aktar
 
 export default function LeaderboardPage() {
   const { leaderboard, isLoading, error } = useLeaderboard();
@@ -39,10 +40,16 @@ export default function LeaderboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {leaderboard.map((entry) => (
+              {leaderboard.map((entry, index) => (
                 <tr key={entry.username} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {entry.leaderboard.rank}
+                    {index < 3 ? (
+                      index === 0 ? <Trophy className="inline h-5 w-5 text-yellow-500" /> :
+                      index === 1 ? <Trophy className="inline h-5 w-5 text-gray-500" /> :
+                      <Trophy className="inline h-5 w-5 text-yellow-800" />
+                    ) : (
+                      entry.leaderboard.rank
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {entry.username}

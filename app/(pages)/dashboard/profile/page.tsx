@@ -34,6 +34,8 @@ export default function ProfilePage() {
   const [quizHistory, setQuizHistory] = useState<QuizHistory[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -62,6 +64,18 @@ export default function ProfilePage() {
     fetchProfileData()
   }, [])
 
+  const handleNextPage = () => {
+    if ((currentPage + 1) * itemsPerPage < quizHistory.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -77,6 +91,8 @@ export default function ProfilePage() {
       </div>
     )
   }
+
+  const paginatedQuizHistory = quizHistory.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -138,10 +154,30 @@ export default function ProfilePage() {
         <Card className="p-6">
           <h2 className="text-2xl font-semibold mb-4">Quiz Geçmişi</h2>
           <div className="space-y-4">
-            {quizHistory.map((quiz) => (
+            {paginatedQuizHistory.map((quiz) => (
               <QuizHistoryItem key={quiz.id} quiz={quiz} />
             ))}
           </div>
+
+          {/* Sayfa Navigasyonu */}
+          {quizHistory.length > itemsPerPage && (
+            <div className="flex justify-between mt-4">
+              <Button 
+                onClick={handlePrevPage} 
+                disabled={currentPage === 0} 
+                className="bg-orange-600 text-white hover:bg-orange-500 transition duration-300 px-4 py-2 rounded-md"
+              >
+                Önceki
+              </Button>
+              <Button 
+                onClick={handleNextPage} 
+                disabled={(currentPage + 1) * itemsPerPage >= quizHistory.length} 
+                className="bg-orange-600 text-white hover:bg-orange-500 transition duration-300 px-4 py-2 rounded-md"
+              >
+                Sonraki
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
     </div>

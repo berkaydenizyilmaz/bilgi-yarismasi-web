@@ -66,8 +66,8 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-orange-50"> {/* Arka plan rengi turuncu tonlarıyla uyumlu hale getirildi */}
+      <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-lg border border-gray-300">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-orange-600">İletişim</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -96,7 +96,7 @@ export default function ContactPage() {
                 <FormItem>
                   <FormLabel>Adınız</FormLabel>
                   <FormControl>
-                    <Input placeholder="Adınızı girin" {...field} />
+                    <Input placeholder="Adınızı girin" {...field} className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,7 +109,7 @@ export default function ContactPage() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="ornek@mail.com" {...field} />
+                    <Input type="email" placeholder="ornek@mail.com" {...field} className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,13 +122,13 @@ export default function ContactPage() {
                 <FormItem>
                   <FormLabel>Mesajınız</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Mesajınızı buraya yazın" {...field} />
+                    <Textarea placeholder="Mesajınızı buraya yazın" {...field} className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="bg-orange-600 hover:bg-orange-500">Gönder</Button>
+            <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-500 transition duration-300">Gönder</Button>
           </form>
         </Form>
       </div>
