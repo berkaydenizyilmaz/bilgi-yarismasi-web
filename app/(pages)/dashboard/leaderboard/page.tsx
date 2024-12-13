@@ -2,7 +2,7 @@
 
 import { useLeaderboard } from '@/lib/hooks/useLeaderboard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Trophy, Star, Medal } from 'lucide-react'; // İkonları içe aktar
+import { Trophy } from 'lucide-react';
 
 export default function LeaderboardPage() {
   const { leaderboard, isLoading, error } = useLeaderboard();

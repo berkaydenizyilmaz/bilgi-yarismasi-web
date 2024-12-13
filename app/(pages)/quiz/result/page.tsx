@@ -158,7 +158,7 @@ function QuizResultContent() {
           <div className="max-w-3xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">
-                {result.category.name} Quiz Sonuçları
+                {result.category.name} Kategorisi Quiz Sonuçları
               </h1>
               <Button
                 variant="outline"

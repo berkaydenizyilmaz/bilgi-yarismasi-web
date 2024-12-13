@@ -66,7 +66,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-orange-50"> {/* Arka plan rengi turuncu tonlarıyla uyumlu hale getirildi */}
+    <div className="flex min-h-screen items-center justify-center"> {/* Arka plan rengi turuncu tonlarıyla uyumlu hale getirildi */}
       <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-lg border border-gray-300">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-orange-600">İletişim</h2>

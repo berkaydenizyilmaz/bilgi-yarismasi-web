@@ -9,6 +9,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
+
 export default function QuizPage() {
   const { categoryId } = useParams<{ categoryId: string }>()
   const searchParams = useSearchParams()
@@ -81,8 +82,8 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="container mx-auto my-20 h-screen px-4 py-8">
+      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             {categoryName}
@@ -100,7 +101,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <Card className="p-8 mb-6">
+        <Card className="p-8 mb-6 shadow-md" style={{ minHeight: '250px' }}> {/* Soru alanının minimum yüksekliği artırıldı */}
           <h2 className="text-2xl font-semibold mb-6">
             {currentQuestion.question_text}
           </h2>
@@ -130,10 +131,10 @@ export default function QuizPage() {
             <Button
               disabled={!selectedOption || isSubmitting}
               onClick={handleFinishQuiz}
-              className="bg-green-600 hover:bg-green-700 text-lg px-8 py-3"
+              className="bg-green-600 hover:bg-green-700 text-lg px-8 py-3 rounded-md transition duration-300"
             >
               {isSubmitting ? (
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   <LoadingSpinner />
                   Sonuçlar Hesaplanıyor...
                 </div>
@@ -145,7 +146,7 @@ export default function QuizPage() {
             <Button
               disabled={!selectedOption}
               onClick={handleNextQuestion}
-              className="bg-orange-600 hover:bg-orange-700 text-lg px-8 py-3"
+              className="bg-orange-600 hover:bg-orange-700 text-lg px-8 py-3 rounded-md transition duration-300"
             >
               Sonraki Soru
             </Button>
