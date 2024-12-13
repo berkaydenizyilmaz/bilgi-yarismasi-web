@@ -5,10 +5,12 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function CategoriesPage() {
     const { categories, isLoading, error } = useCategories();
     const router = useRouter();
+    const [selectedCategory, setSelectedCategory] = useState<number | null>(null); // Seçilen kategori durumu
 
     if (isLoading) {
         return (
@@ -27,63 +29,51 @@ export default function CategoriesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-gray-50 py-12 px-4">
+            <div className="max-w-5xl mx-auto">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                        Quiz Kategorileri
-                    </h1>
-                    <p className="text-lg text-gray-600">
-                        Kendini test etmek istediğin kategoriyi seç ve yarışmaya başla!
-                    </p>
+                    <h1 className="text-5xl font-bold text-orange-600 mb-4">Quiz Kategorileri</h1>
+                    <p className="text-3xl text-gray-800 mb-4">Quiz çözmeye başlamak için bir kategori seçin.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Array.isArray(categories) && categories.length > 0 ? (
                         categories.map((category) => (
-                            <CategoryCard
-                                key={category.id}
-                                category={category}
-                                onStart={() => router.push(`/quiz/start/${category.id}?name=${encodeURIComponent(category.name)}`)}
-                            />
+                            <div key={category.id} className="flex justify-center">
+                                <Button 
+                                    onClick={() => setSelectedCategory(category.id)} // Kategori seçildiğinde durumu güncelle
+                                    className={`relative w-full h-40 flex flex-col items-center justify-center text-lg font-semibold rounded-lg transition-all duration-300 
+                                        ${selectedCategory === category.id ? 'bg-orange-600 text-white shadow-lg' : 'bg-white text-orange-600 border border-orange-600 hover:bg-orange-50'}`}
+                                >
+                                    <BookOpen />
+                                    <span className="text-center">{category.name}</span> 
+                                </Button>
+                            </div>
                         ))
                     ) : (
                         <p className="text-center text-gray-600">Hiç kategori bulunamadı.</p>
                     )}
                 </div>
+                {/*  Aşağıdaki değişiklik butonun her zaman görünür olmasını sağlar */}
+                {selectedCategory ? (
+                    <div className="text-center mt-8">
+                        <Button 
+                            onClick={() => router.push(`/quiz/start/${selectedCategory}?name=${encodeURIComponent(categories.find((cat: { id: number; name: string; questionCount: number; }) => cat.id === selectedCategory)?.name || '')}`)}
+                            className="bg-orange-600 hover:bg-orange-700 transition-colors text-white font-bold py-6 px-8 rounded-lg shadow-lg"
+                        >
+                            Yarışmaya Başla
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="text-center mt-8">
+                        <Button 
+                            onClick={() => {}} // tıklama fonksiyonu boş bırakıldı
+                            className="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-6 px-8 rounded-lg shadow-lg" // tıklanamaz hale getirildi
+                        >
+                            Yarışmaya Başla
+                        </Button>
+                    </div>
+                )}
             </div>
-        </div>
-    );
-}
-
-interface CategoryCardProps {
-    category: {
-        id: number;
-        name: string;
-        questionCount: number;
-    };
-    onStart: () => void;
-}
-
-function CategoryCard({ category, onStart }: CategoryCardProps) {
-    return (
-        <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <div className="flex items-start space-x-4 mb-4">
-                <div className="bg-orange-50 p-3 rounded-lg">
-                    <BookOpen className="h-8 w-8 text-orange-600" />
-                </div>
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">{category.name}</h3>
-                    <p className="text-gray-600 text-sm">
-                        Bu kategoride {category.questionCount} soru bulunuyor
-                    </p>
-                </div>
-            </div>
-            <Button 
-                onClick={onStart}
-                className="w-full bg-orange-600 hover:bg-orange-700"
-            >
-                Yarışmaya Başla
-            </Button>
         </div>
     );
 }
