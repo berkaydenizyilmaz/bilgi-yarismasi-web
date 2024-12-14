@@ -11,10 +11,6 @@ export default function PlayPage() {
         router.push('/play/classic'); // Klasik mod seçildiğinde kategori sayfasına yönlendir
     };
 
-    const handleAIModel = () => {
-        // Yapay zeka moduna yönlendirme işlemi
-    };
-
     return (
         <div className="min-h-screen px-4 flex flex-col items-center mt-36">
             <h1 className="text-4xl font-bold text-orange-600 mb-8">Oyun Modları</h1>
@@ -36,7 +32,6 @@ export default function PlayPage() {
                     <h1 className="text-3xl font-bold text-orange-600 mb-4">Yapay Zeka Modu</h1>
                     <p className="text-lg text-gray-800 mb-6 text-center">Yapay zeka modunda, sorular anlık olarak yapay zeka tarafından üretiliyor. Her seferinde yeni bir deneyim yaşayın!</p>
                     <Button 
-                        onClick={handleAIModel} 
                         className="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-4 px-8 rounded-lg shadow-lg"
                         disabled
                     >
@@ -47,7 +42,6 @@ export default function PlayPage() {
                     <h1 className="text-3xl font-bold text-orange-600 mb-4">Yapay Zeka+ Modu</h1>
                     <p className="text-lg text-gray-800 mb-6 text-center">Yapay zeka+ modunda, kategoriyi de siz belirliyorsunuz ve sorular anlık olarak yapay zeka tarafından üretiliyor. Her seferinde yeni bir deneyim yaşayın!</p>
                     <Button 
-                        onClick={handleAIModel} 
                         className="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-4 px-8 rounded-lg shadow-lg"
                         disabled
                     >
