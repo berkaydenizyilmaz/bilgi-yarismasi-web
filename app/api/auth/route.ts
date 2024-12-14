@@ -56,9 +56,6 @@ export async function GET(request: NextRequest) {
     return apiResponse.success({ user });
 
   } catch (error) {
-    logger.error(error as Error, {
-      path: request.url
-    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);
