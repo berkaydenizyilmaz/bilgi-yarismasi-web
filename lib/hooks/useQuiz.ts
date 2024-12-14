@@ -123,7 +123,7 @@ export const useQuiz = (categoryId: string) => {
             throw new Error(result.error?.message || 'Quiz sonuçları kaydedilemedi');
         }
 
-        router.push(`/quiz/result?quizId=${result.data.data.quizId}`);
+        router.push(`/play/quiz/result?quizId=${result.data.data.quizId}`);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Quiz sonuçları kaydedilemedi';
         setError(errorMessage);

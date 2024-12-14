@@ -160,13 +160,6 @@ function QuizResultContent() {
               <h1 className="text-3xl font-bold">
                 {result.category.name} Kategorisi Quiz Sonuçları
               </h1>
-              <Button
-                variant="outline"
-                onClick={() => router.back()}
-                className="text-gray-600"
-              >
-                Geri Dön
-              </Button>
             </div>
       
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -203,9 +196,6 @@ function QuizResultContent() {
             </div>
       
             <div className="text-center mt-8 space-x-4">
-              <Button variant="outline" onClick={() => router.back()}>
-                Geri Dön
-              </Button>
               <Link href="/play/quiz/classic">
                 <Button>Yeni Quiz Başlat</Button>
               </Link>

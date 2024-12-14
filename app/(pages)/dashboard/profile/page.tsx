@@ -245,7 +245,7 @@ function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
           </div>
           <Button 
             variant="outline"
-            onClick={() => router.push(`/quiz/result?quizId=${quiz.id}`)}
+            onClick={() => router.push(`/play/quiz/result?quizId=${quiz.id}`)}
             className="ml-4"
           >
             Detaylar
