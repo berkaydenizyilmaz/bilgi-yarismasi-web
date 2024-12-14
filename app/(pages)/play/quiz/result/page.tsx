@@ -196,7 +196,7 @@ function QuizResultContent() {
             </div>
       
             <div className="text-center mt-8 space-x-4">
-              <Link href="/play/quiz/classic">
+              <Link href="/play/classic">
                 <Button>Yeni Quiz Başlat</Button>
               </Link>
             </div>
