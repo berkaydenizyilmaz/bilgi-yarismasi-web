@@ -17,7 +17,7 @@ function Header() {
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
     ...(user ? [
-      { name: 'Oyna', href: '/quiz/categories' },
+      { name: 'Oyna', href: '/play' },
       { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
       { name: 'İletişim', href: '/dashboard/contact' },
       { name: 'Profil', href: '/dashboard/profile' },

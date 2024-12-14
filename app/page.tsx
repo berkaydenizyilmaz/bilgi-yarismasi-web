@@ -50,7 +50,7 @@ export default function HomePage() {
                         Bilgi evreninde sınırları zorlayın! QuizVerse ile öğrenmeyi eğlenceye dönüştürün.
                     </p>
                     <div className="flex justify-center gap-4">
-                        <Link href="/quiz/categories">
+                        <Link href="/play">
                             <Button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-6 text-lg rounded-xl transition-transform hover:scale-105">
                                 Keşfetmeye Başla
                                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -103,16 +103,6 @@ export default function HomePage() {
                                 />
                             ))}
                         </div>
-                        {categories.length > 6 && (
-                            <div className="text-center mt-8">
-                                <Link href="/quiz/categories">
-                                    <Button variant="outline">
-                                        Tüm Kategorileri Gör
-                                        <ArrowRight className="ml-2 h-5 w-5" />
-                                    </Button>
-                                </Link>
-                            </div>
-                        )}
                     </div>
                 </section>
             )}
@@ -150,7 +140,7 @@ export default function HomePage() {
                                 QuizVerse'de keşfedilecek daha çok şey var!
                             </p>
                             <div className="flex justify-center gap-4">
-                                <Link href="/quiz/categories">
+                                <Link href="/play">
                                     <Button className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl">
                                         Quiz'e Başla
                                     </Button>
