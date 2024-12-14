@@ -124,7 +124,7 @@ function QuizResultContent() {
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Sonuçlar alınamadı");
                 setTimeout(() => {
-                    router.push('/quiz/categories');
+                    router.push('/play/quiz/classic');
                 }, 3000);
             } finally {
                 setIsLoading(false);
@@ -146,7 +146,7 @@ function QuizResultContent() {
         return (
             <div className="text-center p-4">
                 <p className="text-red-500 mb-4">{error || "Sonuç bulunamadı"}</p>
-                <Link href="/quiz/categories">
+                <Link href="/play/quiz/classic">
                     <Button>Kategorilere Dön</Button>
                 </Link>
             </div>
@@ -206,7 +206,7 @@ function QuizResultContent() {
               <Button variant="outline" onClick={() => router.back()}>
                 Geri Dön
               </Button>
-              <Link href="/quiz/categories">
+              <Link href="/play/quiz/classic">
                 <Button>Yeni Quiz Başlat</Button>
               </Link>
             </div>

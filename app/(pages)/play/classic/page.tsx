@@ -56,7 +56,7 @@ export default function ClassicModePage() {
                 {selectedCategory && (
                     <div className="text-center mt-8">
                         <Button 
-                            onClick={() => router.push(`/quiz/start/${selectedCategory}?name=${encodeURIComponent(categories.find((cat: { id: number; name: string }) => cat.id === selectedCategory)?.name || '')}`)}
+                            onClick={() => router.push(`/play/quiz/start/${selectedCategory}?name=${encodeURIComponent(categories.find((cat: { id: number; name: string }) => cat.id === selectedCategory)?.name || '')}`)}
                             className="bg-orange-600 hover:bg-orange-700 transition-colors text-white font-bold py-6 px-8 rounded-lg shadow-lg"
                         >
                             Yarışmaya Başla

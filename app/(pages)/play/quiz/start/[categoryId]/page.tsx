@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import Link from "next/link"
-import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
 
 export default function QuizPage() {
   const { categoryId } = useParams<{ categoryId: string }>()
   const searchParams = useSearchParams()
   const categoryName = searchParams.get("name")
-  const { user } = useAuth()
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -63,7 +61,7 @@ export default function QuizPage() {
               Hata Oluştu
             </h2>
             <p className="text-red-600 mb-6">{error}</p>
-            <Link href="/quiz/categories">
+            <Link href="/play/quiz/classic">
               <Button variant="outline" className="bg-white hover:bg-gray-50">
                 Kategorilere Geri Dön
               </Button>
