@@ -15,9 +15,24 @@ interface Category {
 }
 
 export default function HomePage() {
+    const { categories, isLoading, error } = useCategories();
     
 
-    
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <LoadingSpinner />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center p-4">
+                <p className="text-red-500">{error}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -71,7 +86,26 @@ export default function HomePage() {
                 </div>
             </section>
 
-           
+            {/* Kategoriler Section */}
+            {categories.length > 0 && (
+                <section className="py-16 px-4 bg-orange-50">
+                    <div className="max-w-6xl mx-auto">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                            Popüler Kategoriler
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {categories.slice(0, 6).map((category: Category) => (
+                                <CategoryCard
+                                    key={category.id}
+                                    icon={<BookOpen className="h-8 w-8 text-orange-600" />}
+                                    title={category.name}
+                                    description={"Bu kategori hakkında daha fazla bilgi yakında eklenecek"}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* CTA Section */}
             <section className="py-20 px-4 bg-orange-600 text-white">
