@@ -14,10 +14,27 @@ interface Category {
     description: string;
 }
 
+
 export default function HomePage() {
+
+    const { categories, isLoading, error } = useCategories();
+    const { user } = useAuth();
     
 
-    
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <LoadingSpinner />
+            </div>
+        );
+    }
+    if (error) {
+        return (
+            <div className="text-center p-4">
+                <p className="text-red-500">{error}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -72,12 +89,73 @@ export default function HomePage() {
             </section>
 
             {/* Kategoriler Section */}
+                        {categories.length > 0 && (
+                <section className="py-16 px-4 bg-orange-50">
+                    <div className="max-w-6xl mx-auto">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                            Popüler Kategoriler
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {categories.slice(0, 6).map((category: Category) => (
+                                <CategoryCard
+                                    key={category.id}
+                                    icon={<BookOpen className="h-8 w-8 text-orange-600" />}
+                                    title={category.name}
+                                    description={"Bu kategori hakkında daha fazla bilgi yakında eklenecek"}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
             
 
             {/* CTA Section */}
             <section className="py-20 px-4 bg-orange-600 text-white">
                 <div className="max-w-4xl mx-auto text-center">
-                    
+                {!user ? (
+                        <>
+                            <h2 className="text-4xl font-bold mb-6">
+                                QuizVerse Topluluğuna Katılın!
+                            </h2>
+                            <p className="text-xl mb-8 opacity-90">
+                                Hemen üye olun ve bilgi evreninin bir parçası olun.
+                            </p>
+                            <div className="flex justify-center gap-4">
+                                <Link href="/auth/register">
+                                    <Button className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl">
+                                        Üye Ol
+                                    </Button>
+                                </Link>
+                                <Link href="/auth/login">
+                                    <Button variant="outline" className="bg-transparent border-white text-white hover:bg-orange-700 px-8 py-6 text-lg rounded-xl">
+                                        Giriş Yap
+                                    </Button>
+                                </Link>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-4xl font-bold mb-6">
+                                Yeni Bir Maceraya Hazır mısınız?
+                            </h2>
+                            <p className="text-xl mb-8 opacity-90">
+                                QuizVerse'de keşfedilecek daha çok şey var!
+                            </p>
+                            <div className="flex justify-center gap-4">
+                                <Link href="/play">
+                                    <Button className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl">
+                                        Quiz'e Başla
+                                    </Button>
+                                </Link>
+                                <Link href="/dashboard/profile">
+                                    <Button variant="outline" className="bg-transparent border-white text-white hover:bg-orange-700 px-8 py-6 text-lg rounded-xl">
+                                        Profilim
+                                    </Button>
+                                </Link>
+                            </div>
+                        </>
+                    )}
                 </div>
             </section>
         </div>
