@@ -124,7 +124,7 @@ function QuizResultContent() {
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Sonuçlar alınamadı");
                 setTimeout(() => {
-                    router.push('/play/quiz/classic');
+                    router.push('/play/classic');
                 }, 3000);
             } finally {
                 setIsLoading(false);
