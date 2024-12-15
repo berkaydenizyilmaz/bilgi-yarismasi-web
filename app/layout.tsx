@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext"
 import { usePathname } from "next/navigation"
 import Footer from "@/components/Footer"
 import { Providers } from './providers';
+import { Toaster } from "@/components/ui/toaster"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -38,6 +39,7 @@ export default function RootLayout({
               {!isAuthPage && !isAdminPage && <Header />}
               <main className="flex-grow">
                 {children}
+                <Toaster />
               </main>
               {!isAuthPage && !isAdminPage && <Footer />}
             </div>
