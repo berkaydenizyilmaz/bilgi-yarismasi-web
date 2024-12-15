@@ -23,13 +23,13 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Hızlı Linkler</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/quiz/categories" className="hover:text-orange-500 transition-colors">
-                  Kategoriler
+                <Link href="/dashboard/profile" className="hover:text-orange-500 transition-colors">
+                  Profil
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/profile" className="hover:text-orange-500 transition-colors">
-                  Profil
+                <Link href="/dashboard/leaderboard" className="hover:text-orange-500 transition-colors">
+                  Lider Tablosu
                 </Link>
               </li>
               <li>
