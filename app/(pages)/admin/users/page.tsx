@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Users, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { ToastProvider, ToastViewport } from "@/components/ui/toast";
 
 // Define User interface for type safety
