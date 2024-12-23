@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation"
 import Footer from "@/components/Footer"
 import { Providers } from './providers';
 import { Toaster } from "@/components/ui/toaster"
+import AdminSidebar from "@/components/AdminHeader";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,16 +37,29 @@ export default function RootLayout({
         <AuthProvider>
           <Providers>
             <div className="flex flex-col min-h-screen">
-              {!isAuthPage && !isAdminPage && <Header />}
-              <main className="flex-grow">
-                {children}
-                <Toaster />
-              </main>
-              {!isAuthPage && !isAdminPage && <Footer />}
+              {!isAuthPage && (
+                <header className="flex-shrink-0">
+                  <Header />
+                </header>
+              )}
+              
+              <div className="flex flex-1 overflow-hidden">
+                {isAdminPage && <AdminSidebar />}
+                <main className="flex-1 overflow-auto">
+                  {children}
+                  <Toaster />
+                </main>
+              </div>
+
+              {!isAuthPage && (
+                <footer className="flex-shrink-0">
+                  <Footer />
+                </footer>
+              )}
             </div>
           </Providers>
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }
