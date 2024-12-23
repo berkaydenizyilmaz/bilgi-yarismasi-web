@@ -72,10 +72,10 @@ export default function AdminLogs() {
   const logsData = data.data.logs || [];
 
   return (
-    <div className="bg-gray-50 min-h-screen py-10">
+    <div className="bg-orange-50 min-h-screen py-10">
       <main className="max-w-7xl mx-auto px-4">
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-800 to-blue-900 p-6">
+          <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-6">
             <h2 className="text-3xl font-bold text-white flex items-center gap-3">
               <FileText className="h-8 w-8" />
               Sistem Logları
