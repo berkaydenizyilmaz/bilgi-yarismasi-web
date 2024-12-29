@@ -22,11 +22,7 @@ export default function HomePage() {
     
 
     if (isLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <LoadingSpinner />
-            </div>
-        );
+        return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-10 w-10" /></div>;
     }
     if (error) {
         return (
