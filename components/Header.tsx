@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation"
 function Header() {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Mobil menü durumu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
@@ -62,7 +62,7 @@ function Header() {
                 href={item.href}
                 className={cn(
                   "px-4 py-3 rounded-lg text-base font-medium transition-colors",
-                  pathname === item.href ? "bg-orange-700 text-white" : "text-white hover:bg-orange-700"
+                  pathname === item.href || item.href.includes("/admin") ? "bg-orange-700 text-white" : "text-white hover:bg-orange-700"
                 )}
                 onClick={() => setIsMenuOpen(false)} // Mobilde tıklanınca menüyü kapat
               >

@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation"
 import Footer from "@/components/Footer"
 import { Providers } from './providers';
 import { Toaster } from "@/components/ui/toaster"
-import AdminSidebar from "@/components/AdminHeader";
+import AdminSidebar from "@/components/AdminSidebar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
