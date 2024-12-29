@@ -50,11 +50,7 @@ export default function AdminLogs() {
   }
 
   if (isLoading) {
-    return (
-      <div className="p-6 flex justify-center items-center h-screen bg-gray-100">
-        <LoadingSpinner className="text-orange-500 animate-spin h-12 w-12" />
-      </div>
-    );
+    return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
   }
 
   if (!data || !data.data || !data.data.logs) {

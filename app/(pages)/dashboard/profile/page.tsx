@@ -77,11 +77,7 @@ export default function ProfilePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoadingSpinner />
-      </div>
-    )
+    return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
   }
 
   if (error || !stats) {
