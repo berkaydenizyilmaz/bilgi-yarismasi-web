@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, Angry, Users, Monitor } from "lucide-react";
+import { Home, FileText, Angry, Users, Monitor, Plus } from "lucide-react";
 
 function AdminSidebar() {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ function AdminSidebar() {
     { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5" /> },
     { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <Angry className="h-5 w-5" /> },
     { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5" /> },
+    { href: "/admin/add-question", label: "Soru Ekle", icon: <Plus className="h-5 w-5" /> },
     { href: "/", label: "Kullanıcı Arayüzüne Dön", icon: <Monitor className="h-5 w-5" /> },
   ];
 
