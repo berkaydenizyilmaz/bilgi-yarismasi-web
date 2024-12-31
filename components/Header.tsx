@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { usePathname } from "next/navigation"
 
-export function Header() {
+export default function Header() {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
