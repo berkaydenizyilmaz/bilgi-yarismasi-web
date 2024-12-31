@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from 'react';
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
 
+// Temel veri tipleri için interface tanımlamaları
 interface Question {
     question_text: string;
     correct_option: string;
@@ -44,9 +45,9 @@ interface StatCardProps {
 
 function StatCard({ title, value, className = "" }: StatCardProps) {
     return (
-        <Card className={`text-center p-4 ${className}`}>
-            <p className="text-gray-600">{title}</p>
-            <p className="text-3xl font-bold text-gray-800">{value}</p>
+        <Card className={`text-center p-4 md:p-6 ${className}`}>
+            <p className="text-sm md:text-base text-gray-600">{title}</p>
+            <p className="text-2xl md:text-3xl font-bold text-gray-800">{value}</p>
         </Card>
     );
 }
@@ -65,15 +66,15 @@ function QuestionCard({ questionNumber, interaction }: QuestionCardProps) {
     };
 
     return (
-        <Card className="p-4">
-            <h3 className="font-semibold mb-2">
+        <Card className="p-4 md:p-6 mb-4">
+            <h3 className="text-base md:text-lg font-semibold mb-2">
                 Soru {questionNumber}: {interaction.question.question_text}
             </h3>
             <div className="space-y-2">
                 {Object.entries(options).map(([key, value]) => (
                     <div
                         key={key}
-                        className={`p-2 rounded ${
+                        className={`p-2 md:p-3 rounded text-sm md:text-base ${
                             interaction.user_answer === key
                                 ? interaction.is_correct
                                     ? "bg-green-100 text-green-800"
@@ -96,6 +97,7 @@ function QuestionCard({ questionNumber, interaction }: QuestionCardProps) {
     );
 }
 
+// Quiz sonuçlarını görüntülemek için ana bileşen
 function QuizResultContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -106,6 +108,7 @@ function QuizResultContent() {
     const { refreshLeaderboard } = useLeaderboard();
 
     useEffect(() => {
+        // Quiz sonuçlarını API'den getir ve leaderboard'u güncelle
         const fetchResult = async () => {
             try {
                 if (!quizId) {
@@ -134,6 +137,7 @@ function QuizResultContent() {
         fetchResult();
     }, [quizId, router, refreshLeaderboard]);
 
+    // Yükleme durumu kontrolü
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
     }
@@ -150,61 +154,66 @@ function QuizResultContent() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold">
-                {result.category.name} Kategorisi Quiz Sonuçları
-              </h1>
+        <div className="container mx-auto px-4 py-6 md:py-8">
+            <div className="max-w-3xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0">
+                        {result.category.name} Kategorisi Quiz Sonuçları
+                    </h1>
+                </div>
+
+                {/* İstatistik kartları */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                    <StatCard
+                        title="Toplam Soru"
+                        value={result.total_questions}
+                        className="bg-gray-50"
+                    />
+                    <StatCard
+                        title="Başarı Oranı"
+                        value={`%${result.score}`}
+                        className="bg-gray-50"
+                    />
+                    <StatCard
+                        title="Doğru Cevap"
+                        value={result.correct_answers}
+                        className="bg-green-50 text-green-700"
+                    />
+                    <StatCard
+                        title="Yanlış Cevap"
+                        value={result.incorrect_answers}
+                        className="bg-red-50 text-red-700"
+                    />
+                </div>
+
+                {/* Soru-cevap kartları listesi */}
+                <div className="space-y-4 md:space-y-6">
+                    {result.user_interactions.map((interaction, index) => (
+                        <QuestionCard
+                            key={index}
+                            questionNumber={index + 1}
+                            interaction={interaction}
+                        />
+                    ))}
+                </div>
+
+                <div className="text-center mt-6 md:mt-8">
+                    <Link href="/play/classic">
+                        <Button className="text-sm md:text-base px-6 py-2 md:px-8 md:py-3">
+                            Yeni Quiz Başlat
+                        </Button>
+                    </Link>
+                </div>
             </div>
-      
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <StatCard
-                title="Toplam Soru"
-                value={result.total_questions}
-                className="bg-gray-50"
-              />
-              <StatCard
-                title="Başarı Oranı"
-                value={`%${result.score}`}
-                className="bg-gray-50"
-              />
-              <StatCard
-                title="Doğru Cevap"
-                value={result.correct_answers}
-                className="bg-green-50 text-green-700"
-              />
-              <StatCard
-                title="Yanlış Cevap"
-                value={result.incorrect_answers}
-                className="bg-red-50 text-red-700"
-              />
-            </div>
-      
-            <div className="space-y-6">
-              {result.user_interactions.map((interaction, index) => (
-                <QuestionCard
-                  key={index}
-                  questionNumber={index + 1}
-                  interaction={interaction}
-                />
-              ))}
-            </div>
-      
-            <div className="text-center mt-8 space-x-4">
-              <Link href="/play/classic">
-                <Button>Yeni Quiz Başlat</Button>
-              </Link>
-            </div>
-          </div>
         </div>
-      );
+    );
 }
 
-export default function QuizResult() {
-  return (
-    <Suspense fallback={<div>Yükleniyor...</div>}>
-      <QuizResultContent />
-    </Suspense>
-  );
+// Sayfa yüklenirken Suspense ile sarmalanmış ana bileşen
+export default function QuizResultPage() {
+    return (
+        <Suspense fallback={<LoadingSpinner />}>
+            <QuizResultContent />
+        </Suspense>
+    );
 }

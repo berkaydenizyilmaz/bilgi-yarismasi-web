@@ -1,128 +1,138 @@
-"use client";
-import useSWR from "swr";
-import { fetcher } from "@/lib/swr-config";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+"use client"
+
+import { useState } from "react"
+import useSWR from "swr"
+import { fetcher } from "@/lib/swr-config"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react"
+
+// Tip tanımlamaları
+interface Feedback {
+  id: number
+  name: string
+  email: string
+  message: string
+  createdAt: string
+}
+
+interface FeedbackData {
+  feedback: Feedback[]
+  totalFeedback: number
+}
 
 export default function AdminFeedback() {
-  const [page, setPage] = useState(1);
-  const { data, error, isLoading } = useSWR(
-    `/api/admin/feedbacks?limit=15&offset=${(page - 1) * 15}`,
-    fetcher
-  );
+  // Sayfalama için state ve sabitleri tanımla
+  const [page, setPage] = useState(1)
+  const pageSize = 10
 
+  // SWR ile veri çekme
+  const { data, error, isLoading } = useSWR<{ 
+    success: boolean
+    message: string
+    data: FeedbackData 
+  }>(`/api/admin/feedbacks?limit=${pageSize}&offset=${(page - 1) * pageSize}`, fetcher)
+
+  // Yükleme durumu
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <LoadingSpinner className="h-8 w-8" />
+      </div>
+    )
+  }
+
+  // Hata durumu
   if (error) {
     return (
-      <div className="p-6 bg-red-50 min-h-screen flex flex-col justify-center items-center">
-        <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
-          <p className="text-red-500 text-center mb-4">
-            Geri bildirimleri yüklerken bir hata oluştu: {error.message}
-          </p>
-          <Link
-            href="/admin"
-            className="w-full block text-center bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition-colors"
-          >
-            Admin Paneline Dön
-          </Link>
-        </div>
+      <div className="text-center p-4 md:p-6">
+        <p className="text-red-500 text-sm md:text-base">
+          Geri bildirimler yüklenirken bir hata oluştu
+        </p>
       </div>
-    );
+    )
   }
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
-  }
+  // Veriyi hazırla
+  const feedbacks = data?.data?.feedback || []
+  const totalFeedbacks = data?.data?.totalFeedback || 0
 
-  if (!data || !data.data || !data.data.feedback) {
+  // Veri boş ise
+  if (feedbacks.length === 0) {
     return (
-      <div className="p-6 min-h-screen bg-gray-100 flex justify-center items-center">
+      <div className="p-4 md:p-6 min-h-screen bg-gray-100 flex justify-center items-center">
         <div className="text-center">
-          <MessageCircle className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-          <p className="text-xl text-gray-600">Henüz geri bildirim yok.</p>
+          <MessageSquare className="mx-auto mb-4 h-12 md:h-16 w-12 md:w-16 text-gray-400" />
+          <p className="text-lg md:text-xl text-gray-600">Henüz geri bildirim yok.</p>
         </div>
       </div>
-    );
+    )
   }
 
-  const totalPages = Math.ceil(data.data.totalFeedback / 15);
-  const feedbackData = data.data.feedback || [];
+  const totalPages = Math.ceil(totalFeedbacks / pageSize)
 
+  // Ana içerik
   return (
-    <div className="bg-orange-50 min-h-screen py-10">
+    <div className="bg-orange-50 min-h-screen py-6 md:py-10">
       <main className="max-w-7xl mx-auto px-4">
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-6">
-            <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-              <MessageCircle className="h-8 w-8" />
-              Geri Bildirimler
+        <Card className="overflow-hidden">
+          {/* Başlık alanı */}
+          <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-4 md:p-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+              <MessageSquare className="h-6 md:h-8 w-6 md:w-8" />
+              Kullanıcı Geri Bildirimleri
             </h2>
           </div>
 
-          <Table className="w-full">
-            <TableCaption className="bg-gray-50 p-2 text-gray-600">
-              Toplam {data.data.totalFeedback} geri bildirimden {feedbackData.length} tanesi
-            </TableCaption>
-            <TableHeader className="bg-gray-100">
-              <TableRow>
-                <TableHead className="w-1/6">İsim</TableHead>
-                <TableHead className="w-1/6">Email</TableHead>
-                <TableHead className="w-3/6">Mesaj</TableHead>
-                <TableHead className="w-1/6">Tarih</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {feedbackData.map((item: any) => (
-                <TableRow key={item.id} className="hover:bg-gray-50 transition-colors">
-                  <TableCell className="font-medium text-gray-700">{item.name}</TableCell>
-                  <TableCell className="text-gray-600">{item.email}</TableCell>
-                  <TableCell className="break-words max-w-xs overflow-hidden text-ellipsis text-gray-800">
-                    {item.message}
-                  </TableCell>
-                  <TableCell className="text-gray-500 text-sm">
-                    {new Date(item.createdAt).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {/* Geri bildirim listesi */}
+          <div className="divide-y">
+            {feedbacks.map((feedback) => (
+              <div key={feedback.id} className="p-4 md:p-6 hover:bg-gray-50">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-base md:text-lg">
+                    {feedback.name}
+                  </h3>
+                  <span className="text-xs md:text-sm text-gray-500">
+                    {new Date(feedback.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base">
+                  {feedback.message}
+                </p>
+                <div className="mt-2 text-xs md:text-sm text-gray-500">
+                  {feedback.email}
+                </div>
+              </div>
+            ))}
+          </div>
 
+          {/* Sayfalama */}
           {totalPages > 1 && (
-            <div className="bg-white p-4 flex justify-between items-center border-t">
+            <div className="bg-white p-4 md:p-6 flex justify-between items-center border-t">
               <Button
                 variant="outline"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="flex items-center gap-2"
+                className="text-sm md:text-base flex items-center gap-2"
               >
                 <ChevronLeft className="h-4 w-4" /> Önceki
               </Button>
-              <span className="text-gray-600">
+              <span className="text-sm md:text-base text-gray-600">
                 Sayfa {page} / {totalPages}
               </span>
               <Button
                 variant="outline"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="flex items-center gap-2"
+                className="text-sm md:text-base flex items-center gap-2"
               >
                 Sonraki <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           )}
-        </div>
+        </Card>
       </main>
     </div>
-  );
+  )
 }

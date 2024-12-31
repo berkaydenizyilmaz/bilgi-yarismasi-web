@@ -18,6 +18,7 @@ import { useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
+// Form validasyon şeması
 const formSchema = z.object({
   username: z.string().min(3, {
     message: "Kullanıcı adı en az 3 karakter olmalıdır.",
@@ -58,34 +59,37 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sol Kısım */}
-      <div className="w-1/2 p-8 text-white relative flex flex-col justify-between bg-gradient-to-r from-orange-600 to-orange-300">
-        {/* Sayfa Bilgileri */}
+    <div className="flex min-h-screen flex-col md:flex-row overflow-hidden">
+      {/* Sol Kısım - Görsel ve Bilgi (Mobilde Gizli) */}
+      <div className="hidden md:block md:w-1/2 p-8 text-white relative bg-gradient-to-r from-orange-600 to-orange-300">
         <div className="mb-8 mt-8 text-center">
-          <h1 className="text-5xl font-extrabold mb-2">QuizVerse</h1>
-          <h2 className="text-3xl mt-12 font-semibold mb-4">Bilgi Yarışmalarına Katılın!</h2>
-          <p className="mt-14 text-xl leading-relaxed">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-2">QuizVerse</h1>
+          <h2 className="text-2xl md:text-3xl mt-12 font-semibold mb-4">Bilgi Yarışmalarına Katılın!</h2>
+          <p className="mt-14 text-lg md:text-xl leading-relaxed">
             QuizVerse, bilgi yarışmalarına katılabileceğiniz ve kendinizi geliştirebileceğiniz bir platformdur. 
             Hızlı ve eğlenceli bir şekilde bilgi dağarcığınızı genişletmek için hemen kaydolun!
           </p>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 h-1/2">
-          <img src="/registerPage.png" alt="QuizVerse" className="h-full w-full object-cover opacity-85" />
+          <img 
+            src="/registerPage.png" 
+            alt="QuizVerse" 
+            className="h-full w-full object-cover opacity-85" 
+          />
         </div>
       </div>
 
-      {/* Sağ Kısım */}
-      <div className="w-1/2 flex items-center justify-center bg-orange-50">
-        <div className="w-full max-w-md p-6 shadow-lg rounded-lg">
+      {/* Sağ Kısım - Form */}
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-orange-50 p-4">
+        <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold">Kayıt Ol</h2>
-            <p className="text-gray-600 mt-2">QuizVerse'e katılmak için kaydolun!</p>
+            <h2 className="text-2xl md:text-3xl font-bold">Kayıt Ol</h2>
+            <p className="text-gray-600 mt-2 text-sm md:text-base">QuizVerse'e katılmak için kaydolun!</p>
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="username"
@@ -93,7 +97,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Kullanıcı Adı</FormLabel>
                     <FormControl>
-                      <Input placeholder="kullaniciadi" {...field} className="border-2 border-gray-300 rounded-md p-2" />
+                      <Input placeholder="kullaniciadi" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,7 +110,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="ornek@email.com" {...field} className="border-2 border-gray-300 rounded-md p-2" />
+                      <Input placeholder="ornek@email.com" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -119,7 +123,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Şifre</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} className="border-2 border-gray-300 rounded-md p-2" />
+                      <Input type="password" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,15 +136,17 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Şifre Tekrar</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} className="border-2 border-gray-300 rounded-md p-2" />
+                      <Input type="password" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               {error && (
                 <div className="text-red-500 text-sm text-center">{error}</div>
               )}
+
               <Button 
                 type="submit" 
                 className="w-full bg-orange-600 hover:bg-orange-700 transition duration-300"
@@ -155,14 +161,15 @@ export default function RegisterPage() {
                   "Kayıt Ol"
                 )}
               </Button>
+              
+              <p className="text-gray-600 mt-2 text-center text-sm md:text-base">
+                Zaten hesabınız var mı?{" "}
+                <Link href="/auth/login" className="text-orange-600 hover:underline">
+                  Giriş Yap
+                </Link>
+              </p>
             </form>
           </Form>
-          <p className="text-center mt-4">
-            Zaten hesabınız var mı?{" "}
-            <Link href="/auth/login" className="text-orange-600 hover:underline">
-              Giriş Yap
-            </Link>
-          </p>
         </div>
       </div>
     </div>

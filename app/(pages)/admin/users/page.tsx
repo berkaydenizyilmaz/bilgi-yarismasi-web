@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
-import { useState, useEffect } from "react";
 import { 
   Table, 
   TableBody, 
@@ -37,7 +37,7 @@ import { Users, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/lib/hooks/use-toast";
 import { ToastProvider, ToastViewport } from "@/components/ui/toast";
 
-// Define User interface for type safety
+// Tip tanımlamaları
 interface User {
   id: number;
   username: string;
@@ -47,54 +47,43 @@ interface User {
 }
 
 export default function AdminUsers() {
-  // Pagination and data fetching
+  // State tanımlamaları
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const { 
-    data, 
-    error, 
-    mutate, 
-    isLoading 
-  } = useSWR(
-    `/api/admin/users?limit=${pageSize}&offset=${(page - 1) * pageSize}`, 
-    fetcher
-  );
-
-  // State management for user editing and deletion
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<'user' | 'admin'>("user");
   const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
-  
-  // Users and pagination state
   const [totalUsers, setTotalUsers] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
-  
-  // Modal and toast management
-  const { toast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // Update users and total users when data changes
+  // Hooks
+  const { toast } = useToast();
+  const { data, error, mutate, isLoading } = useSWR(
+    `/api/admin/users?limit=${pageSize}&offset=${(page - 1) * pageSize}`, 
+    fetcher
+  );
+
+  // Data güncelleme
   useEffect(() => {
-    if (data && data.data) {
+    if (data?.data) {
       setTotalUsers(data.data.totalUsers || data.data.users.length);
       setUsers(data.data.users || []);
     }
   }, [data]);
 
-  // Delete user handler
-  const handleDelete = async () => {
+  // İşlem fonksiyonları
+  const handleDeleteUser = async () => {
     if (deleteUserId) {
       try {
         const response = await fetch(`/api/admin/users?id=${deleteUserId}`, {
           method: "DELETE",
         });
 
-        if (!response.ok) {
-          throw new Error('Kullanıcı silinemedi');
-        }
+        if (!response.ok) throw new Error('Kullanıcı silinemedi');
 
         mutate();
         setDeleteUserId(null);
@@ -104,7 +93,7 @@ export default function AdminUsers() {
           title: "Başarılı!",
           description: "Kullanıcı başarıyla silindi.",
           duration: 5000,
-          className: "text-lg",
+          className: "text-sm md:text-base",
         });
       } catch (error) {
         console.error("Kullanıcı silme hatası:", error);
@@ -168,22 +157,26 @@ export default function AdminUsers() {
     }
   };
 
-  // Error state
+  // Yükleme durumu
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <LoadingSpinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
+  // Hata durumu
   if (error) {
     return (
-      <div className="p-6 bg-red-50 min-h-screen flex flex-col justify-center items-center">
-        <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
-          <p className="text-red-500 text-center mb-4">
+      <div className="p-4 md:p-6 bg-red-50 min-h-screen flex flex-col justify-center items-center">
+        <div className="bg-white shadow-md rounded-lg p-6 md:p-8 max-w-md w-full">
+          <p className="text-red-500 text-center text-sm md:text-base">
             Kullanıcıları yüklerken bir hata oluştu: {error.message}
           </p>
         </div>
       </div>
     );
-  }
-
-  // Loading state
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
   }
 
   // No users state
@@ -203,7 +196,7 @@ export default function AdminUsers() {
 
   return (
     <ToastProvider>
-      <div className="bg-orange-50 min-h-screen py-10">
+      <div className="bg-orange-50 min-h-screen py-6 md:py-10">
         <main className="max-w-7xl mx-auto px-4">
           <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
             {/* Header */}
@@ -278,7 +271,7 @@ export default function AdminUsers() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>İptal</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleDelete}>
+                              <AlertDialogAction onClick={handleDeleteUser}>
                                 Kullanıcıyı Sil
                               </AlertDialogAction>
                             </AlertDialogFooter>

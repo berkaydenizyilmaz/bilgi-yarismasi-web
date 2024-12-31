@@ -1,115 +1,108 @@
-"use client";
+"use client"
 
-import useSWR from "swr";
-import { fetcher } from "@/lib/swr-config";
-import { Bar } from 'react-chartjs-2'; // Chart.js kütüphanesi
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import useSWR from "swr"
+import { fetcher } from "@/lib/swr-config"
+import { Bar } from 'react-chartjs-2'
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
+import { Card } from "@/components/ui/card"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 // Chart.js bileşenlerini kaydet
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-// Veri yapısı tanımları
+// Tip tanımlamaları
 interface QuizCountByDate {
-  date: string;
-  count: number;
+  date: string
+  count: number
 }
 
 interface QuestionsCountByCategory {
-  categoryId: number;
-  categoryName: string;
-  questionCount: number;
+  categoryId: number
+  categoryName: string
+  questionCount: number
 }
 
 interface StatisticsData {
-  totalUsers: number;
-  totalFeedback: number;
-  totalLogs: number;
-  totalQuizzes: number;
-  quizzesCountByDate: QuizCountByDate[];
-  questionsCountByCategory: QuestionsCountByCategory[];
+  totalUsers: number
+  totalFeedback: number
+  totalLogs: number
+  totalQuizzes: number
+  quizzesCountByDate: QuizCountByDate[]
+  questionsCountByCategory: QuestionsCountByCategory[]
+}
+
+function StatCard({ title, value }: { title: string; value: number }) {
+  return (
+    <Card className="p-4 md:p-6">
+      <h3 className="text-sm md:text-base text-gray-600 mb-1">{title}</h3>
+      <p className="text-2xl md:text-3xl font-bold text-gray-900">{value}</p>
+    </Card>
+  )
 }
 
 export default function AdminStatistics() {
-  const { data, error } = useSWR<{ data: StatisticsData }>("/api/admin/statistics", fetcher);
+  const { data, error, isLoading } = useSWR<{ data: StatisticsData }>('/api/admin/statistics', fetcher)
 
-  if (error) return <div>İstatistikleri yüklerken bir hata oluştu: {error.message}</div>;
-  if (!data) return <div className="flex justify-center items-center h-screen">Yükleniyor...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <LoadingSpinner className="h-8 w-8" />
+      </div>
+    )
+  }
 
-  // Grafik verilerini hazırlama
+  if (error || !data) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-red-500">Veriler alınamadı</p>
+      </div>
+    )
+  }
+
   const chartData = {
-    labels: data.data.quizzesCountByDate.map(item => item.date), // Tarih etiketleri
+    labels: data.data.quizzesCountByDate.map(item => item.date),
     datasets: [
       {
-        label: 'Çözülen Quiz Sayısı',
-        data: data.data.quizzesCountByDate.map(item => item.count), // Quiz sayıları
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        label: 'Günlük Quiz Sayısı',
+        data: data.data.quizzesCountByDate.map(item => item.count),
+        backgroundColor: 'rgba(249, 115, 22, 0.5)',
+        borderColor: 'rgb(249, 115, 22)',
         borderWidth: 1,
       },
     ],
-  };
-
-  // Grafik seçenekleri
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Tarih',
-        },
-        ticks: {
-          autoSkip: true,
-          maxTicksLimit: 10, // X eksenindeki maksimum etiket sayısı
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Quiz Sayısı',
-        },
-        beginAtZero: true,
-      },
-    },
-  };
+  }
 
   return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold mb-6">İstatistikler</h2>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold">Toplam Kullanıcı</h3>
-          <p className="text-2xl">{data.data.totalUsers}</p>
-        </div>
-        <div className="bg-green-100 p-4 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold">Toplam Geri Bildirim</h3>
-          <p className="text-2xl">{data.data.totalFeedback}</p>
-        </div>
-        <div className="bg-yellow-100 p-4 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold">Toplam Log</h3>
-          <p className="text-2xl">{data.data.totalLogs}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold">Toplam Quiz</h3>
-          <p className="text-2xl">{data.data.totalQuizzes}</p>
-        </div>
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">
+        Admin İstatistikleri
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <StatCard title="Toplam Kullanıcı" value={data.data.totalUsers} />
+        <StatCard title="Toplam Quiz" value={data.data.totalQuizzes} />
+        <StatCard title="Toplam Geri Bildirim" value={data.data.totalFeedback} />
+        <StatCard title="Toplam Log" value={data.data.totalLogs} />
       </div>
-      <div className="bg-white p-4 rounded-lg shadow-md" style={{ height: '400px' }}>
-        <h3 className="text-2xl font-semibold mb-4">Son Zamanlarda Çözülen Quiz Sayısı</h3>
-        <Bar data={chartData} options={options} />
-      </div>
-      <div className="bg-white p-4 rounded-lg shadow-md mt-6">
-        <h3 className="text-2xl font-semibold mb-4">Kategorilere Göre Soru Sayısı</h3>
-        <ul>
+
+      <Card className="p-4 md:p-6 mt-6 md:mt-8">
+        <h3 className="text-xl md:text-2xl font-semibold mb-4">Tarihe Göre Çözülen Quiz İstatistikleri</h3>
+        <div className="h-[300px] md:h-[400px]">
+          <Bar data={chartData} options={{ maintainAspectRatio: false }} />
+        </div>
+      </Card>
+
+      <Card className="p-4 md:p-6 mt-6">
+        <h3 className="text-xl md:text-2xl font-semibold mb-4">Kategorilere Göre Soru Sayısı</h3>
+        <ul className="space-y-2 md:space-y-3">
           {data.data.questionsCountByCategory.map(category => (
-            <li key={category.categoryId} className="flex justify-between p-2 border-b">
+            <li key={category.categoryId} className="flex justify-between p-2 md:p-3 border-b text-sm md:text-base">
               <span>{category.categoryName}</span>
-              <span>{category.questionCount} Soru</span>
+              <span className="font-medium">{category.questionCount} Soru</span>
             </li>
           ))}
         </ul>
-      </div>
+      </Card>
     </div>
-  );
+  )
 }
