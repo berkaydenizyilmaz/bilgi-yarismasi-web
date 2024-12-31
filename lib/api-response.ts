@@ -11,6 +11,19 @@ class ApiResponse {
     });
   }
 
+  successWithPagination(data: any, total: number, page: number, limit: number) {
+    return NextResponse.json({
+      success: true,
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  }
+
   successWithCookie(data: any, message: string, cookies: Cookie[]) {
     const response = NextResponse.json({
       success: true,

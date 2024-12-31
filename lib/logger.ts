@@ -21,7 +21,7 @@ class Logger {
 
   private async saveLog(logData: LogData) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/logs`, {
+      const response = await fetch(`${this.baseUrl}/api/admin/logs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logData)

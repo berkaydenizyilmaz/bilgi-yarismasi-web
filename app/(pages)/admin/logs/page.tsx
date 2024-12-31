@@ -25,17 +25,25 @@ interface Log {
   timestamp: string
 }
 
-interface LogsData {
-  logs: Log[]
-  totalLogs: number
+interface LogsResponse {
+  success: boolean
+  data: {
+    logs: Log[]
+  }
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
 }
 
 export default function AdminLogs() {
   const [page, setPage] = useState(1)
   const pageSize = 15
 
-  const { data, error, isLoading } = useSWR<{ data: LogsData }>(
-    `/api/admin/logs?limit=${pageSize}&offset=${(page - 1) * pageSize}`,
+  const { data, error, isLoading } = useSWR<LogsResponse>(
+    `/api/admin/logs?page=${page}&limit=${pageSize}`,
     fetcher
   )
 
@@ -83,8 +91,9 @@ export default function AdminLogs() {
     )
   }
 
-  const totalPages = Math.ceil(data.data.totalLogs / pageSize)
+  const totalPages = data.pagination.totalPages
   const logsData = data.data.logs
+  const totalLogs = data.pagination.total
 
   return (
     <div className="bg-orange-50 min-h-screen py-6 md:py-10">
@@ -100,7 +109,7 @@ export default function AdminLogs() {
           <div className="overflow-x-auto">
             <Table>
               <TableCaption className="bg-gray-50 p-2 text-sm md:text-base text-gray-600">
-                Toplam {data.data.totalLogs} log kaydından {logsData.length} tanesi
+                Toplam {totalLogs} log kaydından {logsData.length} tanesi
               </TableCaption>
               <TableHeader>
                 <TableRow>
