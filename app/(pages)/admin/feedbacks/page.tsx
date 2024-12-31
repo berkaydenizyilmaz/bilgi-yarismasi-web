@@ -7,15 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react"
-
-// Tip tanımlamaları
-interface Feedback {
-  id: number
-  name: string
-  email: string
-  message: string
-  createdAt: string
-}
+import { Feedback } from "@/types/feedback";
 
 interface FeedbackData {
   feedback: Feedback[]
