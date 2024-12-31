@@ -35,16 +35,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Users, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/lib/hooks/use-toast";
-import { ToastProvider, ToastViewport } from "@/components/ui/toast";
-
-// Tip tanımlamaları
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: 'user' | 'admin';
-  created_at: string;
-}
+import { ToastProvider } from "@/components/ui/toast";
+import { User } from "@/types/user";
 
 export default function AdminUsers() {
   // State tanımlamaları

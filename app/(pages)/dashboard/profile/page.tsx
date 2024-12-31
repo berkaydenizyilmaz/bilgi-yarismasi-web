@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Trophy, PieChart, BarChart } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { QuizHistory } from "@/types/quiz"
+import { StatCardProps, DetailStatProps, QuizHistoryItemProps } from "@/types/components"
 
 // Tip tanımlamaları
 interface UserStats {
@@ -16,31 +18,6 @@ interface UserStats {
   total_play_count: number
   total_questions_attempted: number
   total_correct_answers: number
-}
-
-interface QuizHistory {
-  id: number
-  categoryName: string
-  playedAt: string
-  score: number
-  correctAnswers: number
-  totalQuestions: number
-}
-
-interface StatCardProps {
-  icon: React.ReactNode
-  title: string
-  value: string | number
-  description: string
-}
-
-interface DetailStatProps {
-  title: string
-  value: number
-}
-
-interface QuizHistoryItemProps {
-  quiz: QuizHistory
 }
 
 export default function ProfilePage() {
