@@ -21,6 +21,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     userData = registerSchema.parse(body);
     
+    // Kullanıcı adı ve email kontrolü
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: userData.username },
+          { email: userData.email }
+        ]
+      },
+      select: {
+        username: true,
+        email: true
+      }
+    });
+
+    if (existingUser) {
+      if (existingUser.username === userData.username) {
+        throw new ValidationError("Bu kullanıcı adı zaten kullanılıyor");
+      }
+      if (existingUser.email === userData.email) {
+        throw new ValidationError("Bu email adresi zaten kullanılıyor");
+      }
+    }
+    
     const user = await prisma.user.create({
       data: {
         username: userData.username,
@@ -30,15 +53,39 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Kullanıcı oluşturma logunu ekleyelim
-    logger.userCreated(user.username, user.id);
-
-    return apiResponse.success({
-      message: "Kayıt başarılı"
+    // JWT token oluştur
+    const token = signJWT({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role
     });
 
+    logger.userCreated(user.username, user.id);
+
+    return apiResponse.successWithCookie(
+      {
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+        },
+      },
+      "Kayıt başarılı",
+      [{
+        name: "token",
+        value: token,
+        options: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24,
+        }
+      }]
+    );
+
   } catch (error) {
-    // Hata durumunda log kaydı
     logger.error('auth', error as Error, {
       action: 'register',
       username: userData?.username,
@@ -47,6 +94,10 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return apiResponse.error(new ValidationError(error.errors[0].message));
+    }
+
+    if (error instanceof ValidationError) {
+      return apiResponse.error(error);
     }
 
     return apiResponse.error(

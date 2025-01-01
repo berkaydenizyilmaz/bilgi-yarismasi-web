@@ -245,7 +245,9 @@ export default function RegisterPage() {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <LoadingSpinner className="w-5 h-5 mr-2" />
-                      Kayıt Yapılıyor...
+                      <span>
+                        {error ? "Tekrar Deneniyor..." : "Kaydediliyor ve Giriş Yapılıyor..."}
+                      </span>
                     </div>
                   ) : (
                     "Kayıt Ol"

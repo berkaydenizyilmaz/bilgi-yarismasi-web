@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router, mutate])
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = useCallback(async (username: string, email: string, password: string) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       throw error
     }
-  }
+  }, [router, mutate])
 
   const logout = useCallback(async () => {
     try {
