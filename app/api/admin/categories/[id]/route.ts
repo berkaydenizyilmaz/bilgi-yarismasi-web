@@ -1,4 +1,4 @@
-import { type NextRequest } from 'next/server';
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError } from "@/lib/errors";
@@ -13,34 +13,18 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<Response> {
-  let oldCategoryName = '';
-  let newCategoryName = '';
-
+  { params, searchParams }: { params: { id: string }, searchParams: URLSearchParams }
+) {
   try {
-    await checkAdminRole(request as NextRequest);
-    
-    const id = parseInt(params.id);
+    await checkAdminRole(request);
 
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
 
-    // Mevcut kategori bilgisini al
-    const currentCategory = await prisma.category.findUnique({
-      where: { id }
-    });
-
-    if (!currentCategory) {
-      throw new ValidationError("Kategori bulunamadı");
-    }
-
-    oldCategoryName = currentCategory.name;
-
     const body = await request.json();
     const validatedData = categorySchema.parse(body);
-    newCategoryName = validatedData.name;
 
     // Aynı isimde başka kategori var mı kontrol et
     const existingCategory = await prisma.category.findFirst({
@@ -73,9 +57,6 @@ export async function PUT(
       }
     });
 
-    // Kategori güncelleme logu
-    logger.categoryUpdated(category.name, category.id);
-
     return apiResponse.success({
       id: category.id,
       name: category.name,
@@ -84,13 +65,9 @@ export async function PUT(
 
   } catch (error) {
     logger.error('category', error as Error, {
-      action: 'update',
-      categoryId: params.id,
-      oldName: oldCategoryName,
-      newName: newCategoryName,
-      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
+      action: 'update_attempt',
+      categoryId: params.id
     });
-
     if (error instanceof z.ZodError) {
       return apiResponse.error(
         new ValidationError(error.errors[0].message)
@@ -107,16 +84,13 @@ export async function PUT(
 
 // Kategori silme (DELETE)
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-): Promise<Response> {
-  let categoryName = '';
-
+  request: NextRequest,
+  { params, searchParams }: { params: { id: string }, searchParams: URLSearchParams }
+) {
   try {
-    await checkAdminRole(request as NextRequest);
+    await checkAdminRole(request);
 
     const id = parseInt(params.id);
-    
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -137,8 +111,6 @@ export async function DELETE(
       throw new ValidationError("Kategori bulunamadı");
     }
 
-    categoryName = category.name;
-
     if (category._count.questions > 0) {
       throw new ValidationError("Bu kategoride sorular bulunduğu için silinemez");
     }
@@ -147,21 +119,15 @@ export async function DELETE(
       where: { id }
     });
 
-    // Kategori silme logu
-    logger.categoryDeleted(categoryName, id);
-
     return apiResponse.success({
       message: "Kategori başarıyla silindi"
     });
 
   } catch (error) {
     logger.error('category', error as Error, {
-      action: 'delete',
-      categoryId: params.id,
-      categoryName,
-      errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
+      action: 'delete_attempt',
+      categoryId: params.id
     });
-
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
