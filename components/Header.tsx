@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Brain, Menu, X, ChevronDown } from "lucide-react"
+import { Brain, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -14,6 +14,7 @@ export default function Header() {
   const pathname = usePathname()
   const { user, logout, isLoading } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(true)
 
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
@@ -27,13 +28,14 @@ export default function Header() {
   ]
 
   useEffect(() => {
-    const closeMenu = () => {
-      if (window.innerWidth >= 768) {
-        setIsMenuOpen(false)
-      }
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
     }
-    window.addEventListener('resize', closeMenu)
-    return () => window.removeEventListener('resize', closeMenu)
+    
+    checkMobile()
+    
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   return (
@@ -68,7 +70,7 @@ export default function Header() {
 
           {/* Ana navigasyon */}
           <AnimatePresence>
-            {(isMenuOpen || window.innerWidth >= 768) && (
+            {(isMenuOpen || !isMobile) && (
               <motion.nav
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}

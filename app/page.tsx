@@ -154,7 +154,7 @@ export default function HomePage() {
             {/* CTA Section */}
             <section className="py-24 px-4 bg-gradient-to-r from-orange-600 to-orange-500 text-white relative overflow-hidden">
                 <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5" />
+                    <div className="absolute inset-0 opacity-5" />
                 </div>
                 <motion.div 
                     initial={{ opacity: 0 }}
