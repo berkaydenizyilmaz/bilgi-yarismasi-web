@@ -47,6 +47,17 @@ interface Question {
   categoryName: string
 }
 
+// Form validasyonu için bir interface ekleyelim
+interface FormErrors {
+  questionText?: string
+  optionA?: string
+  optionB?: string
+  optionC?: string
+  optionD?: string
+  correctOption?: string
+  categoryId?: string
+}
+
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [categories, setCategories] = useState<{id: number, name: string}[]>([])
@@ -69,6 +80,28 @@ export default function QuestionsPage() {
     correctOption: "A",
     categoryId: 1
   })
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+
+  // Validasyon fonksiyonu ekleyelim
+  const validateForm = (question: typeof newQuestion): FormErrors => {
+    const errors: FormErrors = {}
+    
+    if (!question.questionText.trim()) {
+      errors.questionText = "Soru metni boş bırakılamaz"
+    } else if (question.questionText.length < 10) {
+      errors.questionText = "Soru metni en az 10 karakter olmalıdır"
+    }
+
+    if (!question.optionA.trim()) errors.optionA = "A şıkkı boş bırakılamaz"
+    if (!question.optionB.trim()) errors.optionB = "B şıkkı boş bırakılamaz"
+    if (!question.optionC.trim()) errors.optionC = "C şıkkı boş bırakılamaz"
+    if (!question.optionD.trim()) errors.optionD = "D şıkkı boş bırakılamaz"
+    
+    if (!question.correctOption) errors.correctOption = "Doğru cevap seçilmelidir"
+    if (!question.categoryId) errors.categoryId = "Kategori seçilmelidir"
+
+    return errors
+  }
 
   // Soruları ve kategorileri yükle
   useEffect(() => {
@@ -137,6 +170,19 @@ export default function QuestionsPage() {
 
   const handleAddQuestion = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Form validasyonunu kontrol et
+    const errors = validateForm(newQuestion)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm alanları doğru şekilde doldurun",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
       const response = await fetch('/api/admin/questions', {
         method: 'POST',
@@ -176,6 +222,27 @@ export default function QuestionsPage() {
   const handleEditQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingQuestion) return;
+
+    // Form validasyonunu kontrol et
+    const errors = validateForm({
+      questionText: editingQuestion.questionText,
+      optionA: editingQuestion.optionA,
+      optionB: editingQuestion.optionB,
+      optionC: editingQuestion.optionC,
+      optionD: editingQuestion.optionD,
+      correctOption: editingQuestion.correctOption,
+      categoryId: editingQuestion.categoryId
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm alanları doğru şekilde doldurun",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       const response = await fetch(`/api/admin/questions/${editingQuestion.id}`, {
@@ -366,10 +433,16 @@ export default function QuestionsPage() {
               <Textarea
                 id="questionText"
                 value={newQuestion.questionText}
-                onChange={(e) => setNewQuestion({ ...newQuestion, questionText: e.target.value })}
+                onChange={(e) => {
+                  setNewQuestion({ ...newQuestion, questionText: e.target.value })
+                  setFormErrors({ ...formErrors, questionText: undefined })
+                }}
                 placeholder="Soruyu yazın..."
-                className="min-h-[100px]"
+                className={`min-h-[100px] ${formErrors.questionText ? 'border-red-500' : ''}`}
               />
+              {formErrors.questionText && (
+                <p className="text-sm text-red-500">{formErrors.questionText}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -377,39 +450,70 @@ export default function QuestionsPage() {
                 <Input
                   id="optionA"
                   value={newQuestion.optionA}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, optionA: e.target.value })}
+                  onChange={(e) => {
+                    setNewQuestion({ ...newQuestion, optionA: e.target.value })
+                    setFormErrors({ ...formErrors, optionA: undefined })
+                  }}
+                  className={formErrors.optionA ? 'border-red-500' : ''}
                 />
+                {formErrors.optionA && (
+                  <p className="text-sm text-red-500">{formErrors.optionA}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="optionB">B Şıkkı</label>
                 <Input
                   id="optionB"
                   value={newQuestion.optionB}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, optionB: e.target.value })}
+                  onChange={(e) => {
+                    setNewQuestion({ ...newQuestion, optionB: e.target.value })
+                    setFormErrors({ ...formErrors, optionB: undefined })
+                  }}
+                  className={formErrors.optionB ? 'border-red-500' : ''}
                 />
+                {formErrors.optionB && (
+                  <p className="text-sm text-red-500">{formErrors.optionB}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="optionC">C Şıkkı</label>
                 <Input
                   id="optionC"
                   value={newQuestion.optionC}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, optionC: e.target.value })}
+                  onChange={(e) => {
+                    setNewQuestion({ ...newQuestion, optionC: e.target.value })
+                    setFormErrors({ ...formErrors, optionC: undefined })
+                  }}
+                  className={formErrors.optionC ? 'border-red-500' : ''}
                 />
+                {formErrors.optionC && (
+                  <p className="text-sm text-red-500">{formErrors.optionC}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="optionD">D Şıkkı</label>
                 <Input
                   id="optionD"
                   value={newQuestion.optionD}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, optionD: e.target.value })}
+                  onChange={(e) => {
+                    setNewQuestion({ ...newQuestion, optionD: e.target.value })
+                    setFormErrors({ ...formErrors, optionD: undefined })
+                  }}
+                  className={formErrors.optionD ? 'border-red-500' : ''}
                 />
+                {formErrors.optionD && (
+                  <p className="text-sm text-red-500">{formErrors.optionD}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
               <label htmlFor="correctOption">Doğru Cevap</label>
               <Select
                 value={newQuestion.correctOption}
-                onValueChange={(value) => setNewQuestion({ ...newQuestion, correctOption: value })}
+                onValueChange={(value) => {
+                  setNewQuestion({ ...newQuestion, correctOption: value })
+                  setFormErrors({ ...formErrors, correctOption: undefined })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Doğru cevabı seçin" />
@@ -421,12 +525,18 @@ export default function QuestionsPage() {
                   <SelectItem value="D">D</SelectItem>
                 </SelectContent>
               </Select>
+              {formErrors.correctOption && (
+                <p className="text-sm text-red-500">{formErrors.correctOption}</p>
+              )}
             </div>
             <div className="space-y-2">
               <label htmlFor="categoryId">Kategori</label>
               <Select
                 value={newQuestion.categoryId.toString()}
-                onValueChange={(value) => setNewQuestion({ ...newQuestion, categoryId: parseInt(value) })}
+                onValueChange={(value) => {
+                  setNewQuestion({ ...newQuestion, categoryId: parseInt(value) })
+                  setFormErrors({ ...formErrors, categoryId: undefined })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Kategori seçin" />
@@ -439,6 +549,9 @@ export default function QuestionsPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {formErrors.categoryId && (
+                <p className="text-sm text-red-500">{formErrors.categoryId}</p>
+              )}
             </div>
             <div className="flex justify-end gap-4 mt-6">
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
@@ -451,7 +564,10 @@ export default function QuestionsPage() {
       </Dialog>
 
       {/* Soru Düzenleme Modalı */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} onOpenChange={(open) => {
+        setIsEditModalOpen(open);
+        if (!open) setFormErrors({}); // Modal kapandığında hataları temizle
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Soru Düzenle</DialogTitle>
@@ -463,52 +579,94 @@ export default function QuestionsPage() {
                 <Textarea
                   id="edit-questionText"
                   value={editingQuestion.questionText}
-                  onChange={(e) => setEditingQuestion({ ...editingQuestion, questionText: e.target.value })}
+                  onChange={(e) => {
+                    setEditingQuestion({ ...editingQuestion, questionText: e.target.value });
+                    setFormErrors({ ...formErrors, questionText: undefined });
+                  }}
                   placeholder="Soruyu yazın..."
-                  className="min-h-[100px]"
+                  className={`min-h-[100px] ${formErrors.questionText ? 'border-red-500' : ''}`}
                 />
+                {formErrors.questionText && (
+                  <p className="text-sm text-red-500">{formErrors.questionText}</p>
+                )}
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="edit-optionA">A Şıkkı</label>
                   <Input
                     id="edit-optionA"
                     value={editingQuestion.optionA}
-                    onChange={(e) => setEditingQuestion({ ...editingQuestion, optionA: e.target.value })}
+                    onChange={(e) => {
+                      setEditingQuestion({ ...editingQuestion, optionA: e.target.value });
+                      setFormErrors({ ...formErrors, optionA: undefined });
+                    }}
+                    className={formErrors.optionA ? 'border-red-500' : ''}
                   />
+                  {formErrors.optionA && (
+                    <p className="text-sm text-red-500">{formErrors.optionA}</p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <label htmlFor="edit-optionB">B Şıkkı</label>
                   <Input
                     id="edit-optionB"
                     value={editingQuestion.optionB}
-                    onChange={(e) => setEditingQuestion({ ...editingQuestion, optionB: e.target.value })}
+                    onChange={(e) => {
+                      setEditingQuestion({ ...editingQuestion, optionB: e.target.value });
+                      setFormErrors({ ...formErrors, optionB: undefined });
+                    }}
+                    className={formErrors.optionB ? 'border-red-500' : ''}
                   />
+                  {formErrors.optionB && (
+                    <p className="text-sm text-red-500">{formErrors.optionB}</p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <label htmlFor="edit-optionC">C Şıkkı</label>
                   <Input
                     id="edit-optionC"
                     value={editingQuestion.optionC}
-                    onChange={(e) => setEditingQuestion({ ...editingQuestion, optionC: e.target.value })}
+                    onChange={(e) => {
+                      setEditingQuestion({ ...editingQuestion, optionC: e.target.value });
+                      setFormErrors({ ...formErrors, optionC: undefined });
+                    }}
+                    className={formErrors.optionC ? 'border-red-500' : ''}
                   />
+                  {formErrors.optionC && (
+                    <p className="text-sm text-red-500">{formErrors.optionC}</p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <label htmlFor="edit-optionD">D Şıkkı</label>
                   <Input
                     id="edit-optionD"
                     value={editingQuestion.optionD}
-                    onChange={(e) => setEditingQuestion({ ...editingQuestion, optionD: e.target.value })}
+                    onChange={(e) => {
+                      setEditingQuestion({ ...editingQuestion, optionD: e.target.value });
+                      setFormErrors({ ...formErrors, optionD: undefined });
+                    }}
+                    className={formErrors.optionD ? 'border-red-500' : ''}
                   />
+                  {formErrors.optionD && (
+                    <p className="text-sm text-red-500">{formErrors.optionD}</p>
+                  )}
                 </div>
               </div>
+
               <div className="space-y-2">
                 <label htmlFor="edit-correctOption">Doğru Cevap</label>
                 <Select
                   value={editingQuestion.correctOption}
-                  onValueChange={(value) => setEditingQuestion({ ...editingQuestion, correctOption: value })}
+                  onValueChange={(value) => {
+                    setEditingQuestion({ ...editingQuestion, correctOption: value });
+                    setFormErrors({ ...formErrors, correctOption: undefined });
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={formErrors.correctOption ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Doğru cevabı seçin" />
                   </SelectTrigger>
                   <SelectContent>
@@ -518,14 +676,21 @@ export default function QuestionsPage() {
                     <SelectItem value="D">D</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.correctOption && (
+                  <p className="text-sm text-red-500">{formErrors.correctOption}</p>
+                )}
               </div>
+
               <div className="space-y-2">
                 <label htmlFor="edit-categoryId">Kategori</label>
                 <Select
                   value={editingQuestion.categoryId.toString()}
-                  onValueChange={(value) => setEditingQuestion({ ...editingQuestion, categoryId: parseInt(value) })}
+                  onValueChange={(value) => {
+                    setEditingQuestion({ ...editingQuestion, categoryId: parseInt(value) });
+                    setFormErrors({ ...formErrors, categoryId: undefined });
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={formErrors.categoryId ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Kategori seçin" />
                   </SelectTrigger>
                   <SelectContent>
@@ -536,9 +701,20 @@ export default function QuestionsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.categoryId && (
+                  <p className="text-sm text-red-500">{formErrors.categoryId}</p>
+                )}
               </div>
+
               <div className="flex justify-end gap-4 mt-6">
-                <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setFormErrors({});
+                  }}
+                >
                   İptal
                 </Button>
                 <Button type="submit">Güncelle</Button>

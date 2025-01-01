@@ -40,6 +40,13 @@ interface User {
   role: string
 }
 
+// Form validasyonu için interface
+interface FormErrors {
+  username?: string
+  email?: string
+  role?: string
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -49,6 +56,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const pageSize = 15
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -76,9 +84,44 @@ export default function UsersPage() {
     fetchUsers()
   }, [page])
 
+  // Validasyon fonksiyonu
+  const validateForm = (user: User): FormErrors => {
+    const errors: FormErrors = {}
+    
+    if (!user.username.trim()) {
+      errors.username = "Kullanıcı adı boş bırakılamaz"
+    } else if (user.username.length < 3) {
+      errors.username = "Kullanıcı adı en az 3 karakter olmalıdır"
+    }
+
+    if (!user.email.trim()) {
+      errors.email = "E-posta adresi boş bırakılamaz"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+      errors.email = "Geçerli bir e-posta adresi giriniz"
+    }
+
+    if (!user.role) {
+      errors.role = "Rol seçilmelidir"
+    }
+
+    return errors
+  }
+
   const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingUser) return
+
+    // Form validasyonunu kontrol et
+    const errors = validateForm(editingUser)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm alanları doğru şekilde doldurun",
+        variant: "destructive"
+      })
+      return
+    }
 
     try {
       const response = await fetch(`/api/admin/users?id=${editingUser.id}`, {
@@ -258,41 +301,70 @@ export default function UsersPage() {
                   <Input
                     id="editUsername"
                     value={editingUser.username}
-                    onChange={(e) => setEditingUser({
-                      ...editingUser,
-                      username: e.target.value
-                    })}
+                    onChange={(e) => {
+                      setEditingUser({
+                        ...editingUser,
+                        username: e.target.value
+                      })
+                      setFormErrors({ ...formErrors, username: undefined })
+                    }}
+                    className={formErrors.username ? 'border-red-500' : ''}
                   />
+                  {formErrors.username && (
+                    <p className="text-sm text-red-500">{formErrors.username}</p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <label htmlFor="editEmail">E-posta</label>
                   <Input
                     id="editEmail"
                     type="email"
                     value={editingUser.email}
-                    onChange={(e) => setEditingUser({
-                      ...editingUser,
-                      email: e.target.value
-                    })}
+                    onChange={(e) => {
+                      setEditingUser({
+                        ...editingUser,
+                        email: e.target.value
+                      })
+                      setFormErrors({ ...formErrors, email: undefined })
+                    }}
+                    className={formErrors.email ? 'border-red-500' : ''}
                   />
+                  {formErrors.email && (
+                    <p className="text-sm text-red-500">{formErrors.email}</p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <label htmlFor="editRole">Rol</label>
                   <select
                     id="editRole"
                     value={editingUser.role}
-                    onChange={(e) => setEditingUser({
-                      ...editingUser,
-                      role: e.target.value
-                    })}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
+                    onChange={(e) => {
+                      setEditingUser({
+                        ...editingUser,
+                        role: e.target.value
+                      })
+                      setFormErrors({ ...formErrors, role: undefined })
+                    }}
+                    className={`w-full rounded-md border border-input bg-background px-3 py-2 ${
+                      formErrors.role ? 'border-red-500' : ''
+                    }`}
                   >
+                    <option value="">Rol Seçin</option>
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                   </select>
+                  {formErrors.role && (
+                    <p className="text-sm text-red-500">{formErrors.role}</p>
+                  )}
                 </div>
+
                 <div className="flex justify-end gap-4">
-                  <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setIsEditModalOpen(false)
+                    setFormErrors({})
+                  }}>
                     İptal
                   </Button>
                   <Button type="submit">Güncelle</Button>
