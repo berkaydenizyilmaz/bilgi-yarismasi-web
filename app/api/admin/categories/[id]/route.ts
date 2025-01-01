@@ -10,19 +10,14 @@ const categorySchema = z.object({
   name: z.string().min(1, "Kategori adı gereklidir").max(100, "Kategori adı çok uzun")
 });
 
-type RouteContext = {
-  params: { id: string }
-}
-
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
-
-    const id = parseInt(context.params.id);
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -66,20 +61,22 @@ export async function PUT(
       name: category.name,
       questionCount: category._count.questions
     });
-
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update_attempt',
-      categoryId: context.params.id
+      categoryId: params.id
     });
+
     if (error instanceof z.ZodError) {
       return apiResponse.error(
         new ValidationError(error.errors[0].message)
       );
     }
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
+
     return apiResponse.error(
       new APIError("Kategori güncellenirken bir hata oluştu", 500)
     );
@@ -89,12 +86,11 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
-
-    const id = parseInt(context.params.id);
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -126,17 +122,18 @@ export async function DELETE(
     return apiResponse.success({
       message: "Kategori başarıyla silindi"
     });
-
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete_attempt',
-      categoryId: context.params.id
+      categoryId: params.id
     });
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
+
     return apiResponse.error(
       new APIError("Kategori silinirken bir hata oluştu", 500)
     );
   }
-} 
+}
