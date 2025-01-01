@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, MessageSquare, Users, Plus, Monitor, Menu, X } from "lucide-react"
+import { Home, FileText, MessageSquare, Users, Plus, Monitor, Menu, X, FileQuestion, FolderTree } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // Menü öğeleri tipi
@@ -19,7 +19,8 @@ const menuItems: MenuItem[] = [
   { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/", label: "Kullanıcı Arayüzüne Dön", icon: <Monitor className="h-5 w-5 lg:h-6 lg:w-6" /> },
+  { href: "/admin/questions", label: "Sorular", icon: <FileQuestion className="h-5 w-5 lg:h-6 lg:w-6" /> },
+  { href: "/admin/categories", label: "Kategoriler", icon: <FolderTree className="h-5 w-5 lg:h-6 lg:w-6" /> },
 ]
 
 export default function AdminSidebar() {
