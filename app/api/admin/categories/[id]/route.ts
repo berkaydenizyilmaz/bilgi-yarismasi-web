@@ -18,7 +18,7 @@ export async function PUT(
   try {
     await checkAdminRole(request);
 
-    const id = parseInt(params.id);
+    const id = parseInt(await params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -87,7 +87,7 @@ export async function DELETE(
   try {
     await checkAdminRole(request);
 
-    const id = parseInt(params.id);
+    const id = parseInt(await params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
