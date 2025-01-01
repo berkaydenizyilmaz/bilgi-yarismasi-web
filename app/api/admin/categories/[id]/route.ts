@@ -14,7 +14,7 @@ const categorySchema = z.object({
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<Response> {
   let oldCategoryName = '';
   let newCategoryName = '';
 
@@ -111,7 +111,7 @@ export async function PUT(
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<Response> {
   let categoryName = '';
 
   try {
