@@ -10,25 +10,19 @@ const categorySchema = z.object({
   name: z.string().min(1, "Kategori adı gereklidir").max(100, "Kategori adı çok uzun")
 });
 
-type Props = {
-  params: {
-    id: string;
-  };
-};
-
 // Kategori güncelleme (PUT)
 export async function PUT(
-  req: NextRequest,
-  props: Props
+  request: NextRequest,
+  { params }: { params: { id: string }}
 ) {
   try {
-    await checkAdminRole(req);
-    const id = parseInt(props.params.id);
+    await checkAdminRole(request);
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
 
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = categorySchema.parse(body);
 
     // Aynı isimde başka kategori var mı kontrol et
@@ -70,7 +64,7 @@ export async function PUT(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update_attempt',
-      categoryId: props.params.id
+      categoryId: params.id
     });
 
     if (error instanceof z.ZodError) {
@@ -91,12 +85,12 @@ export async function PUT(
 
 // Kategori silme (DELETE)
 export async function DELETE(
-  req: NextRequest,
-  props: Props
+  request: NextRequest,
+  { params }: { params: { id: string }}
 ) {
   try {
-    await checkAdminRole(req);
-    const id = parseInt(props.params.id);
+    await checkAdminRole(request);
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -131,7 +125,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete_attempt',
-      categoryId: props.params.id
+      categoryId: params.id
     });
 
     if (error instanceof APIError) {
