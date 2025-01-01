@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { type NextRequest } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError, ValidationError } from "@/lib/errors";
@@ -13,15 +13,15 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   let oldCategoryName = '';
   let newCategoryName = '';
 
   try {
-    await checkAdminRole(request);
+    await checkAdminRole(request as NextRequest);
     
-    const id = parseInt(context.params.id);
+    const id = parseInt(params.id);
 
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
@@ -85,7 +85,7 @@ export async function PUT(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update',
-      categoryId: context.params.id,
+      categoryId: params.id,
       oldName: oldCategoryName,
       newName: newCategoryName,
       errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
@@ -107,15 +107,15 @@ export async function PUT(
 
 // Kategori silme (DELETE)
 export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   let categoryName = '';
 
   try {
-    await checkAdminRole(request);
+    await checkAdminRole(request as NextRequest);
 
-    const id = parseInt(context.params.id);
+    const id = parseInt(params.id);
     
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
@@ -157,7 +157,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete',
-      categoryId: context.params.id,
+      categoryId: params.id,
       categoryName,
       errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
