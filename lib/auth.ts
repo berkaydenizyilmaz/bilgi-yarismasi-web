@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import jwt from 'jsonwebtoken';
 import { AuthenticationError } from "./errors";
+import { logger } from './logger'
 
 interface JWTPayload {
   id: number;
@@ -23,9 +24,11 @@ export async function checkAdminRole(request: NextRequest) {
 
     return decoded;
   } catch (error) {
-    if (error instanceof AuthenticationError) {
-      throw error;
-    }
-    throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
+    // Yetkilendirme hatası logu
+    logger.authError(error as Error, 'check_admin_role', {
+      path: request.nextUrl.pathname,
+      method: request.method
+    });
+    throw error;
   }
 }

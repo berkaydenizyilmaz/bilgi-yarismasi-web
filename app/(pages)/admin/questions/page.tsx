@@ -69,7 +69,6 @@ export default function QuestionsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
-  const [deleteQuestionId, setDeleteQuestionId] = useState<number | null>(null)
   const { toast } = useToast()
   const [newQuestion, setNewQuestion] = useState({
     questionText: "",
