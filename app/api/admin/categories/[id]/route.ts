@@ -10,15 +10,19 @@ const categorySchema = z.object({
   name: z.string().min(1, "Kategori adı gereklidir").max(100, "Kategori adı çok uzun")
 });
 
+type RouteContext = {
+  params: { id: string }
+}
+
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params, searchParams }: { params: { id: string }, searchParams: URLSearchParams }
+  context: RouteContext
 ) {
   try {
     await checkAdminRole(request);
 
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -66,7 +70,7 @@ export async function PUT(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update_attempt',
-      categoryId: params.id
+      categoryId: context.params.id
     });
     if (error instanceof z.ZodError) {
       return apiResponse.error(
@@ -85,12 +89,12 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  { params, searchParams }: { params: { id: string }, searchParams: URLSearchParams }
+  context: RouteContext
 ) {
   try {
     await checkAdminRole(request);
 
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -126,7 +130,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete_attempt',
-      categoryId: params.id
+      categoryId: context.params.id
     });
     if (error instanceof APIError) {
       return apiResponse.error(error);
