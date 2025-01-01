@@ -19,7 +19,6 @@ const menuItems: MenuItem[] = [
   { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/add-question", label: "Soru Ekle", icon: <Plus className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/", label: "Kullanıcı Arayüzüne Dön", icon: <Monitor className="h-5 w-5 lg:h-6 lg:w-6" /> },
 ]
 
