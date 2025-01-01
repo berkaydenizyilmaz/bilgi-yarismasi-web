@@ -69,7 +69,7 @@ export default function QuizPage() {
               Hata Oluştu
             </h2>
             <p className="text-red-600 mb-6">{error}</p>
-            <Link href="/play/quiz/classic">
+            <Link href="/play/classic">
               <Button variant="outline" className="bg-white hover:bg-gray-50">
                 Kategorilere Geri Dön
               </Button>
