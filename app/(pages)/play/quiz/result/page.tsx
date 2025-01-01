@@ -71,27 +71,36 @@ function QuestionCard({ questionNumber, interaction }: QuestionCardProps) {
                 Soru {questionNumber}: {interaction.question.question_text}
             </h3>
             <div className="space-y-2">
-                {Object.entries(options).map(([key, value]) => (
-                    <div
-                        key={key}
-                        className={`p-2 md:p-3 rounded text-sm md:text-base ${
-                            interaction.user_answer === key
-                                ? interaction.is_correct
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
-                                : interaction.question.correct_option === key
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-50"
-                        }`}
-                    >
-                        {key}. {value}
-                        {interaction.user_answer === key && (
-                            <span className="ml-2 font-medium">
-                                {interaction.is_correct ? "✓" : "✗"}
+                {Object.entries(options).map(([key, value]) => {
+                    const isUserAnswer = interaction.user_answer.toUpperCase() === key.toUpperCase();
+                    const isCorrectAnswer = interaction.question.correct_option.toUpperCase() === key.toUpperCase();
+
+                    let optionStyle = "bg-gray-50";
+
+                    if (isUserAnswer && interaction.is_correct) {
+                        optionStyle = "bg-green-100";
+                    }
+                    else if (isUserAnswer && !interaction.is_correct) {
+                        optionStyle = "bg-red-100";
+                    }
+                    else if (isCorrectAnswer && !interaction.is_correct) {
+                        optionStyle = "bg-green-100";
+                    }
+
+                    return (
+                        <div
+                            key={key}
+                            className={`p-3 rounded flex justify-between items-center ${optionStyle}`}
+                        >
+                            <span className="text-gray-800">
+                                {key}. {value}
                             </span>
-                        )}
-                    </div>
-                ))}
+                            {isUserAnswer && (
+                                <span className="ml-2">{interaction.is_correct ? "✓" : "✗"}</span>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </Card>
     );
@@ -108,13 +117,14 @@ function QuizResultContent() {
     const { refreshLeaderboard } = useLeaderboard();
 
     useEffect(() => {
-        // Quiz sonuçlarını API'den getir ve leaderboard'u güncelle
         const fetchResult = async () => {
-            try {
-                if (!quizId) {
-                    throw new Error("Quiz ID bulunamadı");
-                }
+            if (!quizId) {
+                setError("Quiz ID bulunamadı");
+                setTimeout(() => router.push('/play/classic'), 3000);
+                return;
+            }
 
+            try {
                 const response = await fetch(`/api/quizzes/${quizId}`);
                 const data = await response.json();
 
@@ -123,19 +133,19 @@ function QuizResultContent() {
                 }
 
                 setResult(data.data);
-                await refreshLeaderboard();
+                // Leaderboard'u sadece bir kere güncelle
+                refreshLeaderboard();
             } catch (err) {
-                setError(err instanceof Error ? err.message : "Sonuçlar alınamadı");
-                setTimeout(() => {
-                    router.push('/play/classic');
-                }, 3000);
+                const errorMessage = err instanceof Error ? err.message : "Sonuçlar alınamadı";
+                setError(errorMessage);
+                setTimeout(() => router.push('/play/classic'), 3000);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchResult();
-    }, [quizId, router, refreshLeaderboard]);
+    }, [quizId]); // Sadece quizId değiştiğinde çalışacak
 
     // Yükleme durumu kontrolü
     if (isLoading) {
