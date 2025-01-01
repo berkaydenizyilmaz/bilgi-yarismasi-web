@@ -13,11 +13,11 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string }}
+  { params }: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
-    const id = parseInt(context.params.id); // context.params.id olarak düzeltildi
+    const id = parseInt(params.id); // context.params.id olarak düzeltildi
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -64,7 +64,7 @@ export async function PUT(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update_attempt',
-      categoryId: context.params.id // context.params.id olarak düzeltildi
+      categoryId: params.id // context.params.id olarak düzeltildi
     });
 
     if (error instanceof z.ZodError) {
@@ -86,11 +86,11 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string }}
+  { params }: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
-    const id = parseInt(context.params.id); // context.params.id olarak düzeltildi
+    const id = parseInt(params.id); // context.params.id olarak düzeltildi
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -125,7 +125,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete_attempt',
-      categoryId: context.params.id // context.params.id olarak düzeltildi
+      categoryId: params.id // context.params.id olarak düzeltildi
     });
 
     if (error instanceof APIError) {
