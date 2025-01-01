@@ -6,11 +6,10 @@ import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-
     const leaderboard = await prisma.user.findMany({
       where: {
         total_play_count: {
-          gt: 0  // Sadece en az 1 quiz çözmüş kullanıcıları getir
+          gt: 0
         }
       },
       select: {
@@ -28,15 +27,14 @@ export async function GET(request: NextRequest) {
           rank: 'asc'
         }
       },
-      take: 100 // İlk 100 kullanıcı
+      take: 100
     }).catch((error) => {
-      logger.error(error as Error, {
+      logger.databaseError(error as Error, 'fetch_leaderboard', {
         message: 'Liderlik tablosu getirilirken veritabanı hatası oluştu'
       });
       throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
 
-    // Liderlik tablosu boş kontrolü
     if (!Array.isArray(leaderboard) || leaderboard.length === 0) {
       return apiResponse.success({ data: [] });
     }
@@ -44,7 +42,7 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(leaderboard);
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.systemError(error as Error, 'fetch_leaderboard', {
       path: request.url
     });
 
