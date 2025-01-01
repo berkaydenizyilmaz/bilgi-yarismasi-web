@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
-import { APIError } from "@/lib/errors";
+import { APIError, ValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { checkAdminRole } from "@/lib/auth";
+import { z } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,63 +43,103 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  let deletedUser;
 
   try {
+    await checkAdminRole(request);
+    
     const user = await prisma.user.delete({
       where: { id: Number(id) },
     });
 
-    logger.userDeleted(user.username, user.id, {
-      action: 'admin_delete',
-      deletedAt: new Date().toISOString()
+    // Silinen kullanıcının bilgilerini saklayalım
+    deletedUser = user;
+
+    // Kullanıcı silme logu
+    logger.userDeleted(user.username, user.id);
+
+    return apiResponse.success({ 
+      message: "Kullanıcı başarıyla silindi", 
+      user 
     });
 
-    return apiResponse.success({ message: "Kullanıcı başarıyla silindi", user });
   } catch (error) {
+    // Hata durumunda log
     logger.error('user', error as Error, {
+      action: 'delete',
       userId: id,
-      action: 'delete_attempt'
+      username: deletedUser?.username,
+      errorType: 'DATABASE_ERROR'
     });
+
     return apiResponse.error(
-      new APIError("Kullanıcı silinirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
+      new APIError("Kullanıcı silinirken bir hata oluştu", 500)
     );
   }
 }
 
+interface UserUpdateData {
+  username?: string;
+  email?: string;
+  role?: string;
+}
+
 export async function PUT(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  const body = await request.json();
-
+  let userId;
+  let oldUsername;
+  
   try {
-    const user = await prisma.user.update({
+    await checkAdminRole(request);
+    
+    const body = await request.json();
+    const { id, ...updateData } = body as { id: number } & UserUpdateData;
+    userId = id;
+
+    // Güncellemeden önce mevcut kullanıcı bilgilerini alalım
+    const existingUser = await prisma.user.findUnique({
+      where: { id: Number(id) }
+    });
+
+    if (!existingUser) {
+      throw new APIError("Kullanıcı bulunamadı", 404);
+    }
+
+    oldUsername = existingUser.username;
+
+    // Kullanıcıyı güncelle
+    const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: {
-        username: body.username,
-        email: body.email,
-        role: body.role, 
-      },
+      data: updateData
     });
 
-    logger.info('user', 'update', `Kullanıcı güncellendi: ${user.username}`, {
-      userId: user.id,
-      username: user.username,
-      updatedFields: { 
-        email: body.email, 
-        role: body.role 
-      }
+    // Hangi alanların değiştiğini belirle
+    const changedFields = Object.keys(updateData).filter(
+      key => updateData[key as keyof UserUpdateData] !== existingUser[key as keyof UserUpdateData]
+    );
+
+    // Güncelleme logu
+    logger.userUpdated(updatedUser.username, updatedUser.id, changedFields);
+
+    return apiResponse.success({ 
+      message: "Kullanıcı başarıyla güncellendi",
+      user: updatedUser 
     });
 
-    return apiResponse.success({ message: "Kullanıcı başarıyla güncellendi", user });
   } catch (error) {
+    // Hata durumunda log
     logger.error('user', error as Error, {
-      action: 'update_attempt',
-      userId: id,
-      updatedFields: body
+      action: 'update',
+      userId,
+      oldUsername,
+      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
+
+    if (error instanceof z.ZodError) {
+      return apiResponse.error(new ValidationError(error.errors[0].message));
+    }
 
     return apiResponse.error(
-      new APIError("Kullanıcı güncellenirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
+      new APIError("Kullanıcı güncellenirken bir hata oluştu", 500)
     );
   }
 }

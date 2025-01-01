@@ -21,18 +21,37 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  let body;
+  let categoryName = '';
+  let oldCategoryName = '';
+  
   try {
     await checkAdminRole(request);
-    body = await request.json();
+    const body = await request.json();
 
     const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
 
+    // Güncellemeden önce mevcut soru bilgilerini alalım
+    const existingQuestion = await prisma.question.findUnique({
+      where: { id },
+      include: {
+        category: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (!existingQuestion) {
+      throw new APIError("Soru bulunamadı", 404);
+    }
+
+    oldCategoryName = existingQuestion.category.name;
+
     const validatedData = questionSchema.parse(body);
 
+    // Soruyu güncelle
     const question = await prisma.question.update({
       where: { id },
       data: {
@@ -46,20 +65,15 @@ export async function PUT(
       },
       include: {
         category: {
-          select: {
-            name: true
-          }
+          select: { name: true }
         }
       }
     });
 
-    // Başarılı güncelleme logu
-    logger.info('question', 'update', `Soru güncellendi (ID: ${question.id})`, {
-      questionId: question.id,
-      categoryId: question.category_id,
-      categoryName: question.category.name,
-      questionPreview: question.question_text.substring(0, 50) + '...'
-    });
+    categoryName = question.category.name;
+
+    // Yeni helper metodu kullanalım
+    logger.questionUpdated(question.id, categoryName);
 
     const formattedQuestion = {
       id: question.id,
@@ -76,12 +90,12 @@ export async function PUT(
     return apiResponse.success(formattedQuestion);
 
   } catch (error) {
-    
-    // Düzeltilmiş hali:
     logger.error('question', error as Error, {
       action: 'update',
       questionId: params.id,
-      body: body
+      oldCategoryName,
+      newCategoryName: categoryName,
+      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
 
     if (error instanceof z.ZodError) {
@@ -103,6 +117,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  let categoryName = '';
+  
   try {
     await checkAdminRole(request);
 
@@ -111,27 +127,40 @@ export async function DELETE(
       throw new ValidationError("Geçersiz soru ID'si");
     }
 
-    const question = await prisma.question.delete({
+    // Silmeden önce soru ve kategori bilgisini alalım
+    const question = await prisma.question.findUnique({
+      where: { id },
+      include: {
+        category: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (!question) {
+      throw new APIError("Soru bulunamadı", 404);
+    }
+
+    categoryName = question.category.name;
+
+    // Soruyu sil
+    await prisma.question.delete({
       where: { id }
     });
 
-    // Başarılı silme logu
-    logger.info('question', 'delete', `Soru silindi (ID: ${id})`, {
-      questionId: id
-    });
+    // Yeni helper metodu kullanalım
+    logger.questionDeleted(id, categoryName);
 
     return apiResponse.success({
       message: "Soru başarıyla silindi"
     });
 
   } catch (error) {
-    // Hatalı olan:
-    // logger.error(error as Error);
-    
-    // Düzeltilmiş hali:
     logger.error('question', error as Error, {
       action: 'delete',
-      questionId: params.id
+      questionId: params.id,
+      categoryName,
+      errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
 
     if (error instanceof APIError) {

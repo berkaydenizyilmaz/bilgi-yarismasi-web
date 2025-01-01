@@ -15,76 +15,42 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  let body: z.infer<typeof registerSchema> | undefined;
-
+  let userData;
+  
   try {
-
-    try {
-      body = await request.json();
-    } catch (e) {
-      throw new ValidationError("Geçersiz istek formatı");
-    }
-
-    registerSchema.parse(body);
-    const validatedBody = body as z.infer<typeof registerSchema>;
-
-    // Email kontrolü
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: validatedBody.email },
-          { username: validatedBody.username }
-        ]
-      }
-    });
-
-    if (existingUser) {
-      throw new ValidationError("Bu email veya kullanıcı adı zaten kullanımda");
-    }
-
-    const hashedPassword = await bcrypt.hash(validatedBody.password, 10);
-
+    const body = await request.json();
+    userData = registerSchema.parse(body);
+    
     const user = await prisma.user.create({
       data: {
-        email: validatedBody.email,
-        username: validatedBody.username,
-        password_hash: hashedPassword,
-        last_login: new Date(),
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
+        username: userData.username,
+        email: userData.email,
+        password_hash: await bcrypt.hash(userData.password, 10),
+        role: 'user'
       }
     });
 
-    logger.userCreated(user.username, user.id, {
-      email: user.email,
-      registrationMethod: 'normal'
-    });
+    // Kullanıcı oluşturma logunu ekleyelim
+    logger.userCreated(user.username, user.id);
 
-    return apiResponse.success(
-      { user: { id: user.id, email: user.email, username: user.username } },
-      "Kayıt başarılı"
-    );
+    return apiResponse.success({
+      message: "Kayıt başarılı"
+    });
 
   } catch (error) {
+    // Hata durumunda log kaydı
     logger.error('auth', error as Error, {
-      path: request.url,
-      email: body?.email,
-      username: body?.username
+      action: 'register',
+      username: userData?.username,
+      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
 
-    if (error instanceof APIError) {
-      return apiResponse.error(error);
+    if (error instanceof z.ZodError) {
+      return apiResponse.error(new ValidationError(error.errors[0].message));
     }
 
     return apiResponse.error(
-      new APIError(
-        "Beklenmeyen bir hata oluştu",
-        500,
-        "INTERNAL_SERVER_ERROR"
-      )
+      new APIError("Kayıt işlemi başarısız oldu", 500)
     );
   }
 }

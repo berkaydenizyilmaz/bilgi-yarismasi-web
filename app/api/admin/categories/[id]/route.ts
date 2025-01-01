@@ -15,6 +15,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  let oldCategoryName = '';
+  let newCategoryName = '';
+
   try {
     await checkAdminRole(request);
 
@@ -23,8 +26,20 @@ export async function PUT(
       throw new ValidationError("Geçersiz kategori ID'si");
     }
 
+    // Mevcut kategori bilgisini al
+    const currentCategory = await prisma.category.findUnique({
+      where: { id }
+    });
+
+    if (!currentCategory) {
+      throw new ValidationError("Kategori bulunamadı");
+    }
+
+    oldCategoryName = currentCategory.name;
+
     const body = await request.json();
     const validatedData = categorySchema.parse(body);
+    newCategoryName = validatedData.name;
 
     // Aynı isimde başka kategori var mı kontrol et
     const existingCategory = await prisma.category.findFirst({
@@ -57,6 +72,9 @@ export async function PUT(
       }
     });
 
+    // Kategori güncelleme logu
+    logger.categoryUpdated(category.name, category.id);
+
     return apiResponse.success({
       id: category.id,
       name: category.name,
@@ -65,9 +83,13 @@ export async function PUT(
 
   } catch (error) {
     logger.error('category', error as Error, {
-      action: 'update_attempt',
-      categoryId: params.id
+      action: 'update',
+      categoryId: params.id,
+      oldName: oldCategoryName,
+      newName: newCategoryName,
+      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
+
     if (error instanceof z.ZodError) {
       return apiResponse.error(
         new ValidationError(error.errors[0].message)
@@ -87,6 +109,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  let categoryName = '';
+
   try {
     await checkAdminRole(request);
 
@@ -111,6 +135,8 @@ export async function DELETE(
       throw new ValidationError("Kategori bulunamadı");
     }
 
+    categoryName = category.name;
+
     if (category._count.questions > 0) {
       throw new ValidationError("Bu kategoride sorular bulunduğu için silinemez");
     }
@@ -119,15 +145,21 @@ export async function DELETE(
       where: { id }
     });
 
+    // Kategori silme logu
+    logger.categoryDeleted(categoryName, id);
+
     return apiResponse.success({
       message: "Kategori başarıyla silindi"
     });
 
   } catch (error) {
     logger.error('category', error as Error, {
-      action: 'delete_attempt',
-      categoryId: params.id
+      action: 'delete',
+      categoryId: params.id,
+      categoryName,
+      errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }

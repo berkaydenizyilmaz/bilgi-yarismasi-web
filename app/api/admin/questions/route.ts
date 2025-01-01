@@ -103,13 +103,27 @@ export async function GET(request: NextRequest) {
 
 // Soru ekleme (POST)
 export async function POST(request: NextRequest) {
-  let body;
+  let categoryName = '';
+  
   try {
     await checkAdminRole(request);
 
-    body = await request.json();
+    const body = await request.json();
     const validatedData = questionSchema.parse(body);
 
+    // Önce kategoriyi bulalım (log için kategori adını almak üzere)
+    const category = await prisma.category.findUnique({
+      where: { id: validatedData.categoryId },
+      select: { name: true }
+    });
+
+    if (!category) {
+      throw new APIError("Kategori bulunamadı", 404);
+    }
+
+    categoryName = category.name;
+
+    // Soruyu oluştur
     const question = await prisma.question.create({
       data: {
         question_text: validatedData.questionText,
@@ -119,27 +133,19 @@ export async function POST(request: NextRequest) {
         option_d: validatedData.optionD,
         correct_option: validatedData.correctOption,
         category_id: validatedData.categoryId
-      },
-      include: {
-        category: {
-          select: { name: true }
-        }
       }
     });
 
-    logger.info('question', 'create', `Yeni soru eklendi`, {
-      questionId: question.id,
-      categoryId: question.category_id,
-      categoryName: question.category.name,
-      questionPreview: question.question_text.substring(0, 50) + '...'
-    });
+    // Soru ekleme logu
+    logger.questionCreated(question.id, categoryName);
 
     return apiResponse.success(question);
 
   } catch (error) {
+    // Hata durumunda log
     logger.error('question', error as Error, {
       action: 'create',
-      categoryId: body?.categoryId,
+      categoryName,
       errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR',
       errorContext: 'create_question'
     });
@@ -147,47 +153,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return apiResponse.error(new ValidationError(error.errors[0].message));
     }
+
     return apiResponse.error(
       new APIError("Soru eklenirken bir hata oluştu", 500)
-    );
-  }
-}
-
-// DELETE - Soru silme
-export async function DELETE(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  
-  try {
-    await checkAdminRole(request);
-    
-    const id = parseInt(searchParams.get("id") || "");
-
-    const question = await prisma.question.delete({
-      where: { id },
-      include: {
-        category: {
-          select: { name: true }
-        }
-      }
-    });
-
-    logger.info('question', 'delete', `Soru silindi`, {
-      questionId: question.id,
-      categoryId: question.category_id,
-      categoryName: question.category.name,
-      questionPreview: question.question_text.substring(0, 50) + '...'
-    });
-
-    return apiResponse.success({ message: "Soru başarıyla silindi" });
-
-  } catch (error) {
-    logger.error('question', error as Error, {
-      action: 'delete_attempt',
-      questionId: searchParams.get("id")
-    });
-
-    return apiResponse.error(
-      new APIError("Soru silinirken bir hata oluştu", 500)
     );
   }
 }

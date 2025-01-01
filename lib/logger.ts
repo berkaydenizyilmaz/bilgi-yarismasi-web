@@ -52,59 +52,93 @@ class Logger {
     }
   }
 
-  // Kullanıcı işlemleri için helper metodlar
-  userCreated(username: string, userId: number, metadata?: Record<string, any>) {
+  // Kullanıcı işlemleri
+  userCreated(username: string, userId: number) {
     this.info('user', 'create', `Yeni kullanıcı oluşturuldu: ${username}`, {
       userId,
-      ...metadata
+      username
     });
   }
 
-  userUpdated(username: string, userId: number, metadata?: Record<string, any>) {
+  userUpdated(username: string, userId: number, updatedFields: string[]) {
     this.info('user', 'update', `Kullanıcı güncellendi: ${username}`, {
       userId,
-      ...metadata
+      username,
+      updatedFields
     });
   }
 
-  userDeleted(username: string, userId: number, metadata?: Record<string, any>) {
+  userDeleted(username: string, userId: number) {
     this.info('user', 'delete', `Kullanıcı silindi: ${username}`, {
       userId,
-      ...metadata
+      username
     });
   }
 
-  // Soru işlemleri için helper metodlar
-  questionCreated(questionId: number, metadata?: Record<string, any>) {
-    this.info('question', 'create', `Yeni soru eklendi (ID: ${questionId})`, metadata);
+  // Soru işlemleri
+  questionCreated(questionId: number, categoryName: string) {
+    this.info('question', 'create', `Yeni soru eklendi (ID: ${questionId})`, {
+      questionId,
+      categoryName
+    });
   }
 
-  questionUpdated(questionId: number, metadata?: Record<string, any>) {
-    this.info('question', 'update', `Soru güncellendi (ID: ${questionId})`, metadata);
+  questionUpdated(questionId: number, categoryName: string) {
+    this.info('question', 'update', `Soru güncellendi (ID: ${questionId})`, {
+      questionId,
+      categoryName
+    });
   }
 
-  questionDeleted(questionId: number, metadata?: Record<string, any>) {
-    this.info('question', 'delete', `Soru silindi (ID: ${questionId})`, metadata);
+  questionDeleted(questionId: number, categoryName: string) {
+    this.info('question', 'delete', `Soru silindi (ID: ${questionId})`, {
+      questionId,
+      categoryName
+    });
   }
 
-  // Kategori işlemleri için helper metodlar
-  categoryCreated(name: string, categoryId: number, metadata?: Record<string, any>) {
+  // Kategori işlemleri
+  categoryCreated(name: string, categoryId: number) {
     this.info('category', 'create', `Yeni kategori oluşturuldu: ${name}`, {
       categoryId,
-      ...metadata
+      name
     });
   }
 
-  categoryUpdated(name: string, categoryId: number, metadata?: Record<string, any>) {
+  categoryUpdated(name: string, categoryId: number) {
     this.info('category', 'update', `Kategori güncellendi: ${name}`, {
       categoryId,
+      name
+    });
+  }
+
+  categoryDeleted(name: string, categoryId: number) {
+    this.info('category', 'delete', `Kategori silindi: ${name}`, {
+      categoryId,
+      name
+    });
+  }
+
+  // Sistem hataları
+  systemError(error: Error, context: string, metadata?: Record<string, any>) {
+    this.error('system', error, {
+      errorContext: context,
       ...metadata
     });
   }
 
-  categoryDeleted(name: string, categoryId: number, metadata?: Record<string, any>) {
-    this.info('category', 'delete', `Kategori silindi: ${name}`, {
-      categoryId,
+  databaseError(error: Error, context: string, metadata?: Record<string, any>) {
+    this.error('system', error, {
+      errorType: 'DATABASE_ERROR',
+      errorContext: context,
+      ...metadata
+    });
+  }
+
+  authError(error: Error, context: string, metadata?: Record<string, any>) {
+    this.error('auth', error, {
+      errorType: 'AUTH_ERROR',
+      errorContext: context,
       ...metadata
     });
   }
