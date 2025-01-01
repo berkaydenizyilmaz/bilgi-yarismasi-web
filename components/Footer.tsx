@@ -26,7 +26,6 @@ export default function Footer() {
                   Profil
                 </Link>
               </li>
-              // ... diğer linkler aynı kalacak ...
             </ul>
           </div>
 
@@ -36,7 +35,6 @@ export default function Footer() {
               <Link href="https://github.com/berkaydenizyilmaz" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
                 <Github className="h-5 w-5 md:h-6 md:w-6" />
               </Link>
-              // ... diğer sosyal medya linki aynı kalacak ...
             </div>
           </div>
         </div>
