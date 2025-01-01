@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Brain, Menu, X } from "lucide-react"
+import { Brain, Menu, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function Header() {
   const pathname = usePathname()
@@ -21,7 +22,7 @@ export default function Header() {
       { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
       { name: 'İletişim', href: '/dashboard/contact' },
       { name: 'Profil', href: '/dashboard/profile' },
-      ...(user.role === 'admin' ? [{ name: 'Admin Paneli', href: '/admin' }] : []),
+      ...(user.role === 'admin' ? [{ name: 'Admin Paneli', href: "/admin" }] : []),
     ] : [])
   ]
 
@@ -36,77 +37,108 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="bg-orange-600 text-white py-8 shadow-md relative z-50">
+    <header className="bg-gradient-to-r from-orange-600 to-orange-500 text-white py-6 shadow-lg relative z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <Brain className="h-10 w-10" />
-            <span className="text-3xl font-bold">QuizVerse</span>
+          <Link href="/">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-3 group"
+            >
+              <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-white/20 transition-colors duration-300">
+                <Brain className="h-9 w-9" />
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
+                QuizVerse
+              </span>
+            </motion.div>
           </Link>
 
           {/* Mobil menü butonu */}
-          <button
-            className="md:hidden p-2"
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+            {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+          </motion.button>
 
           {/* Ana navigasyon */}
-          <nav className={cn(
-            "absolute md:relative top-full left-0 right-0 md:top-auto",
-            "bg-orange-600 md:bg-transparent",
-            "p-4 md:p-0",
-            "md:flex items-center space-x-1 md:space-x-4",
-            isMenuOpen ? "block" : "hidden md:flex"
-          )}>
-            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "px-3 py-2 rounded-md text-m font-medium",
-                    "transition-colors duration-200",
-                    pathname === item.href 
-                      ? "bg-orange-700 text-white" 
-                      : "hover:bg-orange-700 text-white"
-                  )}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Kullanıcı işlemleri */}
-            <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
-              {isLoading ? (
-                <LoadingSpinner className="w-6 h-6" />
-              ) : user ? (
-                <Button 
-                  onClick={logout} 
-                  className="w-full md:w-auto bg-gray-900 hover:bg-gray-800"
-                >
-                  Çıkış Yap
-                </Button>
-              ) : (
-                <div className="flex flex-col md:flex-row w-full md:w-auto space-y-2 md:space-y-0 md:space-x-4">
-                  <Link href="/auth/login" className="w-full md:w-auto">
-                    <Button variant="ghost" className="w-full hover:bg-orange-700">
-                      Giriş Yap
-                    </Button>
-                  </Link>
-                  <Link href="/auth/register" className="w-full md:w-auto">
-                    <Button className="w-full bg-black hover:bg-gray-800">
-                      Kayıt Ol
-                    </Button>
-                  </Link>
+          <AnimatePresence>
+            {(isMenuOpen || window.innerWidth >= 768) && (
+              <motion.nav
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className={cn(
+                  "absolute md:relative top-full left-0 right-0 md:top-auto",
+                  "backdrop-blur-lg md:backdrop-blur-none",
+                  "bg-orange-600/95 md:bg-transparent",
+                  "p-4 md:p-0",
+                  "md:flex items-center space-x-1 md:space-x-4",
+                  "border-t border-white/10 md:border-none",
+                  isMenuOpen ? "block" : "hidden md:flex"
+                )}
+              >
+                <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "px-5 py-2.5 rounded-xl text-base font-medium",
+                        "transition-all duration-200",
+                        "hover:bg-white/10",
+                        pathname === item.href
+                          ? "bg-white/20 text-white" 
+                          : "text-white/90 hover:text-white"
+                      )}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
                 </div>
-              )}
-            </div>
-          </nav>
+
+                {/* Kullanıcı işlemleri */}
+                <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-3">
+                  {isLoading ? (
+                    <LoadingSpinner className="w-6 h-6" />
+                  ) : user ? (
+                    <Button 
+                      onClick={logout} 
+                      variant="ghost"
+                      className="w-full md:w-auto text-base font-medium hover:bg-white/10 text-white/90 hover:text-white transition-all duration-200"
+                    >
+                      Çıkış Yap
+                    </Button>
+                  ) : (
+                    <div className="flex flex-col md:flex-row w-full md:w-auto space-y-2 md:space-y-0 md:space-x-3">
+                      <Link href="/auth/login" className="w-full md:w-auto">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full text-base font-medium hover:bg-white/10 text-white/90 hover:text-white transition-all duration-200"
+                        >
+                          Giriş Yap
+                        </Button>
+                      </Link>
+                      <Link href="/auth/register" className="w-full md:w-auto">
+                        <Button 
+                          className="w-full text-base font-medium bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700 transition-all duration-200"
+                        >
+                          Kayıt Ol
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </motion.nav>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>
