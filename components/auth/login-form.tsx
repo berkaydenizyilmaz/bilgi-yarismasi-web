@@ -36,10 +36,7 @@ export function LoginForm() {
     try {
       setIsLoading(true)
       setError(null)
-
       await login(data.email, data.password)
-      router.push("/quiz/categories")
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Giriş yapılamadı")
     } finally {

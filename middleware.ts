@@ -8,11 +8,14 @@ export async function middleware(request: NextRequest) {
         const token = request.cookies.get("token")?.value;
 
         const protectedPaths = [
-            "/quiz",
-            "/quiz/start",
-            "/dashboard",
-            "/quiz/result",
-            "/play"
+            "/dashboard/profile",
+            "/dashboard/leaderboard",
+            "/dashboard/contact",
+            "/play",
+            "/play/quiz",
+            "/play/quiz/result",
+            "/play/quiz/start",
+            "/play/quiz/classic",
         ];
 
         const adminPaths = [

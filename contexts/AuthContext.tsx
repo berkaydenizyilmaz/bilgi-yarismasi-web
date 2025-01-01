@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   })
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -51,18 +51,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      const responseData = await response.json()
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(responseData.error?.message || 'Giriş başarısız')
+        throw new Error(data.error?.message || 'Giriş yapılamadı')
       }
 
-      await mutate() // Auth durumunu güncelle
-      router.push('/')
+      // Token'ın yerleşmesini bekle
+      await mutate()
+      
+      // Kısa bir bekleme ekle
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Yönlendirme yap
+      router.push('/quiz/categories')
+      router.refresh()
     } catch (error) {
       throw error
     }
-  }
+  }, [router, mutate])
 
   const register = async (username: string, email: string, password: string) => {
     try {
