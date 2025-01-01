@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest) {
         total_score: true
       }
     }).catch((error) => {
-      logger.error(error as Error, {
+      logger.error('user', error as Error, {
         userId: decoded.id,
         stats: validatedBody,
         message: 'İstatistikler güncellenirken veritabanı hatası'
@@ -82,9 +82,9 @@ export async function PUT(request: NextRequest) {
     return apiResponse.success(user, "Kullanıcı istatistikleri güncellendi");
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.error('user', error as Error, {
       path: request.url,
-      stats: body  // Ham veriyi logla
+      stats: body
     });
 
     if (error instanceof APIError) {

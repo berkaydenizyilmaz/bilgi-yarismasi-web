@@ -60,7 +60,7 @@ export async function GET(req: NextRequest, { params }: any) {
                 }
             },
         }).catch((error) => {
-            logger.error(error as Error, {
+            logger.error('quiz', error as Error, {
                 quizId,
                 userId: decoded.id,
                 message: 'Quiz bilgileri alınamadı'
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest, { params }: any) {
         return apiResponse.success(formattedQuiz);
 
     } catch (error) {
-        logger.error(error as Error, {
+        logger.error('quiz', error as Error, {
             path: req.url,
             quizId: params.quizId
         });
