@@ -27,6 +27,7 @@ interface StatisticsData {
   totalFeedback: number
   totalLogs: number
   totalQuizzes: number
+  totalQuestions: number
   quizzesCountByDate: QuizCountByDate[]
   questionsCountByCategory: QuestionsCountByCategory[]
 }
@@ -75,12 +76,13 @@ export default function AdminStatistics() {
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
       <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">
-        Admin İstatistikleri
+        İstatistikler
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
         <StatCard title="Toplam Kullanıcı" value={data.data.totalUsers} />
         <StatCard title="Toplam Quiz" value={data.data.totalQuizzes} />
+        <StatCard title="Toplam Soru" value={data.data.totalQuestions} />
         <StatCard title="Toplam Geri Bildirim" value={data.data.totalFeedback} />
         <StatCard title="Toplam Log" value={data.data.totalLogs} />
       </div>

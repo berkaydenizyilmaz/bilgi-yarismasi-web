@@ -61,11 +61,15 @@ export async function GET(request: NextRequest) {
       questionCount: category.questions.length,
     }));
 
+    // Toplam soru sayısını al
+    const totalQuestions = await prisma.question.count();
+
     return apiResponse.success({
       totalUsers,
       totalFeedback,
       totalLogs,
       totalQuizzes,
+      totalQuestions,
       quizzesCountByDate: finalQuizzesCountByDate,
       questionsCountByCategory,
     });

@@ -3,24 +3,16 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, MessageSquare, Users, Plus, Monitor, Menu, X, FileQuestion, FolderTree } from "lucide-react"
+import { Home, FileText, MessageSquare, Users, Menu, X, FileQuestion, FolderTree } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-// Menü öğeleri tipi
-interface MenuItem {
-  href: string
-  label: string
-  icon: JSX.Element
-}
-
-// Menü öğeleri
-const menuItems: MenuItem[] = [
-  { href: "/admin", label: "Genel", icon: <Home className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/questions", label: "Sorular", icon: <FileQuestion className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/categories", label: "Kategoriler", icon: <FolderTree className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5 lg:h-6 lg:w-6" /> },
+const menuItems = [
+  { href: "/admin", label: "Genel", icon: <Home className="h-5 w-5" /> },
+  { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5" /> },
+  { href: "/admin/questions", label: "Sorular", icon: <FileQuestion className="h-5 w-5" /> },
+  { href: "/admin/categories", label: "Kategoriler", icon: <FolderTree className="h-5 w-5" /> },
+  { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5" /> },
+  { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5" /> },
 ]
 
 export default function AdminSidebar() {
@@ -28,7 +20,6 @@ export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Ekran boyutu kontrolü
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 1024)
@@ -48,7 +39,7 @@ export default function AdminSidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden bg-orange-600 hover:bg-orange-700 text-white"
+        className="fixed top-20 left-4 z-50 lg:hidden bg-orange-600 hover:bg-orange-700 text-white"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? (
@@ -68,16 +59,17 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-40
-        w-[240px] lg:w-64 
-        bg-orange-600 text-white
+        fixed lg:static
+        w-[240px]
+        bg-white shadow-lg rounded-lg
+        my-20 mx-4 lg:mx-6
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-4 lg:p-6 h-full overflow-y-auto">
+        <div className="p-4 mt-6">
           {/* Logo veya başlık alanı */}
-          <div className="mb-6 pt-4 lg:pt-0">
-            <h2 className="text-xl lg:text-2xl font-bold text-center">Admin Panel</h2>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800">Seçenekler</h2>
           </div>
 
           {/* Navigasyon */}
@@ -93,16 +85,18 @@ export default function AdminSidebar() {
                       onClick={() => isMobile && setIsOpen(false)}
                       className={`
                         flex items-center p-3 rounded-lg
-                        text-sm lg:text-base
+                        text-sm
                         transition-all duration-200 
-                        hover:bg-orange-700/70 hover:translate-x-1
-                        ${isActive ? 'bg-orange-700 shadow-md' : ''}
+                        ${isActive 
+                          ? 'bg-orange-100 text-orange-600 font-medium' 
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }
                       `}
                     >
                       <span className="inline-flex items-center justify-center">
                         {item.icon}
                       </span>
-                      <span className="ml-3 font-medium">{item.label}</span>
+                      <span className="ml-3">{item.label}</span>
                     </Link>
                   </li>
                 )
@@ -114,5 +108,3 @@ export default function AdminSidebar() {
     </>
   )
 }
-
-export { AdminSidebar }
