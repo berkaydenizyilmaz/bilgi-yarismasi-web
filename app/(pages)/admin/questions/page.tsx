@@ -108,7 +108,7 @@ export default function QuestionsPage() {
       try {
         const [questionsRes, categoriesRes] = await Promise.all([
           fetch(`/api/admin/questions?page=${page}&search=${searchTerm}&category=${selectedCategory}`),
-          fetch('/api/categories')
+          fetch('/api/admin/categories')
         ])
         
         const questionsData = await questionsRes.json()
@@ -120,7 +120,7 @@ export default function QuestionsPage() {
         }
 
         if (categoriesData.success) {
-          setCategories(categoriesData.data.data)
+          setCategories(categoriesData.data)
         }
 
         console.log('Kategoriler:', categoriesData)
@@ -170,7 +170,6 @@ export default function QuestionsPage() {
   const handleAddQuestion = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Form validasyonunu kontrol et
     const errors = validateForm(newQuestion)
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -193,8 +192,15 @@ export default function QuestionsPage() {
 
       if (!response.ok) throw new Error('Soru eklenemedi')
 
-      const result = await response.json()
-      setQuestions([...questions, result.data])
+      // Soruları yeniden yükle
+      const updatedQuestionsRes = await fetch(`/api/admin/questions?page=${page}&search=${searchTerm}&category=${selectedCategory}`)
+      const updatedQuestionsData = await updatedQuestionsRes.json()
+
+      if (updatedQuestionsData.success) {
+        setQuestions(updatedQuestionsData.data.questions)
+        setTotalPages(updatedQuestionsData.data.totalPages)
+      }
+
       setIsAddModalOpen(false)
       setNewQuestion({
         questionText: "",
@@ -205,6 +211,7 @@ export default function QuestionsPage() {
         correctOption: "A",
         categoryId: 1
       })
+      
       toast({
         title: "Başarılı",
         description: "Soru başarıyla eklendi"

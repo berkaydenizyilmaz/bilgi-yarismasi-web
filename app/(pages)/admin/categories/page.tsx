@@ -92,7 +92,14 @@ export default function CategoriesPage() {
         throw new Error(data.error?.message || "Kategori eklenemedi")
       }
 
-      setCategories([...categories, data.data])
+      // Kategorileri yeniden yükle
+      const updatedCategoriesRes = await fetch('/api/admin/categories')
+      const updatedCategoriesData = await updatedCategoriesRes.json()
+      
+      if (updatedCategoriesData.success) {
+        setCategories(updatedCategoriesData.data)
+      }
+
       setIsAddModalOpen(false)
       setNewCategoryName("")
       
