@@ -26,6 +26,11 @@ export default function Footer() {
                   Profil
                 </Link>
               </li>
+              <li>
+                <Link href="/iletişim" className="hover:text-orange-500 transition-colors">
+                  İletişim
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -34,6 +39,9 @@ export default function Footer() {
             <div className="flex gap-4">
               <Link href="https://github.com/berkaydenizyilmaz" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
                 <Github className="h-5 w-5 md:h-6 md:w-6" />
+              </Link>
+              <Link href="https://www.instagram.com/berkaydeniz_" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
+                <Instagram className="h-5 w-5 md:h-6 md:w-6" />
               </Link>
             </div>
           </div>
