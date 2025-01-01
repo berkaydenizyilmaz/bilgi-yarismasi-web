@@ -20,8 +20,11 @@ export async function PUT(
 
   try {
     await checkAdminRole(request);
+    
+    // params'ı await edelim
+    const parameters = await params;
+    const id = parseInt(parameters.id);
 
-    const id = parseInt(await params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -114,7 +117,10 @@ export async function DELETE(
   try {
     await checkAdminRole(request);
 
-    const id = parseInt(await params.id);
+    // params'ı await edelim
+    const parameters = await params;
+    const id = parseInt(parameters.id);
+    
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
