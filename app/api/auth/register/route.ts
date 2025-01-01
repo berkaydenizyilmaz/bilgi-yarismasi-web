@@ -58,37 +58,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    logger.info('Yeni kullanıcı kaydı başarılı', {
-      userId: user.id,
+    logger.userCreated(user.username, user.id, {
       email: user.email,
-      username: user.username
+      registrationMethod: 'normal'
     });
 
-    const token = signJWT({
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      role: "user" 
-    });
-
-    return apiResponse.successWithCookie(
-      { user },
-      "Kayıt başarılı",
-      [{
-        name: "token",
-        value: token,
-        options: {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24,
-        }
-      }]
+    return apiResponse.success(
+      { user: { id: user.id, email: user.email, username: user.username } },
+      "Kayıt başarılı"
     );
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.error('auth', error as Error, {
       path: request.url,
       email: body?.email,
       username: body?.username

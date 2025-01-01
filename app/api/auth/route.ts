@@ -42,9 +42,11 @@ export async function GET(request: NextRequest) {
         created_at: true,
       },
     }).catch((error) => {
-      logger.error(error as Error, {
+      logger.error('auth', error as Error, {
         userId: decoded.id,
-        email: decoded.email
+        email: decoded.email,
+        errorType: 'DATABASE_ERROR',
+        errorContext: 'verify_session'
       });
       throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,6 +75,14 @@ export async function GET(request: NextRequest) {
       questionsCountByCategory,
     });
   } catch (error) {
-    return apiResponse.error(new APIError("İstatistikler alınırken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR"));
+    logger.error('system', error as Error, {
+      errorType: 'DATABASE_ERROR',
+      errorContext: 'fetch_statistics',
+      action: 'list'
+    });
+    
+    return apiResponse.error(
+      new APIError("İstatistikler alınırken bir hata oluştu", 500)
+    );
   }
 }

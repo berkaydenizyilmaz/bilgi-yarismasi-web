@@ -20,9 +20,29 @@ import { tr } from "date-fns/locale"
 interface Log {
   id: number
   level: string
+  module: string
+  action: string
   message: string
-  metadata: any
   timestamp: string
+  path?: string
+  user_id?: number
+  username?: string
+  error?: any
+  metadata?: any
+}
+
+interface Log {
+  id: number
+  level: string
+  module: string
+  action: string
+  message: string
+  timestamp: string
+  path?: string
+  user_id?: number
+  username?: string
+  error?: any
+  metadata?: any
 }
 
 export default function LogsPage() {
@@ -39,28 +59,29 @@ export default function LogsPage() {
         const response = await fetch(`/api/admin/logs?page=${page}&pageSize=${pageSize}`)
         const data = await response.json()
 
+        console.log('API Response:', data);
+
         if (data.success) {
-          console.log('API Response:', data)
-          setLogs(data.data.logs)
-          const total = data.data.total || 0
-          setTotalPages(Math.ceil(total / pageSize))
+          setLogs(data.data.logs || []);
+          setTotalPages(Math.ceil((data.data.total || 0) / pageSize));
         } else {
-          throw new Error(data.error?.message || "Loglar yüklenemedi")
+          throw new Error(data.error?.message || "Loglar yüklenemedi");
         }
       } catch (error) {
-        console.error('Log yükleme hatası:', error)
+        console.error('Log yükleme hatası:', error);
         toast({
           title: "Hata",
           description: "Loglar yüklenirken bir hata oluştu",
           variant: "destructive"
-        })
+        });
+        setLogs([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchLogs()
-  }, [page])
+    fetchLogs();
+  }, [page, pageSize, toast]);
 
   // Metadata'yı daha okunabilir formatta göster
   const formatMetadata = (metadata: any) => {
@@ -84,6 +105,21 @@ export default function LogsPage() {
     )
   }
 
+  if (!logs || logs.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Sistem Logları</h1>
+          </div>
+          <div className="text-center text-gray-500">
+            Henüz log kaydı bulunmamaktadır.
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="p-6">
@@ -96,12 +132,14 @@ export default function LogsPage() {
             <TableRow>
               <TableHead>Tarih</TableHead>
               <TableHead>Seviye</TableHead>
+              <TableHead>Modül</TableHead>
+              <TableHead>İşlem</TableHead>
               <TableHead>Mesaj</TableHead>
               <TableHead>Detaylar</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {logs.map((log) => (
+            {logs && logs.map((log) => (
               <TableRow key={log.id}>
                 <TableCell>
                   {format(new Date(log.timestamp), 'dd MMM yyyy HH:mm:ss', { locale: tr })}
@@ -115,10 +153,18 @@ export default function LogsPage() {
                     {log.level.toUpperCase()}
                   </span>
                 </TableCell>
+                <TableCell>{log.module}</TableCell>
+                <TableCell>{log.action}</TableCell>
                 <TableCell>{log.message}</TableCell>
                 <TableCell>
                   <div className="text-sm">
+                    {log.username && <div className="mb-1">Kullanıcı: {log.username}</div>}
                     {formatMetadata(log.metadata)}
+                    {log.error && (
+                      <div className="text-red-600">
+                        Hata: {typeof log.error === 'object' ? JSON.stringify(log.error) : log.error}
+                      </div>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

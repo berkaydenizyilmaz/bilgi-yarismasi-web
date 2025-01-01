@@ -55,6 +55,7 @@ async function updateLeaderboardRanks(prisma: any) {
 
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof quizSchema> | undefined;
+  let userId: number | undefined;
 
   try {
 
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Token'dan userId al
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
-    const userId = decoded.id;  // Artık kesin olarak bir number
+    userId = decoded.id;
 
     try {
       body = await request.json();
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
         score: validatedBody.score,
         user_interactions: {
           create: validatedBody.questions.map(q => ({
-            user_id: userId,  // Artık kesin olarak number
+            user_id: userId!,
             question_id: q.id,
             is_correct: q.isCorrect,
             user_answer: q.userAnswer
@@ -112,15 +113,27 @@ export async function POST(request: NextRequest) {
     // Liderlik tablosunu güncelle
     await updateLeaderboardRanks(prisma);
 
+    logger.info('quiz', 'create', `Quiz tamamlandı`, {
+      quizId: quiz.id,
+      userId: userId,
+      categoryId: validatedBody.categoryId,
+      score: validatedBody.score,
+      correctAnswers: validatedBody.correctAnswers,
+      totalQuestions: validatedBody.totalQuestions
+    });
+
     return apiResponse.success({
       message: "Quiz sonuçları kaydedildi",
       data: { quizId: quiz.id }
     });
 
   } catch (error) {
-    logger.error(error as Error, {
-      path: request.url,
-      categoryId: body?.categoryId
+    logger.error('quiz', error as Error, {
+      userId: userId,
+      categoryId: body?.categoryId,
+      errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR',
+      errorContext: 'save_quiz_result',
+      action: 'create'
     });
 
     if (error instanceof APIError) {

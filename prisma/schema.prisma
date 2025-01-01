@@ -30,7 +30,7 @@ model User {
   question_interactions   UserQuestionInteraction[]
   leaderboard            Leaderboard?
   last_login             DateTime?
-  logs                   Log[]     // Yeni eklenen ilişki
+  logs                   Log[]     // Karşılıklı ilişki tanımı
 }
 
 model Category {
@@ -97,18 +97,18 @@ model Leaderboard {
 model Log {
   id        Int      @id @default(autoincrement())
   level     String   // 'info' | 'warn' | 'error'
+  module    String   // 'user' | 'question' | 'category' | 'quiz' | 'auth' | 'system' | 'feedback'
+  action    String   // 'create' | 'update' | 'delete' | 'auth' | 'error' | 'access' | 'list'
   message   String
   timestamp DateTime @default(now())
   path      String?
   user_id   Int?
-  error     Json?    // Hata detayları için
-  metadata  Json?    // Ek bilgiler için
+  error     Json?
+  metadata  Json?
   
   user      User?    @relation(fields: [user_id], references: [id])
-
-  @@index([timestamp])
-  @@index([level])
-  @@index([user_id])
+  
+  @@index([timestamp(sort: Desc)])
 }
 
 model Feedback {

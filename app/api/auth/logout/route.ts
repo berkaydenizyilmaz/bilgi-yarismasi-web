@@ -20,13 +20,13 @@ export async function POST(request: NextRequest) {
         // Token'dan kullanıcı bilgilerini al
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
         
-        logger.info('Kullanıcı çıkış yaptı', {
+        logger.authLog('logout', 'Kullanıcı çıkış yaptı', {
           userId: decoded.id,
           email: decoded.email,
           username: decoded.username
         });
       } catch (error) {
-        console.log(error)
+        console.error('Token decode hatası:', error);
       }
     } 
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.error('auth', error as Error, {
       path: request.url
     });
 

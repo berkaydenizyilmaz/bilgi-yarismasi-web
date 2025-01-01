@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
+  let userId: number | undefined;
   try {
 
     // Token kontrolü
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Token'dan userId al
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
-    const userId = decoded.id;
+    userId = decoded.id;
 
     const quizHistory = await prisma.quiz.findMany({
       where: {
@@ -40,9 +41,11 @@ export async function GET(request: NextRequest) {
       },
       take: 10 // Son 10 quiz
     }).catch((error) => {
-      logger.error(error as Error, {
+      logger.error('quiz', error as Error, {
         userId,
-        message: 'Quiz geçmişi getirilirken veritabanı hatası oluştu'
+        errorType: 'DATABASE_ERROR',
+        errorContext: 'fetch_user_history',
+        action: 'list'
       });
       throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
@@ -65,7 +68,11 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.error('quiz', error as Error, {
+      userId,
+      errorType: error instanceof AuthenticationError ? 'AUTH_ERROR' : 'INTERNAL_SERVER_ERROR',
+      errorContext: 'fetch_user_history',
+      action: 'list',
       path: request.url
     });
 

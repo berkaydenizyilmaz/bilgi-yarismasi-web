@@ -38,14 +38,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      logger.warn('Başarısız giriş denemesi: Kullanıcı bulunamadı', { email: validatedBody.email });
+      logger.warn('auth', 'auth', 'Başarısız giriş denemesi: Kullanıcı bulunamadı', { 
+        email: validatedBody.email 
+      });
       throw new AuthenticationError("Email veya şifre hatalı");
     }
 
     const passwordMatch = await bcrypt.compare(validatedBody.password, user.password_hash);
 
     if (!passwordMatch) {
-      logger.warn('Başarısız giriş denemesi: Yanlış şifre', { 
+      logger.warn('auth', 'auth', 'Başarısız giriş denemesi: Yanlış şifre', { 
         userId: user.id,
         email: user.email 
       });
@@ -64,10 +66,9 @@ export async function POST(request: NextRequest) {
       data: { last_login: new Date() },
     });
 
-    logger.info('Kullanıcı başarıyla giriş yaptı', {
+    logger.authLog('login', 'Başarılı giriş', {
       userId: user.id,
-      email: user.email,
-      username: user.username
+      email: user.email
     });
 
     return apiResponse.successWithCookie(
@@ -93,10 +94,18 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error(error as Error, {
-      path: request.url,
-      email: body?.email
+    logger.error('auth', error as Error, {
+      email: body?.email,
+      errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'AUTH_ERROR',
+      errorContext: 'login_attempt'
     });
+
+    if (body?.email) {
+      logger.warn('auth', 'auth', 'Başarısız giriş denemesi', {
+        email: body.email,
+        reason: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      });
+    }
 
     if (error instanceof APIError) {
       return apiResponse.error(error);

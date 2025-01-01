@@ -21,15 +21,16 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  let body;
   try {
     await checkAdminRole(request);
+    body = await request.json();
 
     const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
 
-    const body = await request.json();
     const validatedData = questionSchema.parse(body);
 
     const question = await prisma.question.update({
@@ -52,6 +53,14 @@ export async function PUT(
       }
     });
 
+    // Başarılı güncelleme logu
+    logger.info('question', 'update', `Soru güncellendi (ID: ${question.id})`, {
+      questionId: question.id,
+      categoryId: question.category_id,
+      categoryName: question.category.name,
+      questionPreview: question.question_text.substring(0, 50) + '...'
+    });
+
     const formattedQuestion = {
       id: question.id,
       questionText: question.question_text,
@@ -67,7 +76,14 @@ export async function PUT(
     return apiResponse.success(formattedQuestion);
 
   } catch (error) {
-    logger.error(error as Error);
+    
+    // Düzeltilmiş hali:
+    logger.error('question', error as Error, {
+      action: 'update',
+      questionId: params.id,
+      body: body
+    });
+
     if (error instanceof z.ZodError) {
       return apiResponse.error(
         new ValidationError(error.errors[0].message)
@@ -95,8 +111,13 @@ export async function DELETE(
       throw new ValidationError("Geçersiz soru ID'si");
     }
 
-    await prisma.question.delete({
+    const question = await prisma.question.delete({
       where: { id }
+    });
+
+    // Başarılı silme logu
+    logger.info('question', 'delete', `Soru silindi (ID: ${id})`, {
+      questionId: id
     });
 
     return apiResponse.success({
@@ -104,7 +125,15 @@ export async function DELETE(
     });
 
   } catch (error) {
-    logger.error(error as Error);
+    // Hatalı olan:
+    // logger.error(error as Error);
+    
+    // Düzeltilmiş hali:
+    logger.error('question', error as Error, {
+      action: 'delete',
+      questionId: params.id
+    });
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }

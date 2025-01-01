@@ -33,11 +33,12 @@ export async function GET(request: NextRequest) {
     const category = await prisma.category.findUnique({
       where: { id: Number(categoryId) }
     }).catch((error) => {
-      logger.error(error as Error, {
-        categoryId,
-        message: 'Kategori bilgisi alınamadı'
+      logger.error('category', error as Error, {
+        action: 'list',
+        errorType: 'DATABASE_ERROR',
+        errorContext: 'fetch_categories'
       });
-      throw new APIError("Kategori bilgisi alınamadı", 500, "DATABASE_ERROR");
+      throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
 
     if (!category) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
         }
       }
     }).catch((error) => {
-      logger.error(error as Error, {
+      logger.error('question', error as Error, {
         categoryId,
         userId,
         message: 'Soru sayısı alınamadı'
@@ -101,10 +102,12 @@ export async function GET(request: NextRequest) {
         id: 'asc'
       }
     }).catch((error) => {
-      logger.error(error as Error, {
-        categoryId,
-        userId,
-        message: 'Sorular alınamadı'
+      logger.error('question', error as Error, {
+        action: 'list',
+        categoryId: categoryId,
+        userId: userId,
+        errorType: 'DATABASE_ERROR',
+        errorContext: 'fetch_questions'
       });
       throw new APIError("Sorular alınamadı", 500, "DATABASE_ERROR");
     });
@@ -112,9 +115,12 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(questions);
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.error('question', error as Error, {
+      action: 'list',
       path: request.url,
-      categoryId: searchParams.get("categoryId")
+      categoryId: searchParams.get("categoryId"),
+      errorType: error instanceof APIError ? error.code : 'INTERNAL_SERVER_ERROR',
+      errorContext: 'get_questions'
     });
 
     if (error instanceof APIError) {

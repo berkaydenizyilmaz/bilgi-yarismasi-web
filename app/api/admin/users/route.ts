@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
       pageSize
     });
   } catch (error) {
+    logger.error('user', error as Error, {
+      action: 'list_attempt',
+      path: request.url
+    });
+
     return apiResponse.error(
       new APIError("Kullanıcıları çekerken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
     );
@@ -42,16 +47,20 @@ export async function DELETE(request: NextRequest) {
       where: { id: Number(id) },
     });
 
-    // Log kaydı
-    logger.info('Kullanıcı silindi', {
-      userId: user.id,
-      username: user.username,
-      action: 'delete'
+    logger.userDeleted(user.username, user.id, {
+      action: 'admin_delete',
+      deletedAt: new Date().toISOString()
     });
 
     return apiResponse.success({ message: "Kullanıcı başarıyla silindi", user });
   } catch (error) {
-    return apiResponse.error(new APIError("Kullanıcı silinirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR"));
+    logger.error('user', error as Error, {
+      userId: id,
+      action: 'delete_attempt'
+    });
+    return apiResponse.error(
+      new APIError("Kullanıcı silinirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
+    );
   }
 }
 
@@ -70,16 +79,25 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    // Log kaydı
-    logger.info('Kullanıcı güncellendi', {
+    logger.info('user', 'update', `Kullanıcı güncellendi: ${user.username}`, {
       userId: user.id,
       username: user.username,
-      action: 'update',
-      updatedFields: { email: body.email, role: body.role }
+      updatedFields: { 
+        email: body.email, 
+        role: body.role 
+      }
     });
 
     return apiResponse.success({ message: "Kullanıcı başarıyla güncellendi", user });
   } catch (error) {
-    return apiResponse.error(new APIError("Kullanıcı güncellenirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR"));
+    logger.error('user', error as Error, {
+      action: 'update_attempt',
+      userId: id,
+      updatedFields: body
+    });
+
+    return apiResponse.error(
+      new APIError("Kullanıcı güncellenirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
+    );
   }
 }

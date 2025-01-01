@@ -64,7 +64,10 @@ export async function PUT(
     });
 
   } catch (error) {
-    logger.error(error as Error);
+    logger.error('category', error as Error, {
+      action: 'update_attempt',
+      categoryId: params.id
+    });
     if (error instanceof z.ZodError) {
       return apiResponse.error(
         new ValidationError(error.errors[0].message)
@@ -121,7 +124,10 @@ export async function DELETE(
     });
 
   } catch (error) {
-    logger.error(error as Error);
+    logger.error('category', error as Error, {
+      action: 'delete_attempt',
+      categoryId: params.id
+    });
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }

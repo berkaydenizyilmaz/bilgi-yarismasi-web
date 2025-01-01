@@ -19,12 +19,13 @@ const questionSchema = z.object({
 
 // Soruları listeleme (GET)
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  
   try {
     // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
     const limit = 10;
     const offset = (page - 1) * limit;
     const search = searchParams.get("search") || "";
@@ -84,7 +85,13 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error(error as Error);
+    logger.error('question', error as Error, {
+      action: 'list_attempt',
+      search: searchParams.get("search"),
+      category: searchParams.get("category"),
+      page: page
+    });
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
@@ -96,15 +103,13 @@ export async function GET(request: NextRequest) {
 
 // Soru ekleme (POST)
 export async function POST(request: NextRequest) {
+  let body;
   try {
-    // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
-    // Request body'yi al ve validate et
-    const body = await request.json();
+    body = await request.json();
     const validatedData = questionSchema.parse(body);
 
-    // Soruyu veritabanına ekle
     const question = await prisma.question.create({
       data: {
         question_text: validatedData.questionText,
@@ -117,40 +122,72 @@ export async function POST(request: NextRequest) {
       },
       include: {
         category: {
-          select: {
-            name: true
-          }
+          select: { name: true }
         }
       }
     });
 
-    // Yanıt formatını düzenle
-    const formattedQuestion = {
-      id: question.id,
-      questionText: question.question_text,
-      optionA: question.option_a,
-      optionB: question.option_b,
-      optionC: question.option_c,
-      optionD: question.option_d,
-      correctOption: question.correct_option,
+    logger.info('question', 'create', `Yeni soru eklendi`, {
+      questionId: question.id,
       categoryId: question.category_id,
-      categoryName: question.category.name
-    };
+      categoryName: question.category.name,
+      questionPreview: question.question_text.substring(0, 50) + '...'
+    });
 
-    return apiResponse.success(formattedQuestion);
+    return apiResponse.success(question);
 
   } catch (error) {
-    logger.error(error as Error);
+    logger.error('question', error as Error, {
+      action: 'create',
+      categoryId: body?.categoryId,
+      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR',
+      errorContext: 'create_question'
+    });
+
     if (error instanceof z.ZodError) {
-      return apiResponse.error(
-        new ValidationError(error.errors[0].message)
-      );
-    }
-    if (error instanceof APIError) {
-      return apiResponse.error(error);
+      return apiResponse.error(new ValidationError(error.errors[0].message));
     }
     return apiResponse.error(
       new APIError("Soru eklenirken bir hata oluştu", 500)
+    );
+  }
+}
+
+// DELETE - Soru silme
+export async function DELETE(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  
+  try {
+    await checkAdminRole(request);
+    
+    const id = parseInt(searchParams.get("id") || "");
+
+    const question = await prisma.question.delete({
+      where: { id },
+      include: {
+        category: {
+          select: { name: true }
+        }
+      }
+    });
+
+    logger.info('question', 'delete', `Soru silindi`, {
+      questionId: question.id,
+      categoryId: question.category_id,
+      categoryName: question.category.name,
+      questionPreview: question.question_text.substring(0, 50) + '...'
+    });
+
+    return apiResponse.success({ message: "Soru başarıyla silindi" });
+
+  } catch (error) {
+    logger.error('question', error as Error, {
+      action: 'delete_attempt',
+      questionId: searchParams.get("id")
+    });
+
+    return apiResponse.error(
+      new APIError("Soru silinirken bir hata oluştu", 500)
     );
   }
 }

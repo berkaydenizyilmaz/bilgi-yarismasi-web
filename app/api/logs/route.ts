@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { apiResponse } from '@/lib/api-response';
-import { APIError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
+import { APIError } from '@/lib/errors';
 
 // Log verisi için Zod şeması
 const logSchema = z.object({
   level: z.enum(['info', 'warn', 'error']),
+  module: z.enum(['user', 'question', 'category', 'quiz', 'auth', 'system', 'feedback']),
+  action: z.enum(['create', 'update', 'delete', 'auth', 'error', 'access', 'list']),
   message: z.string(),
   timestamp: z.string().datetime(),
   path: z.string().optional(),
@@ -16,71 +18,53 @@ const logSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  let body: z.infer<typeof logSchema> | undefined;
-  let validatedBody: z.infer<typeof logSchema>;
-
   try {
     // Request body'yi parse et
+    let body;
     try {
       body = await request.json();
     } catch (e) {
-      throw new ValidationError("Geçersiz istek formatı");
+      console.error('JSON parse hatası:', e);
+      return apiResponse.error(
+        new APIError("Geçersiz JSON formatı", 400, "INVALID_REQUEST")
+      );
     }
 
-    // Zod validasyonu
+    // Veri doğrulama
     try {
-      logSchema.parse(body);
-      validatedBody = body as z.infer<typeof logSchema>;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.warn('Log validasyon hatası:', {
-          errors: error.errors
-        });
-        throw new ValidationError(error.errors[0].message);
-      }
-      throw error;
+      const validatedData = logSchema.parse(body);
+      
+      // Log'u kaydet
+      const log = await prisma.log.create({
+        data: {
+          level: validatedData.level,
+          module: validatedData.module,
+          action: validatedData.action,
+          message: validatedData.message,
+          timestamp: new Date(validatedData.timestamp),
+          path: validatedData.path,
+          user_id: validatedData.userId,
+          error: validatedData.error,
+          metadata: validatedData.metadata,
+        },
+      });
+
+      return apiResponse.success({ 
+        message: 'Log kaydedildi',
+        logId: log.id 
+      });
+
+    } catch (validationError) {
+      console.error('Validasyon hatası:', validationError);
+      return apiResponse.error(
+        new APIError("Geçersiz log verisi", 400, "VALIDATION_ERROR")
+      );
     }
-
-    // Log'u kaydet
-    const log = await prisma.log.create({
-      data: {
-        level: validatedBody.level,
-        message: validatedBody.message,
-        timestamp: new Date(validatedBody.timestamp),
-        path: validatedBody.path,
-        user_id: validatedBody.userId,
-        error: validatedBody.error,
-        metadata: validatedBody.metadata,
-      },
-    }).catch((error) => {
-      console.error('Veritabanı hatası:', error);
-      throw new APIError("Log kaydedilemedi", 500, "DATABASE_ERROR");
-    });
-
-    console.info('Log başarıyla kaydedildi:', {
-      id: log.id,
-      level: log.level,
-      message: log.message
-    });
-
-    return apiResponse.success({ 
-      message: 'Log kaydedildi',
-      logId: log.id 
-    });
     
   } catch (error) {
     console.error('Log kaydetme hatası:', error);
-
-    if (error instanceof APIError) {
-      return apiResponse.error(error);
-    }
-
     return apiResponse.error(
-      new APIError(
-        "Log kaydedilirken beklenmeyen bir hata oluştu",
-        500,
-        "INTERNAL_SERVER_ERROR"
-      )
+      new APIError("Log kaydedilirken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
     );
   }
 }

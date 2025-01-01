@@ -21,8 +21,10 @@ export async function GET(request: NextRequest) {
         name: 'asc'
       }
     }).catch((error) => {
-      logger.error(error as Error, {
-        message: 'Kategoriler getirilirken veritabanı hatası oluştu'
+      logger.error('category', error as Error, {
+        action: 'list',
+        errorType: 'DATABASE_ERROR',
+        errorContext: 'fetch_categories'
       });
       throw new APIError("Veritabanı hatası", 500, "DATABASE_ERROR");
     });
@@ -42,7 +44,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error(error as Error, {
+    logger.error('category', error as Error, {
+      action: 'list',
       path: request.url
     });
 
