@@ -19,7 +19,7 @@ const questionSchema = z.object({
 // Soru güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  params: any
 ) {
   let categoryName = '';
   let oldCategoryName = '';
@@ -115,14 +115,14 @@ export async function PUT(
 // Soru silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  params: any
 ) {
   let categoryName = '';
   
   try {
     await checkAdminRole(request);
 
-    const id = parseInt(await context.params.id);
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
@@ -158,7 +158,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('question', error as Error, {
       action: 'delete',
-      questionId: context.params.id,
+      questionId: params.id,
       categoryName,
       errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
