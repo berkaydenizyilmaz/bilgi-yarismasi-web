@@ -13,7 +13,7 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  params: any
 ) {
   try {
     await checkAdminRole(request);
@@ -86,7 +86,7 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  params: any
 ) {
   try {
     await checkAdminRole(request);
