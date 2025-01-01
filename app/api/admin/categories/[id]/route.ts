@@ -10,10 +10,16 @@ const categorySchema = z.object({
   name: z.string().min(1, "Kategori adı gereklidir").max(100, "Kategori adı çok uzun")
 });
 
+interface RequestContext {
+  params: {
+    id: string;
+  };
+}
+
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RequestContext
 ) {
   try {
     await checkAdminRole(request);
@@ -86,7 +92,7 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RequestContext
 ) {
   try {
     await checkAdminRole(request);
