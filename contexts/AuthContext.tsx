@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 100))
       
       // Yönlendirme yap
-      router.push('/quiz/categories')
+      router.push('/')
       router.refresh()
     } catch (error) {
       throw error
@@ -85,8 +85,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(responseData.error?.message || 'Kayıt başarısız')
       }
 
-      await mutate() // Auth durumunu güncelle
+      // Token'ın yerleşmesini bekle
+      await mutate()
+      
+      // Kısa bir bekleme ekle
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Yönlendirme yap
       router.push('/')
+      router.refresh()
     } catch (error) {
       throw error
     }
