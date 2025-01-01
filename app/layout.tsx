@@ -30,6 +30,7 @@ export default function RootLayout({
   const pathname = usePathname()
   const isAuthPage = pathname.startsWith('/auth/')
   const isAdminPage = pathname.startsWith('/admin')
+  
 
   return (
     <html lang="tr">
