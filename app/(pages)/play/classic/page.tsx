@@ -6,13 +6,14 @@ import { useCategories } from "@/lib/hooks/useCategories"
 import { BookOpen } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 
 export default function ClassicModePage() {
   const { categories, isLoading, error } = useCategories()
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+  const [hoveredCategory, setHoveredCategory] = useState<number | null>(null)
 
-  // Yükleme durumu
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -21,7 +22,6 @@ export default function ClassicModePage() {
     )
   }
 
-  // Hata durumu
   if (error) {
     return (
       <div className="text-center p-4 text-red-500">
@@ -35,49 +35,104 @@ export default function ClassicModePage() {
     router.push(`/play/quiz/start/${categoryId}`)
   }
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 md:py-12 px-4">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto"
+      >
         {/* Başlık Bölümü */}
-        <div className="text-center mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-5xl font-bold text-orange-600 mb-3">
+        <div className="text-center mb-12">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent mb-4"
+          >
             Klasik Mod
-          </h1>
-          <p className="text-xl md:text-3xl text-gray-800">
-            Quiz çözmeye başlamak için bir kategori seçin
-          </p>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl md:text-2xl text-gray-600"
+          >
+            Bilgi yarışmasına başlamak için bir kategori seçin
+          </motion.p>
         </div>
 
         {/* Kategoriler Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <motion.div 
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4"
+        >
           {Array.isArray(categories) && categories.length > 0 ? (
             categories.map((category) => (
-              <div key={category.id} className="flex justify-center">
+              <motion.div 
+                key={category.id}
+                variants={item}
+                className="flex justify-center"
+                onHoverStart={() => setHoveredCategory(category.id)}
+                onHoverEnd={() => setHoveredCategory(null)}
+              >
                 <Button 
                   onClick={() => handleCategorySelect(category.id)} 
                   className={`
-                    relative w-full h-32 md:h-40 
+                    relative w-full h-40 md:h-48
                     flex flex-col items-center justify-center 
-                    text-base md:text-lg font-semibold rounded-lg 
-                    transition-all duration-300 gap-3
+                    text-lg md:text-xl font-semibold
+                    rounded-2xl
+                    transition-all duration-300 gap-4
                     ${selectedCategory === category.id 
-                      ? 'bg-orange-600 text-white shadow-lg scale-105' 
-                      : 'bg-white text-orange-600 border-2 border-orange-600 hover:bg-orange-50'
+                      ? 'bg-gradient-to-br from-orange-600 to-orange-400 text-white shadow-lg scale-105' 
+                      : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:shadow-lg hover:scale-[1.02]'
                     }
                   `}
                 >
-                  <BookOpen className="h-6 w-6 md:h-8 md:w-8" />
-                  <span className="text-center px-2">{category.name}</span>
+                  <div className={`
+                    p-4 rounded-full 
+                    ${hoveredCategory === category.id ? 'bg-white/80' : 'bg-orange-50'}
+                    transition-colors duration-300
+                  `}>
+                    <BookOpen className={`
+                      h-8 w-8 md:h-10 md:w-10
+                      ${hoveredCategory === category.id ? 'text-orange-600' : 'text-orange-500'}
+                      transition-colors duration-300
+                    `} />
+                  </div>
+                  <span className="text-center px-4 transition-colors duration-300">
+                    {category.name}
+                  </span>
                 </Button>
-              </div>
+              </motion.div>
             ))
           ) : (
-            <div className="col-span-full text-center text-gray-600 py-8">
+            <motion.div 
+              variants={item}
+              className="col-span-full text-center text-gray-600 py-12 bg-white rounded-2xl shadow-sm"
+            >
               Hiç kategori bulunamadı.
-            </div>
+            </motion.div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

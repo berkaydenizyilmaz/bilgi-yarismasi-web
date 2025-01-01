@@ -15,8 +15,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useState } from "react"
 import * as z from "zod"
+import { motion } from "framer-motion"
+import { Mail, MessageSquare, User, CheckCircle, AlertCircle } from "lucide-react"
 
-// Form validasyon şeması
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "İsim en az 2 karakter olmalıdır.",
@@ -32,6 +33,7 @@ const formSchema = z.object({
 export default function ContactPage() {
   const [error, setError] = useState<string>("")
   const [success, setSuccess] = useState<string>("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,6 +46,10 @@ export default function ContactPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setIsSubmitting(true)
+      setError("")
+      setSuccess("")
+
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: {
@@ -62,33 +68,67 @@ export default function ContactPage() {
       form.reset()
     } catch (error) {
       setError(error instanceof Error ? error.message : "Bir hata oluştu")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto my-16">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Sol taraf dekoratif bölüm */}
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto"
+      >
+        {/* Başlık */}
+        <div className="text-center mb-12">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent mb-4"
+          >
+            İletişime Geçin
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl text-gray-600"
+          >
+            Sorularınız ve önerileriniz için bize ulaşın
+          </motion.p>
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100"
+        >
           <div className="grid md:grid-cols-5 gap-0">
-            <div className="hidden md:block md:col-span-2 bg-orange-600 p-8 text-white">
-              <div className="h-full flex flex-col justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6">Bizimle İletişime Geçin</h3>
-                  <p className="text-orange-100 mb-6">
-                    Sorularınız veya önerileriniz için bize ulaşın. En kısa sürede size dönüş yapacağız.
-                  </p>
-                </div>                
+            {/* Sol taraf */}
+            <div className="hidden md:block md:col-span-2 bg-gradient-to-br from-orange-600 to-orange-500 p-8 text-white relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold mb-6">Bizimle İletişime Geçin</h3>
+                <p className="text-orange-100 mb-6 leading-relaxed">
+                  Sorularınız veya önerileriniz için bize ulaşın. En kısa sürede size dönüş yapacağız.
+                </p>
+                <div className="mt-12">
+                  <div className="flex items-center gap-3 text-orange-100 mb-4">
+                    <Mail className="w-5 h-5" />
+                    <span>yilmazberkaydeniz@gmail.com</span>
+                  </div>
+                </div>
+              </div>
+              {/* Dekoratif arka plan deseni */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute -right-20 -bottom-20 w-64 h-64 rounded-full border-4 border-orange-200" />
+                <div className="absolute -left-20 -top-20 w-64 h-64 rounded-full border-4 border-orange-200" />
               </div>
             </div>
 
-            {/* Sağ taraf form bölümü */}
+            {/* Sağ taraf - Form */}
             <div className="md:col-span-3 p-8">
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900">İletişim Formu</h2>
-                <p className="mt-2 text-gray-600">Tüm alanları eksiksiz doldurunuz</p>
-              </div>
-
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
@@ -96,13 +136,16 @@ export default function ContactPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">İsim</FormLabel>
+                        <FormLabel className="text-gray-700 font-medium">İsim</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Adınız Soyadınız" 
-                            {...field}
-                            className="rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500" 
-                          />
+                          <div className="relative">
+                            <Input 
+                              placeholder="Adınız Soyadınız" 
+                              {...field}
+                              className="pl-10 rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-colors" 
+                            />
+                            <User className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          </div>
                         </FormControl>
                         <FormMessage className="text-red-500" />
                       </FormItem>
@@ -114,13 +157,16 @@ export default function ContactPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Email</FormLabel>
+                        <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="ornek@email.com" 
-                            {...field}
-                            className="rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500" 
-                          />
+                          <div className="relative">
+                            <Input 
+                              placeholder="ornek@email.com" 
+                              {...field}
+                              className="pl-10 rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-colors" 
+                            />
+                            <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          </div>
                         </FormControl>
                         <FormMessage className="text-red-500" />
                       </FormItem>
@@ -132,13 +178,16 @@ export default function ContactPage() {
                     name="message"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Mesajınız</FormLabel>
+                        <FormLabel className="text-gray-700 font-medium">Mesajınız</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Mesajınızı buraya yazın..." 
-                            className="min-h-[150px] rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500" 
-                            {...field} 
-                          />
+                          <div className="relative">
+                            <Textarea 
+                              placeholder="Mesajınızı buraya yazın..." 
+                              className="pl-10 min-h-[150px] rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-colors" 
+                              {...field} 
+                            />
+                            <MessageSquare className="w-5 h-5 text-gray-400 absolute left-3 top-4" />
+                          </div>
                         </FormControl>
                         <FormMessage className="text-red-500" />
                       </FormItem>
@@ -146,29 +195,40 @@ export default function ContactPage() {
                   />
 
                   {error && (
-                    <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm"
+                    >
+                      <AlertCircle className="w-5 h-5" />
                       {error}
-                    </div>
+                    </motion.div>
                   )}
 
                   {success && (
-                    <div className="p-4 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm"
+                    >
+                      <CheckCircle className="w-5 h-5" />
                       {success}
-                    </div>
+                    </motion.div>
                   )}
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-orange-600 hover:bg-orange-700 transition-colors rounded-lg py-3 text-base font-medium"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70"
                   >
-                    Gönder
+                    {isSubmitting ? "Gönderiliyor..." : "Gönder"}
                   </Button>
                 </form>
               </Form>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
