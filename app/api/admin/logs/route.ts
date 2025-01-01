@@ -23,55 +23,28 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const level = searchParams.get("level");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const skip = (page - 1) * pageSize;
 
-    // Filtreleme koşulları
-    const where: any = {};
-    if (level) where.level = level;
-    if (startDate && endDate) {
-      where.timestamp = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
-      };
-    }
-
+    // Toplam log sayısı ve sayfalı logları al
     const [logs, total] = await Promise.all([
       prisma.log.findMany({
-        where,
         orderBy: { timestamp: "desc" },
-        take: limit,
-        skip: (page - 1) * limit,
-        select: {
-          id: true,
-          level: true,
-          message: true,
-          timestamp: true,
-          path: true,
-          user_id: true,
-          error: true,
-          metadata: true
-        }
+        skip,
+        take: pageSize,
       }),
-      prisma.log.count({ where })
+      prisma.log.count()
     ]);
 
-    return apiResponse.successWithPagination(
-      { logs },
+    return apiResponse.success({ 
+      logs,
       total,
       page,
-      limit
-    );
-
+      pageSize
+    });
   } catch (error) {
-    console.error('Log getirme hatası:', error);
-    if (error instanceof APIError) {
-      return apiResponse.error(error);
-    }
     return apiResponse.error(
-      new APIError("Loglar alınırken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
+      new APIError("Loglar çekilirken bir hata oluştu", 500)
     );
   }
 }

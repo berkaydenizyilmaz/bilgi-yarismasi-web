@@ -16,11 +16,11 @@ interface MenuItem {
 // Menü öğeleri
 const menuItems: MenuItem[] = [
   { href: "/admin", label: "Genel", icon: <Home className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5 lg:h-6 lg:w-6" /> },
-  { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/questions", label: "Sorular", icon: <FileQuestion className="h-5 w-5 lg:h-6 lg:w-6" /> },
   { href: "/admin/categories", label: "Kategoriler", icon: <FolderTree className="h-5 w-5 lg:h-6 lg:w-6" /> },
+  { href: "/admin/logs", label: "Loglar", icon: <FileText className="h-5 w-5 lg:h-6 lg:w-6" /> },
+  { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5 lg:h-6 lg:w-6" /> },
 ]
 
 export default function AdminSidebar() {

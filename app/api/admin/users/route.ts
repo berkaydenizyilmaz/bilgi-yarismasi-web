@@ -6,13 +6,30 @@ import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
-    const users = await prisma.user.findMany({
-      orderBy: { created_at: "desc" }, // En yeni kullanıcılar önce
-    });
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get("page") || "1")
+    const pageSize = parseInt(searchParams.get("pageSize") || "15")
+    const skip = (page - 1) * pageSize
 
-    return apiResponse.success({ users });
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { created_at: "desc" },
+        skip,
+        take: pageSize,
+      }),
+      prisma.user.count() // Toplam kullanıcı sayısı
+    ]);
+
+    return apiResponse.success({ 
+      users,
+      total,
+      page,
+      pageSize
+    });
   } catch (error) {
-    return apiResponse.error(new APIError("Kullanıcıları çekerken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR"));
+    return apiResponse.error(
+      new APIError("Kullanıcıları çekerken bir hata oluştu", 500, "INTERNAL_SERVER_ERROR")
+    );
   }
 }
 
@@ -49,7 +66,7 @@ export async function PUT(request: NextRequest) {
       data: {
         username: body.username,
         email: body.email,
-        role: body.role, // Rolü de güncelle
+        role: body.role, 
       },
     });
 

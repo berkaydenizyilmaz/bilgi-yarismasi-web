@@ -1,365 +1,307 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import useSWR from "swr";
-import { fetcher } from "@/lib/swr-config";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Users, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useToast } from "@/lib/hooks/use-toast";
-import { ToastProvider } from "@/components/ui/toast";
-import { User } from "@/types/user";
+import { useState, useEffect } from "react"
+import { useToast } from "@/lib/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
-export default function AdminUsers() {
-  // State tanımlamaları
-  const [page, setPage] = useState(1);
-  const pageSize = 15;
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<'user' | 'admin'>("user");
-  const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+interface User {
+  id: number
+  email: string
+  username: string
+  role: string
+}
 
-  // Hooks
-  const { toast } = useToast();
-  const { data, error, mutate, isLoading } = useSWR(
-    `/api/admin/users?limit=${pageSize}&offset=${(page - 1) * pageSize}`, 
-    fetcher
-  );
+export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const { toast } = useToast()
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const pageSize = 15
 
-  // Data güncelleme
   useEffect(() => {
-    if (data?.data) {
-      setTotalUsers(data.data.totalUsers || data.data.users.length);
-      setUsers(data.data.users || []);
-    }
-  }, [data]);
-
-  // İşlem fonksiyonları
-  const handleDeleteUser = async () => {
-    if (deleteUserId) {
+    const fetchUsers = async () => {
       try {
-        const response = await fetch(`/api/admin/users?id=${deleteUserId}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(`/api/admin/users?page=${page}&pageSize=${pageSize}`)
+        const data = await response.json()
 
-        if (!response.ok) throw new Error('Kullanıcı silinemedi');
-
-        mutate();
-        setDeleteUserId(null);
-        setIsDeleteModalOpen(false);
-        
-        toast({
-          title: "Başarılı!",
-          description: "Kullanıcı başarıyla silindi.",
-          duration: 5000,
-          className: "text-sm md:text-base",
-        });
+        if (data.success) {
+          setUsers(data.data.users)
+          setTotalPages(Math.ceil(data.data.total / pageSize))
+        } else {
+          throw new Error(data.error?.message || "Kullanıcılar yüklenemedi")
+        }
       } catch (error) {
-        console.error("Kullanıcı silme hatası:", error);
         toast({
-          title: "Hata!",
-          description: "Kullanıcı silinirken bir hata oluştu.",
-          variant: "destructive",
-          duration: 5000,
-        });
+          title: "Hata",
+          description: "Kullanıcılar yüklenirken bir hata oluştu",
+          variant: "destructive"
+        })
+      } finally {
+        setIsLoading(false)
       }
     }
-  };
 
-  // Open edit modal and populate fields
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setUsername(user.username);
-    setEmail(user.email);
-    setRole(user.role);
-    setIsEditModalOpen(true);
-  };
+    fetchUsers()
+  }, [page])
 
-  // Update user handler
-  const handleUpdate = async () => {
-    if (!editingUser) return;
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser) return
 
     try {
       const response = await fetch(`/api/admin/users?id=${editingUser.id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, role }),
-      });
+        body: JSON.stringify(editingUser),
+      })
+
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error('Kullanıcı güncellenemedi');
+        throw new Error(data.error?.message || "Kullanıcı güncellenemedi")
       }
-      
-      // Close the modal
-      setIsEditModalOpen(false);
-      
-      // Reset editing state
-      setEditingUser(null);
-      
-      // Refresh data
-      mutate();
-      
-      // Show success toast
-      toast({
-        title: "Başarılı!",
-        description: "Kullanıcı bilgileri güncellendi.",
-      });
-    } catch (error) {
-      console.error("Kullanıcı güncelleme hatası:", error);
-      toast({
-        title: "Hata!",
-        description: "Kullanıcı bilgileri güncellenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-  };
 
-  // Yükleme durumu
+      setUsers(users.map(u => 
+        u.id === editingUser.id ? data.data.user : u
+      ))
+      setIsEditModalOpen(false)
+      setEditingUser(null)
+      
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı başarıyla güncellendi"
+      })
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: error instanceof Error ? error.message : "Kullanıcı güncellenirken bir hata oluştu",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`/api/admin/users?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error?.message || "Silme işlemi başarısız")
+      }
+
+      setUsers(users.filter(u => u.id !== id))
+      
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı başarıyla silindi"
+      })
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: error instanceof Error ? error.message : "Kullanıcı silinirken bir hata oluştu",
+        variant: "destructive"
+      })
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <LoadingSpinner className="h-8 w-8" />
       </div>
-    );
+    )
   }
-
-  // Hata durumu
-  if (error) {
-    return (
-      <div className="p-4 md:p-6 bg-red-50 min-h-screen flex flex-col justify-center items-center">
-        <div className="bg-white shadow-md rounded-lg p-6 md:p-8 max-w-md w-full">
-          <p className="text-red-500 text-center text-sm md:text-base">
-            Kullanıcıları yüklerken bir hata oluştu: {error.message}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // No users state
-  if (users.length === 0) {
-    return (
-      <div className="p-6 min-h-screen bg-gray-100 flex justify-center items-center">
-        <div className="text-center">
-          <Users className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-          <p className="text-xl text-gray-600">Henüz kullanıcı bulunmuyor.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate total pages
-  const totalPages = Math.ceil(totalUsers / pageSize);
 
   return (
-    <ToastProvider>
-      <div className="bg-orange-50 min-h-screen py-6 md:py-10">
-        <main className="max-w-7xl mx-auto px-4">
-          <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-6">
-              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                <Users className="h-8 w-8" />
-                Kullanıcı Yönetimi
-              </h2>
-            </div>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Kullanıcı Yönetimi</h1>
+        </div>
 
-            {/* Users Table */}
-            <Table className="w-full">
-              <TableCaption className="bg-gray-50 p-2 text-gray-600">
-                Toplam {totalUsers} kullanıcıdan {users.length} tanesi
-              </TableCaption>
-              <TableHeader className="bg-gray-100">
-                <TableRow>
-                  <TableHead>Kullanıcı Adı</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead>Kayıt Tarihi</TableHead>
-                  <TableHead>İşlemler</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-gray-50 transition-colors">
-                    <TableCell className="font-medium text-gray-800">{user.username}</TableCell>
-                    <TableCell className="text-gray-600">{user.email}</TableCell>
-                    <TableCell>
-                      <span className={`
-                        px-2 py-1 rounded-full text-xs font-semibold 
-                        ${user.role === 'admin' 
-                          ? 'bg-red-100 text-red-800' 
-                          : 'bg-green-100 text-green-800'
-                        }
-                      `}>
-                        {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-gray-500 text-sm">
-                      {new Date(user.created_at).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {/* Edit Button */}
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleEdit(user)}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Kullanıcı Adı</TableHead>
+              <TableHead>E-posta</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user.role === 'admin' 
+                      ? 'bg-red-100 text-red-800' 
+                      : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {user.role}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingUser(user)
+                        setIsEditModalOpen(true)
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
                         >
-                          <Edit className="h-4 w-4 mr-2" /> Düzenle
+                          <Trash2 className="h-4 w-4" />
                         </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Bu kullanıcıyı silmek istediğinize emin misiniz?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>İptal</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(user.id)}>
+                            Sil
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-                        {/* Delete Button */}
-                        <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => setDeleteUserId(user.id)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Sil
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Kullanıcıyı Silmek İstediğinize Emin Misiniz?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Bu işlem geri alınamaz. Kullanıcı kalıcı olarak sistemden silinecektir.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>İptal</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleDeleteUser}>
-                                Kullanıcıyı Sil
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="bg-white p-4 flex justify-between items-center border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="flex items-center gap-2"
-                >
-                  <ChevronLeft className="h-4 w-4" /> Önceki
-                </Button>
-                <span className="text-gray-600">
-                  Sayfa {page} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="flex items-center gap-2"
-                >
-                  Sonraki <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" /> Önceki
+            </Button>
+            <span>
+              Sayfa {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Sonraki <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
           </div>
+        )}
 
-          {/* Edit User Modal */}
-          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Kullanıcı Bilgilerini Düzenle</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Kullanıcı Adı</label>
-                  <Input 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="mt-1"
+        {/* Kullanıcı Düzenleme Modalı */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Kullanıcı Düzenle</DialogTitle>
+            </DialogHeader>
+            {editingUser && (
+              <form onSubmit={handleEditUser} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="editUsername">Kullanıcı Adı</label>
+                  <Input
+                    id="editUsername"
+                    value={editingUser.username}
+                    onChange={(e) => setEditingUser({
+                      ...editingUser,
+                      username: e.target.value
+                    })}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <Input 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1"
+                <div className="space-y-2">
+                  <label htmlFor="editEmail">E-posta</label>
+                  <Input
+                    id="editEmail"
+                    type="email"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({
+                      ...editingUser,
+                      email: e.target.value
+                    })}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Rol</label>
-                  <Select 
-                    value={role} 
-                    onValueChange={(value: 'user' | 'admin') => setRole(value)}
+                <div className="space-y-2">
+                  <label htmlFor="editRole">Rol</label>
+                  <select
+                    id="editRole"
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({
+                      ...editingUser,
+                      role: e.target.value
+                    })}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2"
                   >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Rol Seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">Kullanıcı</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="secondary" 
-                    onClick={() => setIsEditModalOpen(false)}
-                  >
+                <div className="flex justify-end gap-4">
+                  <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
                     İptal
                   </Button>
-                  <Button 
-                    type="button"
-                    onClick={handleUpdate}
-                  >
-                    Kaydet
-                  </Button>
+                  <Button type="submit">Güncelle</Button>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </main>
-      </div>
-    </ToastProvider>
-  );
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
+      </Card>
+    </div>
+  )
 }

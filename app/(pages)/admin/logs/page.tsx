@@ -1,63 +1,79 @@
 "use client"
 
-import { useState } from "react"
-import useSWR from "swr"
-import { fetcher } from "@/lib/swr-config"
+import { useState, useEffect } from "react"
+import { useToast } from "@/lib/hooks/use-toast"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { AlertCircle, Bug, Info, FileText, ChevronLeft, ChevronRight } from "lucide-react"
+import { format } from "date-fns"
+import { tr } from "date-fns/locale"
 
-// Tip tanımlamaları
 interface Log {
   id: number
   level: string
   message: string
+  metadata: any
   timestamp: string
 }
 
-interface LogsResponse {
-  success: boolean
-  data: {
-    logs: Log[]
-  }
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
-}
-
-export default function AdminLogs() {
+export default function LogsPage() {
+  const [logs, setLogs] = useState<Log[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const pageSize = 15
+  const [totalPages, setTotalPages] = useState(1)
+  const pageSize = 10
+  const { toast } = useToast()
 
-  const { data, error, isLoading } = useSWR<LogsResponse>(
-    `/api/admin/logs?page=${page}&limit=${pageSize}`,
-    fetcher
-  )
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch(`/api/admin/logs?page=${page}&pageSize=${pageSize}`)
+        const data = await response.json()
 
-  const getLevelIcon = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-500" />
-      case 'warn':
-        return <Bug className="h-5 w-5 text-yellow-500" />
-      case 'info':
-        return <Info className="h-5 w-5 text-blue-500" />
-      default:
-        return <FileText className="h-5 w-5 text-gray-500" />
+        if (data.success) {
+          console.log('API Response:', data)
+          setLogs(data.data.logs)
+          const total = data.data.total || 0
+          setTotalPages(Math.ceil(total / pageSize))
+        } else {
+          throw new Error(data.error?.message || "Loglar yüklenemedi")
+        }
+      } catch (error) {
+        console.error('Log yükleme hatası:', error)
+        toast({
+          title: "Hata",
+          description: "Loglar yüklenirken bir hata oluştu",
+          variant: "destructive"
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    fetchLogs()
+  }, [page])
+
+  // Metadata'yı daha okunabilir formatta göster
+  const formatMetadata = (metadata: any) => {
+    if (!metadata) return null
+
+    return Object.entries(metadata).map(([key, value]) => (
+      <div key={key} className="mb-1">
+        <span className="font-medium text-gray-700">{key}:</span>{" "}
+        <span className="text-gray-600">
+          {typeof value === 'object' ? JSON.stringify(value) : value?.toString()}
+        </span>
+      </div>
+    ))
   }
 
   if (isLoading) {
@@ -68,100 +84,68 @@ export default function AdminLogs() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="p-4 md:p-6 bg-red-50 min-h-screen flex flex-col justify-center items-center">
-        <Card className="p-6 md:p-8 max-w-md w-full">
-          <p className="text-red-500 text-center text-sm md:text-base mb-4">
-            Logları yüklerken bir hata oluştu: {error.message}
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
-  if (!data?.data?.logs) {
-    return (
-      <div className="p-4 md:p-6 min-h-screen bg-gray-100 flex justify-center items-center">
-        <div className="text-center">
-          <FileText className="mx-auto mb-4 h-12 md:h-16 w-12 md:w-16 text-gray-400" />
-          <p className="text-lg md:text-xl text-gray-600">Henüz log kaydı yok.</p>
-        </div>
-      </div>
-    )
-  }
-
-  const totalPages = data.pagination.totalPages
-  const logsData = data.data.logs
-  const totalLogs = data.pagination.total
-
   return (
-    <div className="bg-orange-50 min-h-screen py-6 md:py-10">
-      <main className="max-w-7xl mx-auto px-4">
-        <Card className="overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-4 md:p-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-              <FileText className="h-6 md:h-8 w-6 md:w-8" />
-              Sistem Logları
-            </h2>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Sistem Logları</h1>
+        </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableCaption className="bg-gray-50 p-2 text-sm md:text-base text-gray-600">
-                Toplam {totalLogs} log kaydından {logsData.length} tanesi
-              </TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-1/6 text-sm md:text-base">Seviye</TableHead>
-                  <TableHead className="w-3/6 text-sm md:text-base">Mesaj</TableHead>
-                  <TableHead className="w-1/6 text-sm md:text-base">Tarih</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logsData.map((log) => (
-                  <TableRow key={log.id} className="hover:bg-gray-50 transition-colors">
-                    <TableCell className="flex items-center gap-2 text-sm md:text-base">
-                      {getLevelIcon(log.level)}
-                      <span className="font-medium">{log.level}</span>
-                    </TableCell>
-                    <TableCell className="break-words max-w-xs text-sm md:text-base">
-                      {log.message}
-                    </TableCell>
-                    <TableCell className="text-gray-500 text-xs md:text-sm">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Tarih</TableHead>
+              <TableHead>Seviye</TableHead>
+              <TableHead>Mesaj</TableHead>
+              <TableHead>Detaylar</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {logs.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell>
+                  {format(new Date(log.timestamp), 'dd MMM yyyy HH:mm:ss', { locale: tr })}
+                </TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    log.level === 'error' ? 'bg-red-100 text-red-800' :
+                    log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {log.level.toUpperCase()}
+                  </span>
+                </TableCell>
+                <TableCell>{log.message}</TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {formatMetadata(log.metadata)}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-          {totalPages > 1 && (
-            <div className="bg-white p-4 flex justify-between items-center border-t">
-              <Button
-                variant="outline"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="text-sm md:text-base"
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" /> Önceki
-              </Button>
-              <span className="text-sm md:text-base text-gray-600">
-                Sayfa {page} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-                className="text-sm md:text-base"
-              >
-                Sonraki <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          )}
-        </Card>
-      </main>
+        <div className="flex justify-between items-center mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" /> Önceki
+          </Button>
+          <span>
+            Sayfa {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Sonraki <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      </Card>
     </div>
   )
 }
