@@ -13,7 +13,7 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ): Promise<Response> {
   let oldCategoryName = '';
   let newCategoryName = '';
@@ -21,9 +21,7 @@ export async function PUT(
   try {
     await checkAdminRole(request);
     
-    // params'ı await edelim
-    const parameters = await params;
-    const id = parseInt(parameters.id);
+    const id = parseInt(context.params.id);
 
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
@@ -87,7 +85,7 @@ export async function PUT(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update',
-      categoryId: params.id,
+      categoryId: context.params.id,
       oldName: oldCategoryName,
       newName: newCategoryName,
       errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
@@ -110,16 +108,14 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ): Promise<Response> {
   let categoryName = '';
 
   try {
     await checkAdminRole(request);
 
-    // params'ı await edelim
-    const parameters = await params;
-    const id = parseInt(parameters.id);
+    const id = parseInt(context.params.id);
     
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
@@ -161,7 +157,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete',
-      categoryId: params.id,
+      categoryId: context.params.id,
       categoryName,
       errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
