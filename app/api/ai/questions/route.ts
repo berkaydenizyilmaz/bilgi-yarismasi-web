@@ -14,18 +14,13 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 const cleanJsonResponse = (text: string): string => {
   try {
-    // Markdown işaretlerini kaldır
     text = text.replace(/```json\s*|\s*```/g, "").trim();
-    
-    // JSON formatını düzelt
     text = text.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
     text = text.replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*([,}])/g, ':"$1"$2');
     
-    // JSON içeriğini bul
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("JSON içeriği bulunamadı");
     
-    // JSON'ı parse et ve tekrar stringify yap
     const parsed = JSON.parse(jsonMatch[0]);
     return JSON.stringify(parsed);
   } catch (error) {
@@ -69,15 +64,9 @@ async function getCategoryName(categoryId: number): Promise<string> {
   return category.name;
 }
 
-logger.info('ai', 'error', 'API yapılandırması', {
-  hasApiKey: !!process.env.GEMINI_API_KEY,
-  apiKeyLength: process.env.GEMINI_API_KEY?.length || 0
-});
-
 export async function POST(request: NextRequest) {
-  let body;
   try {
-    body = await request.json();
+    const body = await request.json();
     const { category } = body;
 
     if (!category) {
@@ -87,34 +76,32 @@ export async function POST(request: NextRequest) {
     const categoryText = await getCategoryName(Number(category));
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // AI isteği başlangıç logu
-    logger.info('ai', 'generate', `AI soru üretimi başladı - Kategori: ${categoryText}`, {
-      categoryId: category,
-      categoryName: categoryText
-    });
+    const prompt = `"${categoryText}" konusunda 10 adet özgün çoktan seçmeli soru üret.
 
-    const prompt = `Lütfen "${categoryText}" konusunda 10 adet çoktan seçmeli soru üret.
-    Her soru için:
-    - Soru Türkçe olmalı ve "${categoryText}" konusuyla doğrudan ilgili olmalı
-    - 4 şık olmalı (A,B,C,D)
-    - Tek bir doğru cevap olmalı
-    - Şıklar kısa ve net olmalı
-    
-    Yanıtı tam olarak aşağıdaki JSON formatında ver (başka metin ekleme):
+Önemli kurallar:
+1. Her soru benzersiz ve özgün olmalı, birbirini tekrar etmemeli
+2. Sorular farklı zorluk seviyelerinde olmalı (kolay, orta, zor)
+3. Her sorunun kesinlikle tek bir doğru cevabı olmalı
+4. Yanlış şıklar mantıklı ama açıkça yanlış olmalı
+5. Şıklar kısa ve net olmalı, birbirine çok benzer olmamalı
+6. Sorular test etme, anlama ve uygulama becerilerini ölçmeli
+7. Her soru Türkçe dilbilgisi kurallarına uygun olmalı
+
+Yanıtı tam olarak aşağıdaki JSON formatında ver (başka metin ekleme):
+{
+  "questions": [
     {
-      "questions": [
-        {
-          "question": "soru metni",
-          "options": {
-            "A": "birinci şık",
-            "B": "ikinci şık",
-            "C": "üçüncü şık",
-            "D": "dördüncü şık"
-          },
-          "correct_option": "A"
-        }
-      ]
-    }`;
+      "question": "soru metni",
+      "options": {
+        "A": "birinci şık",
+        "B": "ikinci şık",
+        "C": "üçüncü şık",
+        "D": "dördüncü şık"
+      },
+      "correct_option": "A"
+    }
+  ]
+}`;
 
     let retryCount = 0;
     const maxRetries = 3;
@@ -129,25 +116,16 @@ export async function POST(request: NextRequest) {
         const jsonData = JSON.parse(cleanedJson);
         const validatedQuestions = validateQuestions(jsonData.questions);
 
-        // Başarılı üretim logu
-        logger.info('ai', 'generate', `Sorular başarıyla üretildi`, {
-          categoryId: category,
-          categoryName: categoryText,
-          questionCount: validatedQuestions.length
-        });
-
         return apiResponse.success({ questions: validatedQuestions });
       } catch (error) {
         retryCount++;
         
-        // Her başarısız deneme için log
         logger.error('ai', error as Error, {
-          action: 'generate',
+          errorType: 'AI_GENERATION_ERROR',
+          errorContext: 'generate_questions',
           categoryId: category,
           categoryName: categoryText,
-          retryCount,
-          errorType: 'AI_GENERATION_ERROR',
-          errorContext: 'generate_questions'
+          retryCount
         });
 
         if (retryCount === maxRetries) {
@@ -157,11 +135,8 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    // Genel hata logu
     logger.error('ai', error as Error, {
-      action: 'generate',
-      categoryId: body?.category,
-      errorType: error instanceof APIError ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
+      errorType: error instanceof APIError ? 'VALIDATION_ERROR' : 'AI_ERROR',
       errorContext: 'ai_questions_endpoint',
       path: request.url
     });

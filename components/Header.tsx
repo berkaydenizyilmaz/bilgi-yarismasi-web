@@ -43,8 +43,8 @@ export default function Header() {
   return (
     <header className={`
       ${isAiMode 
-        ? "bg-gradient-to-r from-purple-600 to-pink-500" 
-        : "bg-gradient-to-r from-orange-600 to-orange-500"
+        ? "bg-gradient-to-r from-purple-600 to-pink-500 shadow-purple-500/20" 
+        : "bg-gradient-to-r from-orange-600 to-orange-500 shadow-orange-500/20"
       } text-white py-6 shadow-lg relative z-50`}
     >
       <div className="max-w-7xl mx-auto px-4">
@@ -86,7 +86,9 @@ export default function Header() {
                 className={cn(
                   "absolute md:relative top-full left-0 right-0 md:top-auto",
                   "backdrop-blur-lg md:backdrop-blur-none",
-                  "bg-orange-600/95 md:bg-transparent",
+                  isAiMode 
+                    ? "bg-purple-600/95 md:bg-transparent" 
+                    : "bg-orange-600/95 md:bg-transparent",
                   "p-4 md:p-0",
                   "md:flex items-center space-x-1 md:space-x-4",
                   "border-t border-white/10 md:border-none",
