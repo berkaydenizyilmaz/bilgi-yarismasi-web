@@ -42,7 +42,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link 
-                  href="/iletişim" 
+                  href="/dashboard/contact" 
                   className={`hover:${isAiMode ? "text-pink-400" : "text-orange-500"} transition-colors`}
                 >
                   İletişim

@@ -10,7 +10,6 @@ export async function middleware(request: NextRequest) {
         const protectedPaths = [
             "/dashboard/profile",
             "/dashboard/leaderboard",
-            "/dashboard/contact",
             "/play",
             "/play/quiz",
             "/play/quiz/result",
