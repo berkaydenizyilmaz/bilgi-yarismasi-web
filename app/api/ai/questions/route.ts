@@ -65,8 +65,9 @@ async function getCategoryName(categoryId: number): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  let body;
   try {
-    const body = await request.json();
+    body = await request.json();
     const { category } = body;
 
     if (!category) {
@@ -75,6 +76,12 @@ export async function POST(request: NextRequest) {
 
     const categoryText = await getCategoryName(Number(category));
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // AI isteği başlangıç logu
+    logger.info('ai', 'generate', `AI soru üretimi başladı - Kategori: ${categoryText}`, {
+      categoryId: category,
+      categoryName: categoryText
+    });
 
     const prompt = `Lütfen "${categoryText}" konusunda 10 adet çoktan seçmeli soru üret.
     Her soru için:
@@ -112,10 +119,26 @@ export async function POST(request: NextRequest) {
         const jsonData = JSON.parse(cleanedJson);
         const validatedQuestions = validateQuestions(jsonData.questions);
 
+        // Başarılı üretim logu
+        logger.info('ai', 'generate', `Sorular başarıyla üretildi`, {
+          categoryId: category,
+          categoryName: categoryText,
+          questionCount: validatedQuestions.length
+        });
+
         return apiResponse.success({ questions: validatedQuestions });
       } catch (error) {
         retryCount++;
-
+        
+        // Her başarısız deneme için log
+        logger.error('ai', error as Error, {
+          action: 'generate',
+          categoryId: category,
+          categoryName: categoryText,
+          retryCount,
+          errorType: 'AI_GENERATION_ERROR',
+          errorContext: 'generate_questions'
+        });
 
         if (retryCount === maxRetries) {
           throw new APIError("Sorular oluşturulamadı, lütfen tekrar deneyin", 500);
@@ -124,6 +147,15 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
+    // Genel hata logu
+    logger.error('ai', error as Error, {
+      action: 'generate',
+      categoryId: body?.category,
+      errorType: error instanceof APIError ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
+      errorContext: 'ai_questions_endpoint',
+      path: request.url
+    });
+
     return apiResponse.error(
       error instanceof APIError ? error : new APIError("Beklenmeyen bir hata oluştu", 500)
     );
