@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Brain, Menu, X } from "lucide-react"
+import { Brain, Menu, X, LogOut, LogIn, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -50,19 +50,63 @@ export default function Header() {
       <header className="text-white py-6">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
+            {/* Logo - Geliştirilmiş animasyonlar */}
             <Link href="/">
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center space-x-3 group"
               >
-                <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-white/20 transition-colors duration-300">
-                  <Brain className="h-9 w-9" />
-                </div>
-                <span className="text-3xl font-bold bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
+                <motion.div 
+                  className="bg-white/10 p-2.5 rounded-xl transition-all duration-300 ease-out"
+                  whileHover={{
+                    scale: 1.1,
+                    transition: {
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 10
+                    }
+                  }}
+                  whileTap={{ 
+                    scale: 0.9,
+                    transition: {
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 10
+                    }
+                  }}
+                >
+                  <motion.div
+                    animate={{ rotate: 0 }}
+                    whileHover={{ 
+                      rotate: 360,
+                      transition: {
+                        duration: 1,
+                        ease: "linear",
+                        repeat: Infinity
+                      }
+                    }}
+                  >
+                    <Brain className="h-9 w-9 transition-colors duration-300 ease-out" />
+                  </motion.div>
+                </motion.div>
+                <motion.span 
+                  className={`text-3xl font-bold ${
+                    isAiMode 
+                      ? "bg-gradient-to-r from-white via-purple-200 to-pink-200"
+                      : "bg-gradient-to-r from-white via-orange-100 to-yellow-200"
+                  } bg-clip-text text-transparent`}
+                  whileHover={{
+                    scale: 1.05,
+                    transition: {
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 17
+                    }
+                  }}
+                >
                   QuizVerse
-                </span>
+                </motion.span>
               </motion.div>
             </Link>
 
@@ -79,7 +123,7 @@ export default function Header() {
                       isAiMode
                         ? "hover:bg-white/10"
                         : "hover:bg-white/10",
-                      pathname === item.href
+                      (pathname === item.href) || (pathname.includes(item.href) && item.href !== '/')
                         ? isAiMode 
                           ? "bg-white/20 text-white" 
                           : "bg-white/20 text-white"
@@ -96,65 +140,108 @@ export default function Header() {
                 {isLoading ? (
                   <LoadingSpinner className="w-6 h-6" />
                 ) : user ? (
-                  <Button 
-                    onClick={logout} 
-                    variant="ghost"
-                    className={`text-base font-medium text-white/90 hover:text-white transition-all duration-200
-                      ${isAiMode 
-                        ? "hover:bg-purple-500/50" 
-                        : "hover:bg-white/10"
-                      }`}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 17
+                    }}
                   >
-                    Çıkış Yap
-                  </Button>
+                    <Button 
+                      onClick={logout} 
+                      variant="ghost"
+                      className={`group text-base font-medium text-white transition-all duration-300 ease-out
+                        ${isAiMode 
+                          ? "hover:bg-white/15 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-transparent hover:border-white/20" 
+                          : "hover:bg-white/10"
+                        }`}
+                    >
+                      <motion.div
+                        initial={{ rotate: 0 }}
+                        whileHover={{ 
+                          rotate: 12,
+                          x: 2,
+                          transition: {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 17
+                          }
+                        }}
+                      >
+                        <LogOut className="w-5 h-5 mr-2" />
+                      </motion.div>
+                      Çıkış Yap
+                    </Button>
+                  </motion.div>
                 ) : (
                   <div className="flex items-center space-x-3">
-                    <Link href="/auth/login">
-                      <Button 
-                        variant="ghost" 
-                        className={`text-base font-medium text-white/90 hover:text-white transition-all duration-200
-                          ${isAiMode 
-                            ? "hover:bg-purple-500/50" 
-                            : "hover:bg-white/10"
-                          }`}
-                      >
-                        Giriş Yap
-                      </Button>
-                    </Link>
-                    <Link href="/auth/register">
-                      <Button 
-                        className={`text-base font-medium transition-all duration-200
-                          ${isAiMode 
-                            ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
-                            : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
-                          }`}
-                      >
-                        Kayıt Ol
-                      </Button>
-                    </Link>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Link href="/auth/login">
+                        <Button 
+                          variant="ghost" 
+                          className={`group text-base font-medium text-white/90 hover:text-white transition-all duration-300
+                            ${isAiMode 
+                              ? "hover:bg-purple-500/50" 
+                              : "hover:bg-white/10"
+                            }`}
+                        >
+                          <LogIn className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+                          Giriş Yap
+                        </Button>
+                      </Link>
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Link href="/auth/register">
+                        <Button 
+                          className={`group text-base font-medium transition-all duration-300
+                            ${isAiMode 
+                              ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
+                              : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
+                            } hover:shadow-lg hover:-translate-y-0.5`}
+                        >
+                          <UserPlus className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                          Kayıt Ol
+                        </Button>
+                      </Link>
+                    </motion.div>
                   </div>
                 )}
               </div>
             </nav>
 
-            {/* Mobil menü butonu */}
+            {/* Geliştirilmiş mobil menü butonu */}
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className={`md:hidden p-2 rounded-lg transition-colors duration-200 
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className={`md:hidden p-2 rounded-lg transition-all duration-300
                 ${isAiMode 
                   ? "hover:bg-purple-500/50" 
                   : "hover:bg-white/10"
                 }`}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+              <motion.div
+                animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+              </motion.div>
             </motion.button>
           </div>
         </div>
       </header>
 
-      {/* Mobil menü */}
+      {/* Mobil menü - Geliştirilmiş butonlar */}
       <AnimatePresence>
         {(isMenuOpen && isMobile) && (
           <motion.nav
@@ -168,7 +255,21 @@ export default function Header() {
               "block md:hidden"
             )}
           >
-            <div className="flex flex-col space-y-2">
+            <motion.div 
+              className="flex flex-col space-y-2"
+              variants={{
+                hidden: { opacity: 0, y: -20 },
+                show: {
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+              initial="hidden"
+              animate="show"
+            >
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -179,7 +280,7 @@ export default function Header() {
                     isAiMode
                       ? "hover:bg-white/10"
                       : "hover:bg-white/10",
-                    pathname === item.href
+                    (pathname === item.href) || (pathname.includes(item.href) && item.href !== '/')
                       ? isAiMode 
                         ? "bg-white/20 text-white" 
                         : "bg-white/20 text-white"
@@ -191,51 +292,69 @@ export default function Header() {
                 </Link>
               ))}
 
-              {/* Mobil kullanıcı işlemleri */}
+              {/* Mobil kullanıcı işlemleri - Geliştirilmiş butonlar */}
               <div className="flex flex-col space-y-2 mt-2">
                 {isLoading ? (
                   <LoadingSpinner className="w-6 h-6" />
                 ) : user ? (
-                  <Button 
-                    onClick={logout} 
-                    variant="ghost"
-                    className={`w-full text-base font-medium text-white/90 hover:text-white transition-all duration-200
-                      ${isAiMode 
-                        ? "hover:bg-purple-500/50" 
-                        : "hover:bg-white/10"
-                      }`}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    Çıkış Yap
-                  </Button>
+                    <Button 
+                      onClick={logout} 
+                      variant="ghost"
+                      className={`w-full group text-base font-medium text-white/90 hover:text-white transition-all duration-300
+                        ${isAiMode 
+                          ? "hover:bg-white/15 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:border hover:border-white/20" 
+                          : "hover:bg-white/10"
+                        }`}
+                    >
+                      <LogOut className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                      Çıkış Yap
+                    </Button>
+                  </motion.div>
                 ) : (
                   <>
-                    <Link href="/auth/login" className="w-full">
-                      <Button 
-                        variant="ghost" 
-                        className={`w-full text-base font-medium text-white/90 hover:text-white transition-all duration-200
-                          ${isAiMode 
-                            ? "hover:bg-purple-500/50" 
-                            : "hover:bg-white/10"
-                          }`}
-                      >
-                        Giriş Yap
-                      </Button>
-                    </Link>
-                    <Link href="/auth/register" className="w-full">
-                      <Button 
-                        className={`w-full text-base font-medium transition-all duration-200
-                          ${isAiMode 
-                            ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
-                            : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
-                          }`}
-                      >
-                        Kayıt Ol
-                      </Button>
-                    </Link>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link href="/auth/login" className="w-full">
+                        <Button 
+                          variant="ghost" 
+                          className={`w-full group text-base font-medium text-white/90 hover:text-white transition-all duration-300
+                            ${isAiMode 
+                              ? "hover:bg-purple-500/50" 
+                              : "hover:bg-white/10"
+                            }`}
+                        >
+                          <LogIn className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+                          Giriş Yap
+                        </Button>
+                      </Link>
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link href="/auth/register" className="w-full">
+                        <Button 
+                          className={`w-full group text-base font-medium transition-all duration-300
+                            ${isAiMode 
+                              ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
+                              : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
+                            } hover:shadow-lg`}
+                        >
+                          <UserPlus className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                          Kayıt Ol
+                        </Button>
+                      </Link>
+                    </motion.div>
                   </>
                 )}
               </div>
-            </div>
+            </motion.div>
           </motion.nav>
         )}
       </AnimatePresence>
