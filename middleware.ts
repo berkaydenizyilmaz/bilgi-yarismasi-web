@@ -40,13 +40,13 @@ export async function middleware(request: NextRequest) {
         // Korunan sayfalara erişim kontrolü
         if (protectedPaths.some(pp => path.startsWith(pp))) {
             if (!token) {
-                return NextResponse.redirect(new URL("/auth/login", request.url));
+                return NextResponse.redirect(new URL("/auth", request.url));
             }
         }
 
         if (adminPaths.some((ap) => path.startsWith(ap))) {
             if (!token) {
-                return NextResponse.redirect(new URL("/auth/login", request.url));
+                return NextResponse.redirect(new URL("/auth", request.url));
             }
 
             try {
@@ -59,13 +59,13 @@ export async function middleware(request: NextRequest) {
                 });
 
                 if (!response.ok) {
-                    return NextResponse.redirect(new URL("/auth/login", request.url));
+                    return NextResponse.redirect(new URL("/auth", request.url));
                 }
 
                 const apiData = await response.json();
 
                 if (!apiData.success || !apiData.data || !apiData.data.user) {
-                    return NextResponse.redirect(new URL("/auth/login", request.url));
+                    return NextResponse.redirect(new URL("/auth", request.url));
                 }
 
                 const user = apiData.data.user;
@@ -75,7 +75,7 @@ export async function middleware(request: NextRequest) {
                 }
 
             } catch (error) {
-                return NextResponse.redirect(new URL("/auth/login", request.url));
+                return NextResponse.redirect(new URL("/auth", request.url));
             }
         }
 

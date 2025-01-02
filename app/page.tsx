@@ -343,14 +343,9 @@ export default function HomePage() {
                                 Hemen üye olun ve bilgi evreninin bir parçası olun.
                             </p>
                             <div className="flex flex-col sm:flex-row justify-center gap-4">
-                                <Link href="/auth/register">
+                                <Link href="/auth">
                                     <Button className="w-full sm:w-auto bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
                                         Üye Ol
-                                    </Button>
-                                </Link>
-                                <Link href="/auth/login">
-                                    <Button variant="outline" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
-                                        Giriş Yap
                                     </Button>
                                 </Link>
                             </div>
