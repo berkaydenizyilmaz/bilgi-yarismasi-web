@@ -184,7 +184,7 @@ export default function QuestionsPage() {
         },
         body: JSON.stringify({
           ...newQuestion,
-          correctOption: newQuestion.correctOption.toLowerCase()
+          correctOption: newQuestion.correctOption.toUpperCase()
         }),
       })
 
