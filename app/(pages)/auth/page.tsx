@@ -64,6 +64,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [error, setError] = useState<string>("")
   const { login, register, isLoading } = useAuth()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -86,18 +87,24 @@ export default function AuthPage() {
   async function onLoginSubmit(values: z.infer<typeof loginSchema>) {
     try {
       setError("")
+      setIsSubmitting(true)
       await login(values.email, values.password)
     } catch (error) {
       setError(error instanceof Error ? error.message : "Giriş yapılırken bir hata oluştu")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
       setError("")
+      setIsSubmitting(true)
       await register(values.username, values.email, values.password)
     } catch (error) {
       setError(error instanceof Error ? error.message : "Kayıt olurken bir hata oluştu")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -289,7 +296,7 @@ export default function AuthPage() {
                           />
                           <Button 
                             type="submit" 
-                            disabled={isLoading}
+                            disabled={isSubmitting}
                             className="relative w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 
                             hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 
                             text-white font-medium rounded-xl overflow-hidden
@@ -310,7 +317,7 @@ export default function AuthPage() {
                                 ease: "linear",
                               }}
                             />
-                            {isLoading ? (
+                            {isSubmitting ? (
                               <motion.div 
                                 className="flex items-center gap-2 justify-center"
                                 initial={{ opacity: 0, scale: 0.8 }}
@@ -522,7 +529,7 @@ export default function AuthPage() {
                           />
                           <Button 
                             type="submit" 
-                            disabled={isLoading}
+                            disabled={isSubmitting}
                             className="relative w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 
                             hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 
                             text-white font-medium rounded-xl overflow-hidden
@@ -543,7 +550,7 @@ export default function AuthPage() {
                                 ease: "linear",
                               }}
                             />
-                            {isLoading ? (
+                            {isSubmitting ? (
                               <motion.div 
                                 className="flex items-center gap-2 justify-center"
                                 initial={{ opacity: 0, scale: 0.8 }}
