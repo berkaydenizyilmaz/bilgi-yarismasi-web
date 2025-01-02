@@ -6,8 +6,10 @@ import { Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
 import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Users, MessageSquare, BarChart3, ClipboardList, FileText } from "lucide-react"
+import { motion } from "framer-motion"
 
-// Chart.js bileşenlerini kaydet
+// Chart.js kayıt
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 // Tip tanımlamaları
@@ -32,11 +34,21 @@ interface StatisticsData {
   questionsCountByCategory: QuestionsCountByCategory[]
 }
 
-function StatCard({ title, value }: { title: string; value: number }) {
+function StatCard({ title, value, icon, gradient }: { title: string; value: number; icon: React.ReactNode; gradient: string }) {
   return (
-    <Card className="p-4 md:p-6">
-      <h3 className="text-sm md:text-base text-gray-600 mb-1">{title}</h3>
-      <p className="text-2xl md:text-3xl font-bold text-gray-900">{value}</p>
+    <Card className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border-0 overflow-hidden group hover:shadow-2xl transition-all duration-300">
+      <div className="relative z-10">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="p-3 rounded-xl bg-gray-50 group-hover:scale-110 transition-transform duration-300">
+            {icon}
+          </div>
+          <h3 className="text-base text-gray-600">{title}</h3>
+        </div>
+        <p className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+          {value.toLocaleString()}
+        </p>
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </Card>
   )
 }
@@ -118,37 +130,131 @@ export default function AdminStatistics() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">
-        İstatistikler
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-12 px-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-7xl mx-auto"
+      >
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent"
+        >
+          Admin İstatistikleri
+        </motion.h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
-        <StatCard title="Toplam Kullanıcı" value={data.data.totalUsers} />
-        <StatCard title="Toplam Quiz" value={data.data.totalQuizzes} />
-        <StatCard title="Toplam Soru" value={data.data.totalQuestions} />
-        <StatCard title="Toplam Geri Bildirim" value={data.data.totalFeedback} />
-        <StatCard title="Toplam Log" value={data.data.totalLogs} />
-      </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8"
+        >
+          <StatCard 
+            title="Toplam Kullanıcı" 
+            value={data.data.totalUsers} 
+            icon={<Users className="w-6 h-6 text-blue-500" />}
+            gradient="from-blue-500 to-blue-400"
+          />
+          <StatCard 
+            title="Toplam Quiz" 
+            value={data.data.totalQuizzes} 
+            icon={<ClipboardList className="w-6 h-6 text-green-500" />}
+            gradient="from-green-500 to-green-400"
+          />
+          <StatCard 
+            title="Toplam Soru" 
+            value={data.data.totalQuestions} 
+            icon={<MessageSquare className="w-6 h-6 text-purple-500" />}
+            gradient="from-purple-500 to-purple-400"
+          />
+          <StatCard 
+            title="Geri Bildirim" 
+            value={data.data.totalFeedback} 
+            icon={<FileText className="w-6 h-6 text-yellow-500" />}
+            gradient="from-yellow-500 to-yellow-400"
+          />
+          <StatCard 
+            title="Toplam Log" 
+            value={data.data.totalLogs} 
+            icon={<BarChart3 className="w-6 h-6 text-orange-500" />}
+            gradient="from-orange-500 to-orange-400"
+          />
+        </motion.div>
 
-      <Card className="p-4 md:p-6 mt-6 md:mt-8">
-        <h3 className="text-xl md:text-2xl font-semibold mb-4">Tarihe Göre Çözülen Quiz İstatistikleri</h3>
-        <div className="h-[300px] md:h-[400px]">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-      </Card>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border-0 mb-8">
+            <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+              Tarihe Göre Quiz İstatistikleri
+            </h3>
+            <div className="h-[400px]">
+              <Bar data={chartData} options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  legend: {
+                    ...chartOptions.plugins.legend,
+                    labels: {
+                      font: {
+                        size: 14
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  ...chartOptions.scales,
+                  y: {
+                    ...chartOptions.scales.y,
+                    grid: {
+                      color: 'rgba(0,0,0,0.05)'
+                    }
+                  },
+                  x: {
+                    ...chartOptions.scales.x,
+                    grid: {
+                      display: false
+                    }
+                  }
+                }
+              }} />
+            </div>
+          </Card>
+        </motion.div>
 
-      <Card className="p-4 md:p-6 mt-6">
-        <h3 className="text-xl md:text-2xl font-semibold mb-4">Kategorilere Göre Soru Sayısı</h3>
-        <ul className="space-y-2 md:space-y-3">
-          {data.data.questionsCountByCategory.map(category => (
-            <li key={category.categoryId} className="flex justify-between p-2 md:p-3 border-b text-sm md:text-base">
-              <span>{category.categoryName}</span>
-              <span className="font-medium">{category.questionCount} Soru</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border-0">
+            <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+              Kategorilere Göre Soru Dağılımı
+            </h3>
+            <div className="grid gap-4">
+              {data.data.questionsCountByCategory.map(category => (
+                <div 
+                  key={category.categoryId} 
+                  className="p-4 rounded-xl border border-gray-100 hover:border-orange-200 hover:bg-orange-50/30 transition-colors"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-orange-400" />
+                      <span className="font-medium text-gray-700">{category.categoryName}</span>
+                    </div>
+                    <span className="text-lg font-semibold text-orange-600">
+                      {category.questionCount} Soru
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

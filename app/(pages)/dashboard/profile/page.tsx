@@ -9,6 +9,7 @@ import { Trophy, PieChart, BarChart, MessageSquare, CheckCircle, XCircle, Star, 
 import { formatDate } from "@/lib/utils"
 import { QuizHistory } from "@/types/quiz"
 import { StatCardProps, DetailStatProps, QuizHistoryItemProps } from "@/types/components"
+import { motion } from "framer-motion"
 
 // Tip tanımlamaları
 interface UserStats {
@@ -84,108 +85,150 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-6xl mx-auto"
+      >
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <motion.h1 
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-4xl md:text-5xl font-bold mb-3"
+          >
             <span className="bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
               {stats?.username}
             </span>
-          </h1>
-          <p className="text-gray-600 flex items-center justify-center gap-2">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-gray-600 flex items-center justify-center gap-2"
+          >
             <span className="inline-block w-2 h-2 rounded-full bg-orange-400" />
             Üyelik Tarihi: {formatDate(stats?.created_at || '')}
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <StatCard
-            icon={<Trophy className="w-8 h-8 text-yellow-500" />}
-            title="Toplam Puan"
-            value={stats?.total_score || 0}
-            description="Tüm zamanlar"
-            gradient="from-yellow-500 to-orange-400"
-          />
-          <StatCard
-            icon={<PieChart className="w-8 h-8 text-blue-500" />}
-            title="Başarı Oranı"
-            value={`%${stats?.total_play_count ? Math.round(stats.total_score / stats.total_play_count) : 0}`}
-            description="Doğru cevap yüzdesi"
-            gradient="from-blue-500 to-cyan-400"
-          />
-          <StatCard
-            icon={<BarChart className="w-8 h-8 text-green-500" />}
-            title="Toplam Quiz"
-            value={stats?.total_play_count || 0}
-            description="Tamamlanan"
-            gradient="from-green-500 to-emerald-400"
-          />
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+        >
+          <motion.div initial={{ x: -20 }} animate={{ x: 0 }} transition={{ delay: 0.5 }}>
+            <StatCard
+              icon={<Trophy className="w-8 h-8 text-yellow-500" />}
+              title="Toplam Puan"
+              value={stats?.total_score || 0}
+              description="Tüm zamanlar"
+              gradient="from-yellow-500 to-orange-400"
+            />
+          </motion.div>
+          <motion.div initial={{ y: 20 }} animate={{ y: 0 }} transition={{ delay: 0.6 }}>
+            <StatCard
+              icon={<PieChart className="w-8 h-8 text-blue-500" />}
+              title="Başarı Oranı"
+              value={`%${stats?.total_play_count ? Math.round(stats.total_score / stats.total_play_count) : 0}`}
+              description="Doğru cevap yüzdesi"
+              gradient="from-blue-500 to-cyan-400"
+            />
+          </motion.div>
+          <motion.div initial={{ x: 20 }} animate={{ x: 0 }} transition={{ delay: 0.7 }}>
+            <StatCard
+              icon={<BarChart className="w-8 h-8 text-green-500" />}
+              title="Toplam Quiz"
+              value={stats?.total_play_count || 0}
+              description="Tamamlanan"
+              gradient="from-green-500 to-emerald-400"
+            />
+          </motion.div>
+        </motion.div>
 
-        <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl mb-12 border-0">
-          <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
-            Detaylı İstatistikler
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <DetailStat 
-              title="Toplam Soru" 
-              value={stats?.total_questions_attempted || 0}
-              icon={<MessageSquare className="w-5 h-5 text-orange-500" />}
-            />
-            <DetailStat 
-              title="Doğru Cevap" 
-              value={stats?.total_correct_answers || 0}
-              icon={<CheckCircle className="w-5 h-5 text-green-500" />}
-            />
-            <DetailStat 
-              title="Yanlış Cevap" 
-              value={(stats?.total_questions_attempted || 0) - (stats?.total_correct_answers || 0)}
-              icon={<XCircle className="w-5 h-5 text-red-500" />}
-            />
-            <DetailStat 
-              title="Ortalama Puan" 
-              value={Math.round((stats?.total_score || 0) / (stats?.total_play_count || 1))}
-              icon={<Star className="w-5 h-5 text-yellow-500" />}
-            />
-          </div>
-        </Card>
-
-        <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border-0">
-          <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
-            Quiz Geçmişi
-          </h2>
-          <div className="space-y-6">
-            {paginatedQuizHistory.map((quiz) => (
-              <QuizHistoryItem key={quiz.id} quiz={quiz} />
-            ))}
-          </div>
-
-          {quizHistory.length > itemsPerPage && (
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
-              <Button 
-                onClick={handlePrevPage} 
-                disabled={currentPage === 0}
-                variant="outline"
-                className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Önceki
-              </Button>
-              <span className="text-gray-600 font-medium">
-                Sayfa {currentPage + 1} / {Math.ceil(quizHistory.length / itemsPerPage)}
-              </span>
-              <Button 
-                onClick={handleNextPage} 
-                disabled={(currentPage + 1) * itemsPerPage >= quizHistory.length}
-                variant="outline"
-                className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
-              >
-                Sonraki
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl mb-12 border-0">
+            <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+              Detaylı İstatistikler
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <DetailStat 
+                title="Toplam Soru" 
+                value={stats?.total_questions_attempted || 0}
+                icon={<MessageSquare className="w-5 h-5 text-orange-500" />}
+              />
+              <DetailStat 
+                title="Doğru Cevap" 
+                value={stats?.total_correct_answers || 0}
+                icon={<CheckCircle className="w-5 h-5 text-green-500" />}
+              />
+              <DetailStat 
+                title="Yanlış Cevap" 
+                value={(stats?.total_questions_attempted || 0) - (stats?.total_correct_answers || 0)}
+                icon={<XCircle className="w-5 h-5 text-red-500" />}
+              />
+              <DetailStat 
+                title="Ortalama Puan" 
+                value={Math.round((stats?.total_score || 0) / (stats?.total_play_count || 1))}
+                icon={<Star className="w-5 h-5 text-yellow-500" />}
+              />
             </div>
-          )}
-        </Card>
-      </div>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border-0">
+            <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+              Quiz Geçmişi
+            </h2>
+            <div className="space-y-6">
+              {paginatedQuizHistory.map((quiz) => (
+                <QuizHistoryItem key={quiz.id} quiz={quiz} />
+              ))}
+            </div>
+
+            {quizHistory.length > itemsPerPage && (
+              <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
+                <Button 
+                  onClick={handlePrevPage} 
+                  disabled={currentPage === 0}
+                  variant="outline"
+                  className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 mr-2" />
+                  Önceki
+                </Button>
+                <span className="text-gray-600 font-medium">
+                  Sayfa {currentPage + 1} / {Math.ceil(quizHistory.length / itemsPerPage)}
+                </span>
+                <Button 
+                  onClick={handleNextPage} 
+                  disabled={(currentPage + 1) * itemsPerPage >= quizHistory.length}
+                  variant="outline"
+                  className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
+                >
+                  Sonraki
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
@@ -229,7 +272,12 @@ function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
   const router = useRouter()
   
   return (
-    <div className="group p-4 rounded-xl hover:bg-gray-50/80 transition-colors border border-gray-100 hover:border-orange-200">
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="group p-4 rounded-xl hover:bg-gray-50/80 transition-colors border border-gray-100 hover:border-orange-200"
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">
@@ -255,6 +303,6 @@ function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
           </Button>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

@@ -44,12 +44,16 @@ export default function RootLayout({
                 </header>
               )}
               
-              <div className="flex flex-1 overflow-hidden">
-                {isAdminPage && <AdminSidebar />}
-                <main className="flex-1 overflow-auto">
-                  {children}
-                  <Toaster />
-                </main>
+              <div className={`flex-1 ${isAdminPage ? 'bg-gradient-to-br from-orange-50 via-white to-orange-50' : ''}`}>
+                <div className="flex">
+                  {isAdminPage && <AdminSidebar />}
+                  <main className={`
+                    flex-1 
+                    ${isAdminPage ? 'p-8 min-h-[calc(100vh-4rem)]' : ''}
+                  `}>
+                    {children}
+                  </main>
+                </div>
               </div>
 
               {!isAuthPage && (
@@ -58,6 +62,7 @@ export default function RootLayout({
                 </footer>
               )}
             </div>
+            <Toaster />
           </Providers>
         </AuthProvider>
       </body>
