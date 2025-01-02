@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Trophy, CheckCircle2, XCircle, Sparkles } from "lucide-react";
+import { Suspense } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Question {
   question: string;
@@ -61,7 +63,19 @@ function QuestionCard({ questionNumber, question }: { questionNumber: number; qu
   );
 }
 
-export default function AiResultPage() {
+function StatCard({ icon, title, value, className = "" }: { icon: any; title: string; value: string; className?: string }) {
+  return (
+    <Card className={`text-center p-3 sm:p-4 md:p-6 ${className}`}>
+      <div className="flex flex-col items-center gap-1 sm:gap-2">
+        {icon}
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">{title}</p>
+        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">{value}</p>
+      </div>
+    </Card>
+  );
+}
+
+function ResultContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode");
   const categoryId = searchParams.get("category");
@@ -164,14 +178,10 @@ export default function AiResultPage() {
   );
 }
 
-function StatCard({ icon, title, value, className = "" }: { icon: any; title: string; value: string; className?: string }) {
+export default function AiResultPage() {
   return (
-    <Card className={`text-center p-3 sm:p-4 md:p-6 ${className}`}>
-      <div className="flex flex-col items-center gap-1 sm:gap-2">
-        {icon}
-        <p className="text-xs sm:text-sm md:text-base text-gray-600">{title}</p>
-        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">{value}</p>
-      </div>
-    </Card>
+    <Suspense fallback={<LoadingSpinner />}>
+      <ResultContent />
+    </Suspense>
   );
 }
