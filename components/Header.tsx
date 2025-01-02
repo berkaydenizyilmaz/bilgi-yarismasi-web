@@ -69,7 +69,11 @@ export default function Header() {
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+            className={`md:hidden p-2 rounded-lg transition-colors duration-200 
+              ${isAiMode 
+                ? "hover:bg-purple-500/50" 
+                : "hover:bg-white/10"
+              }`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
@@ -86,13 +90,16 @@ export default function Header() {
                 className={cn(
                   "absolute md:relative top-full left-0 right-0 md:top-auto",
                   "backdrop-blur-lg md:backdrop-blur-none",
-                  isAiMode 
-                    ? "bg-purple-600/95 md:bg-transparent" 
+                  isAiMode && isMobile
+                    ? "bg-gradient-to-br from-purple-600/95 to-pink-500/95 md:bg-transparent" 
                     : "bg-orange-600/95 md:bg-transparent",
                   "p-4 md:p-0",
                   "md:flex items-center space-x-1 md:space-x-4",
-                  "border-t border-white/10 md:border-none",
-                  isMenuOpen ? "block" : "hidden md:flex"
+                  isAiMode
+                    ? "border-t border-purple-400/20 md:border-none"
+                    : "border-t border-white/10 md:border-none",
+                  isMenuOpen ? "block" : "hidden md:flex",
+                  "shadow-xl md:shadow-none"
                 )}
               >
                 <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
@@ -103,9 +110,13 @@ export default function Header() {
                       className={cn(
                         "px-5 py-2.5 rounded-xl text-base font-medium",
                         "transition-all duration-200",
-                        "hover:bg-white/10",
+                        isAiMode
+                          ? "hover:bg-white/10"
+                          : "hover:bg-white/10",
                         pathname === item.href
-                          ? "bg-white/20 text-white" 
+                          ? isAiMode 
+                            ? "bg-white/20 text-white" 
+                            : "bg-white/20 text-white"
                           : "text-white/90 hover:text-white"
                       )}
                       onClick={() => setIsMenuOpen(false)}
@@ -123,7 +134,11 @@ export default function Header() {
                     <Button 
                       onClick={logout} 
                       variant="ghost"
-                      className="w-full md:w-auto text-base font-medium hover:bg-white/10 text-white/90 hover:text-white transition-all duration-200"
+                      className={`w-full md:w-auto text-base font-medium text-white/90 hover:text-white transition-all duration-200
+                        ${isAiMode 
+                          ? "hover:bg-purple-500/50" 
+                          : "hover:bg-white/10"
+                        }`}
                     >
                       Çıkış Yap
                     </Button>
@@ -132,14 +147,22 @@ export default function Header() {
                       <Link href="/auth/login" className="w-full md:w-auto">
                         <Button 
                           variant="ghost" 
-                          className="w-full text-base font-medium hover:bg-white/10 text-white/90 hover:text-white transition-all duration-200"
+                          className={`w-full text-base font-medium text-white/90 hover:text-white transition-all duration-200
+                            ${isAiMode 
+                              ? "hover:bg-purple-500/50" 
+                              : "hover:bg-white/10"
+                            }`}
                         >
                           Giriş Yap
                         </Button>
                       </Link>
                       <Link href="/auth/register" className="w-full md:w-auto">
                         <Button 
-                          className="w-full text-base font-medium bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700 transition-all duration-200"
+                          className={`w-full text-base font-medium transition-all duration-200
+                            ${isAiMode 
+                              ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
+                              : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
+                            }`}
                         >
                           Kayıt Ol
                         </Button>

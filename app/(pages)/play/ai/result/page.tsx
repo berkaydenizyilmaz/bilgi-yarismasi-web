@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { Trophy, CheckCircle2, XCircle, Sparkles, Home, RotateCcw } from "lucide
 import { Suspense } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { motion, AnimatePresence } from "framer-motion";
+import { memo } from "react";
 
 interface Question {
   question: string;
@@ -23,7 +24,7 @@ interface Question {
   isCorrect?: boolean;
 }
 
-function QuestionCard({ questionNumber, question }: { questionNumber: number; question: Question }) {
+const QuestionCard = memo(({ questionNumber, question }: { questionNumber: number; question: Question }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -107,9 +108,9 @@ function QuestionCard({ questionNumber, question }: { questionNumber: number; qu
       </Card>
     </motion.div>
   );
-}
+});
 
-function StatCard({ 
+const StatCard = memo(({ 
   icon, 
   title, 
   value, 
@@ -121,7 +122,7 @@ function StatCard({
   value: string; 
   className?: string;
   delay?: number;
-}) {
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -144,7 +145,7 @@ function StatCard({
       </Card>
     </motion.div>
   );
-}
+});
 
 function ResultContent() {
   const searchParams = useSearchParams();
@@ -157,30 +158,32 @@ function ResultContent() {
   const [categoryName, setCategoryName] = useState<string>("");
   const router = useRouter();
 
+  const fetchCategoryName = useCallback(async () => {
+    if (categoryId && !isNaN(Number(categoryId))) {
+      try {
+        const response = await fetch(`/api/categories/${categoryId}`, {
+          cache: 'force-cache'
+        });
+        const data = await response.json();
+        if (data.success) {
+          setCategoryName(data.data.name);
+        }
+      } catch (error) {
+        console.error("Kategori adı alınamadı:", error);
+      }
+    }
+  }, [categoryId]);
+
   useEffect(() => {
     const savedQuestions = localStorage.getItem('aiQuizQuestions');
     if (savedQuestions) {
       setQuestions(JSON.parse(savedQuestions));
     }
 
-    const fetchCategoryName = async () => {
-      if (categoryId && !isNaN(Number(categoryId))) {
-        try {
-          const response = await fetch(`/api/categories/${categoryId}`);
-          const data = await response.json();
-          if (data.success) {
-            setCategoryName(data.data.name);
-          }
-        } catch (error) {
-          console.error("Kategori adı alınamadı:", error);
-        }
-      }
-    };
-
     if (mode === "ai") {
       fetchCategoryName();
     }
-  }, [categoryId, mode]);
+  }, [mode, fetchCategoryName]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -205,6 +208,9 @@ function ResultContent() {
     return "text-orange-600";
   };
 
+  const scoreMessage = useMemo(() => getScoreMessage(score), [score]);
+  const scoreColor = useMemo(() => getScoreColor(score), [score]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-6 sm:py-8 md:py-12 px-3 sm:px-4">
       <div className="max-w-4xl mx-auto">
@@ -215,7 +221,7 @@ function ResultContent() {
         >
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-400 
             bg-clip-text text-transparent mb-3 sm:mb-4">
-            {getScoreMessage(score)}
+            {scoreMessage}
           </h1>
           {(mode === "ai" ? categoryName : categoryId) && (
             <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mt-2">
@@ -223,7 +229,7 @@ function ResultContent() {
             </p>
           )}
           <motion.p 
-            className={`text-4xl sm:text-5xl md:text-6xl font-bold mt-4 ${getScoreColor(score)}`}
+            className={`text-4xl sm:text-5xl md:text-6xl font-bold mt-4 ${scoreColor}`}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring" }}

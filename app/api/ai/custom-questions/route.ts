@@ -45,18 +45,15 @@ const validateQuestions = (questions: any[]) => {
   return questions;
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { category } = body;
+// Prompt cache'i
+const promptCache = new Map();
 
-    if (!category) {
-      throw new APIError("Kategori belirtilmedi", 400);
-    }
+const getPrompt = (category: string): string => {
+  if (promptCache.has(category)) {
+    return promptCache.get(category);
+  }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-    const prompt = `"${category}" konusunda 10 adet özgün çoktan seçmeli soru üret.
+  const prompt = `"${category}" konusunda 10 adet özgün çoktan seçmeli soru üret.
 
     Önemli kurallar:
     1. Her soru benzersiz ve özgün olmalı, birbirini tekrar etmemeli
@@ -83,6 +80,22 @@ export async function POST(request: NextRequest) {
         }
       ]
     }`;
+  promptCache.set(category, prompt);
+  return prompt;
+};
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { category } = body;
+
+    if (!category) {
+      throw new APIError("Kategori belirtilmedi", 400);
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    const prompt = getPrompt(category);
 
     let retryCount = 0;
     const maxRetries = 3;

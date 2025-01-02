@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -38,44 +38,46 @@ function QuizContent() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnswerSubmitting, setIsAnswerSubmitting] = useState(false);
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      if (!category) {
-        setError("Kategori bulunamadı");
-        return;
-      }
+  const fetchQuestions = useCallback(async () => {
+    if (!category) {
+      setError("Kategori bulunamadı");
+      return;
+    }
 
-      try {
-        const response = await fetch("/api/ai/custom-questions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ category })
-        });
+    try {
+      const response = await fetch("/api/ai/custom-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category }),
+        cache: 'no-store'
+      });
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error?.message || "Sorular alınamadı");
-        }
-
+      if (!response.ok) {
         const data = await response.json();
-        setQuestions(data.data.questions);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Sorular alınamadı");
-      } finally {
-        setIsLoading(false);
+        throw new Error(data.error?.message || "Sorular alınamadı");
       }
-    };
 
-    fetchQuestions();
+      const data = await response.json();
+      setQuestions(data.data.questions);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sorular alınamadı");
+    } finally {
+      setIsLoading(false);
+    }
   }, [category]);
 
-  const handleAnswer = async (selectedOption: string) => {
+  useEffect(() => {
+    fetchQuestions();
+  }, [fetchQuestions]);
+
+  const currentQuestion = useMemo(() => questions[currentQuestionIndex], [questions, currentQuestionIndex]);
+
+  const handleAnswer = useCallback(async (selectedOption: string) => {
     if (isAnswerSubmitting) return;
     
     setIsAnswerSubmitting(true);
     setSelectedOption(selectedOption);
 
-    const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = selectedOption === currentQuestion.correct_option;
 
     const updatedQuestions = [...questions];
@@ -116,7 +118,55 @@ function QuizContent() {
     }
     
     setIsAnswerSubmitting(false);
-  };
+  }, [currentQuestionIndex, questions, isAnswerSubmitting, category, router]);
+
+  const renderOptions = useMemo(() => {
+    if (!currentQuestion) return null;
+
+    return Object.entries(currentQuestion.options).map(([key, value]) => {
+      const isSelected = selectedOption === key;
+      
+      return (
+        <motion.button
+          key={key}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => handleAnswer(key)}
+          disabled={isAnswerSubmitting}
+          className={`group w-full p-3 sm:p-4 text-left rounded-xl border-2 
+            ${isSelected 
+              ? 'border-purple-500 bg-purple-50/80' 
+              : 'border-gray-100 hover:border-purple-300 hover:bg-purple-50/50'
+            } 
+            transition-all duration-200 relative overflow-hidden
+            ${isAnswerSubmitting ? 'cursor-not-allowed opacity-75' : ''}
+          `}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 
+            opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+          />
+          
+          <div className="relative flex items-center gap-2 sm:gap-3">
+            <span className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg 
+              ${isSelected 
+                ? 'bg-purple-500 text-white' 
+                : 'bg-purple-100 text-purple-600'
+              } 
+              text-sm sm:text-base font-semibold group-hover:bg-purple-200 
+              transition-colors duration-200`}
+            >
+              {key}
+            </span>
+            <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 
+              transition-colors duration-200"
+            >
+              {value}
+            </span>
+          </div>
+        </motion.button>
+      );
+    });
+  }, [currentQuestion, selectedOption, isAnswerSubmitting, handleAnswer]);
 
   if (isLoading) {
     return <AiLoading />;
@@ -144,8 +194,6 @@ function QuizContent() {
       </div>
     );
   }
-
-  const currentQuestion = questions[currentQuestionIndex];
 
   if (!currentQuestion) return null;
 
@@ -200,49 +248,7 @@ function QuizContent() {
             </AnimatePresence>
 
             <div className="space-y-3 sm:space-y-4">
-              {Object.entries(currentQuestion.options).map(([key, value]) => {
-                const isSelected = selectedOption === key;
-                
-                return (
-                  <motion.button
-                    key={key}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => handleAnswer(key)}
-                    disabled={isAnswerSubmitting}
-                    className={`group w-full p-3 sm:p-4 text-left rounded-xl border-2 
-                      ${isSelected 
-                        ? 'border-purple-500 bg-purple-50/80' 
-                        : 'border-gray-100 hover:border-purple-300 hover:bg-purple-50/50'
-                      } 
-                      transition-all duration-200 relative overflow-hidden
-                      ${isAnswerSubmitting ? 'cursor-not-allowed opacity-75' : ''}
-                    `}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 
-                      opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
-                    />
-                    
-                    <div className="relative flex items-center gap-2 sm:gap-3">
-                      <span className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg 
-                        ${isSelected 
-                          ? 'bg-purple-500 text-white' 
-                          : 'bg-purple-100 text-purple-600'
-                        } 
-                        text-sm sm:text-base font-semibold group-hover:bg-purple-200 
-                        transition-colors duration-200`}
-                      >
-                        {key}
-                      </span>
-                      <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 
-                        transition-colors duration-200"
-                      >
-                        {value}
-                      </span>
-                    </div>
-                  </motion.button>
-                );
-              })}
+              {renderOptions}
             </div>
           </div>
         </Card>

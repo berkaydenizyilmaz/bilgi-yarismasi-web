@@ -51,7 +51,27 @@ const validateQuestions = (questions: any[]) => {
   return questions;
 };
 
+const memoizedCleanJsonResponse = (() => {
+  const cache = new Map();
+  
+  return (text: string): string => {
+    if (cache.has(text)) {
+      return cache.get(text);
+    }
+    
+    const result = cleanJsonResponse(text);
+    cache.set(text, result);
+    return result;
+  };
+})();
+
+const categoryNameCache = new Map();
+
 async function getCategoryName(categoryId: number): Promise<string> {
+  if (categoryNameCache.has(categoryId)) {
+    return categoryNameCache.get(categoryId);
+  }
+
   const category = await prisma.category.findUnique({
     where: { id: categoryId },
     select: { name: true }
@@ -61,6 +81,7 @@ async function getCategoryName(categoryId: number): Promise<string> {
     throw new APIError("Kategori bulunamadı", 404);
   }
 
+  categoryNameCache.set(categoryId, category.name);
   return category.name;
 }
 
@@ -112,7 +133,7 @@ Yanıtı tam olarak aşağıdaki JSON formatında ver (başka metin ekleme):
         const response = await result.response;
         const text = response.text();
 
-        const cleanedJson = cleanJsonResponse(text);
+        const cleanedJson = memoizedCleanJsonResponse(text);
         const jsonData = JSON.parse(cleanedJson);
         const validatedQuestions = validateQuestions(jsonData.questions);
 

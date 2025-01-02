@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,6 +36,8 @@ function QuizContent() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnswerSubmitting, setIsAnswerSubmitting] = useState(false);
 
+  const currentQuestion = useMemo(() => questions[currentQuestionIndex], [questions, currentQuestionIndex]);
+
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!categoryId) {
@@ -68,13 +69,12 @@ function QuizContent() {
     fetchQuestions();
   }, [categoryId]);
 
-  const handleAnswer = async (selectedOption: string) => {
+  const handleAnswer = useCallback(async (selectedOption: string) => {
     if (isAnswerSubmitting) return;
     
     setIsAnswerSubmitting(true);
     setSelectedOption(selectedOption);
 
-    const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = selectedOption === currentQuestion.correct_option;
 
     const updatedQuestions = [...questions];
@@ -85,16 +85,12 @@ function QuizContent() {
     };
     setQuestions(updatedQuestions);
 
-    // Animasyon için kısa bir gecikme
     await new Promise(resolve => setTimeout(resolve, 500));
 
     if (currentQuestionIndex === questions.length - 1) {
       const finalResults = updatedQuestions.reduce((acc, q) => {
-        if (q.isCorrect) {
-          acc.correct++;
-        } else {
-          acc.incorrect++;
-        }
+        if (q.isCorrect) acc.correct++;
+        else acc.incorrect++;
         return acc;
       }, { correct: 0, incorrect: 0 });
 
@@ -104,20 +100,56 @@ function QuizContent() {
         `/play/ai/result?mode=ai&category=${categoryId}&score=${Math.round((finalResults.correct / questions.length) * 100)}&correct=${finalResults.correct}&incorrect=${finalResults.incorrect}`
       );
     } else {
-      if (isCorrect) {
-        setCorrectCount(prev => prev + 1);
-      } else {
-        setIncorrectCount(prev => prev + 1);
-      }
+      if (isCorrect) setCorrectCount(prev => prev + 1);
+      else setIncorrectCount(prev => prev + 1);
       
-      // Sonraki soruya geçmeden önce kısa bir gecikme
       await new Promise(resolve => setTimeout(resolve, 300));
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedOption(null);
     }
     
     setIsAnswerSubmitting(false);
-  };
+  }, [currentQuestionIndex, questions, isAnswerSubmitting, categoryId, router]);
+
+  const renderOptions = useMemo(() => {
+    if (!currentQuestion) return null;
+
+    return Object.entries(currentQuestion.options).map(([key, value]) => {
+      const isSelected = selectedOption === key;
+      return (
+        <motion.button
+          key={key}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => handleAnswer(key)}
+          disabled={isAnswerSubmitting}
+          className={`group w-full p-3 sm:p-4 text-left rounded-xl border-2 
+            ${isSelected ? 'border-purple-500 bg-purple-50/80' : 'border-gray-100 hover:border-purple-300 hover:bg-purple-50/50'}
+            transition-all duration-200 relative overflow-hidden
+            ${isAnswerSubmitting ? 'cursor-not-allowed opacity-75' : ''}`}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 
+            opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+          />
+          
+          <div className="relative flex items-center gap-2 sm:gap-3">
+            <span className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg 
+              ${isSelected ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600'}
+              text-sm sm:text-base font-semibold group-hover:bg-purple-200 
+              transition-colors duration-200`}
+            >
+              {key}
+            </span>
+            <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 
+              transition-colors duration-200"
+            >
+              {value}
+            </span>
+          </div>
+        </motion.button>
+      );
+    });
+  }, [currentQuestion, selectedOption, isAnswerSubmitting, handleAnswer]);
 
   if (isLoading) {
     return <AiLoading />;
@@ -145,8 +177,6 @@ function QuizContent() {
       </div>
     );
   }
-
-  const currentQuestion = questions[currentQuestionIndex];
 
   if (!currentQuestion) return null;
 
@@ -201,49 +231,7 @@ function QuizContent() {
             </AnimatePresence>
 
             <div className="space-y-3 sm:space-y-4">
-              {Object.entries(currentQuestion.options).map(([key, value]) => {
-                const isSelected = selectedOption === key;
-                
-                return (
-                  <motion.button
-                    key={key}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => handleAnswer(key)}
-                    disabled={isAnswerSubmitting}
-                    className={`group w-full p-3 sm:p-4 text-left rounded-xl border-2 
-                      ${isSelected 
-                        ? 'border-purple-500 bg-purple-50/80' 
-                        : 'border-gray-100 hover:border-purple-300 hover:bg-purple-50/50'
-                      } 
-                      transition-all duration-200 relative overflow-hidden
-                      ${isAnswerSubmitting ? 'cursor-not-allowed opacity-75' : ''}
-                    `}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 
-                      opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
-                    />
-                    
-                    <div className="relative flex items-center gap-2 sm:gap-3">
-                      <span className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg 
-                        ${isSelected 
-                          ? 'bg-purple-500 text-white' 
-                          : 'bg-purple-100 text-purple-600'
-                        } 
-                        text-sm sm:text-base font-semibold group-hover:bg-purple-200 
-                        transition-colors duration-200`}
-                      >
-                        {key}
-                      </span>
-                      <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 
-                        transition-colors duration-200"
-                      >
-                        {value}
-                      </span>
-                    </div>
-                  </motion.button>
-                );
-              })}
+              {renderOptions}
             </div>
           </div>
         </Card>
