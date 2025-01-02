@@ -41,140 +41,204 @@ export default function Header() {
   }, [])
 
   return (
-    <header className={`
+    <div className={`
       ${isAiMode 
-        ? "bg-gradient-to-r from-purple-600 to-pink-500 shadow-purple-500/20" 
+        ? "bg-gradient-to-br from-purple-600 to-pink-500 shadow-purple-500/20"
         : "bg-gradient-to-r from-orange-600 to-orange-500 shadow-orange-500/20"
-      } text-white py-6 shadow-lg relative z-50`}
+      } relative z-50`}
     >
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-3 group"
-            >
-              <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-white/20 transition-colors duration-300">
-                <Brain className="h-9 w-9" />
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
-                QuizVerse
-              </span>
-            </motion.div>
-          </Link>
-
-          {/* Mobil menü butonu */}
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={`md:hidden p-2 rounded-lg transition-colors duration-200 
-              ${isAiMode 
-                ? "hover:bg-purple-500/50" 
-                : "hover:bg-white/10"
-              }`}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
-          </motion.button>
-
-          {/* Ana navigasyon */}
-          <AnimatePresence>
-            {(isMenuOpen || !isMobile) && (
-              <motion.nav
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className={cn(
-                  "absolute md:relative top-full left-0 right-0 md:top-auto",
-                  "backdrop-blur-lg md:backdrop-blur-none",
-                  isAiMode && isMobile
-                    ? "bg-gradient-to-br from-purple-600/95 to-pink-500/95 md:bg-transparent" 
-                    : "bg-orange-600/95 md:bg-transparent",
-                  "p-4 md:p-0",
-                  "md:flex items-center space-x-1 md:space-x-4",
-                  isAiMode
-                    ? "border-t border-purple-400/20 md:border-none"
-                    : "border-t border-white/10 md:border-none",
-                  isMenuOpen ? "block" : "hidden md:flex",
-                  "shadow-xl md:shadow-none"
-                )}
+      <header className="text-white py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center space-x-3 group"
               >
-                <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        "px-5 py-2.5 rounded-xl text-base font-medium",
-                        "transition-all duration-200",
-                        isAiMode
-                          ? "hover:bg-white/10"
-                          : "hover:bg-white/10",
-                        pathname === item.href
-                          ? isAiMode 
-                            ? "bg-white/20 text-white" 
-                            : "bg-white/20 text-white"
-                          : "text-white/90 hover:text-white"
-                      )}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+                <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-white/20 transition-colors duration-300">
+                  <Brain className="h-9 w-9" />
                 </div>
+                <span className="text-3xl font-bold bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
+                  QuizVerse
+                </span>
+              </motion.div>
+            </Link>
 
-                {/* Kullanıcı işlemleri */}
-                <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-3">
-                  {isLoading ? (
-                    <LoadingSpinner className="w-6 h-6" />
-                  ) : user ? (
-                    <Button 
-                      onClick={logout} 
-                      variant="ghost"
-                      className={`w-full md:w-auto text-base font-medium text-white/90 hover:text-white transition-all duration-200
-                        ${isAiMode 
-                          ? "hover:bg-purple-500/50" 
-                          : "hover:bg-white/10"
-                        }`}
-                    >
-                      Çıkış Yap
-                    </Button>
-                  ) : (
-                    <div className="flex flex-col md:flex-row w-full md:w-auto space-y-2 md:space-y-0 md:space-x-3">
-                      <Link href="/auth/login" className="w-full md:w-auto">
-                        <Button 
-                          variant="ghost" 
-                          className={`w-full text-base font-medium text-white/90 hover:text-white transition-all duration-200
-                            ${isAiMode 
-                              ? "hover:bg-purple-500/50" 
-                              : "hover:bg-white/10"
-                            }`}
-                        >
-                          Giriş Yap
-                        </Button>
-                      </Link>
-                      <Link href="/auth/register" className="w-full md:w-auto">
-                        <Button 
-                          className={`w-full text-base font-medium transition-all duration-200
-                            ${isAiMode 
-                              ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
-                              : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
-                            }`}
-                        >
-                          Kayıt Ol
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </motion.nav>
-            )}
-          </AnimatePresence>
+            {/* Masaüstü navigasyon */}
+            <nav className="hidden md:flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "px-5 py-2.5 rounded-xl text-base font-medium",
+                      "transition-all duration-200",
+                      isAiMode
+                        ? "hover:bg-white/10"
+                        : "hover:bg-white/10",
+                      pathname === item.href
+                        ? isAiMode 
+                          ? "bg-white/20 text-white" 
+                          : "bg-white/20 text-white"
+                        : "text-white/90 hover:text-white"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Masaüstü kullanıcı işlemleri */}
+              <div className="flex items-center space-x-3">
+                {isLoading ? (
+                  <LoadingSpinner className="w-6 h-6" />
+                ) : user ? (
+                  <Button 
+                    onClick={logout} 
+                    variant="ghost"
+                    className={`text-base font-medium text-white/90 hover:text-white transition-all duration-200
+                      ${isAiMode 
+                        ? "hover:bg-purple-500/50" 
+                        : "hover:bg-white/10"
+                      }`}
+                  >
+                    Çıkış Yap
+                  </Button>
+                ) : (
+                  <div className="flex items-center space-x-3">
+                    <Link href="/auth/login">
+                      <Button 
+                        variant="ghost" 
+                        className={`text-base font-medium text-white/90 hover:text-white transition-all duration-200
+                          ${isAiMode 
+                            ? "hover:bg-purple-500/50" 
+                            : "hover:bg-white/10"
+                          }`}
+                      >
+                        Giriş Yap
+                      </Button>
+                    </Link>
+                    <Link href="/auth/register">
+                      <Button 
+                        className={`text-base font-medium transition-all duration-200
+                          ${isAiMode 
+                            ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
+                            : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
+                          }`}
+                      >
+                        Kayıt Ol
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </nav>
+
+            {/* Mobil menü butonu */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={`md:hidden p-2 rounded-lg transition-colors duration-200 
+                ${isAiMode 
+                  ? "hover:bg-purple-500/50" 
+                  : "hover:bg-white/10"
+                }`}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+            </motion.button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobil menü */}
+      <AnimatePresence>
+        {(isMenuOpen && isMobile) && (
+          <motion.nav
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className={cn(
+              "p-4",
+              "border-t border-white/5",
+              "block md:hidden"
+            )}
+          >
+            <div className="flex flex-col space-y-2">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "px-5 py-2.5 rounded-xl text-base font-medium",
+                    "transition-all duration-200",
+                    isAiMode
+                      ? "hover:bg-white/10"
+                      : "hover:bg-white/10",
+                    pathname === item.href
+                      ? isAiMode 
+                        ? "bg-white/20 text-white" 
+                        : "bg-white/20 text-white"
+                      : "text-white/90 hover:text-white"
+                  )}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              {/* Mobil kullanıcı işlemleri */}
+              <div className="flex flex-col space-y-2 mt-2">
+                {isLoading ? (
+                  <LoadingSpinner className="w-6 h-6" />
+                ) : user ? (
+                  <Button 
+                    onClick={logout} 
+                    variant="ghost"
+                    className={`w-full text-base font-medium text-white/90 hover:text-white transition-all duration-200
+                      ${isAiMode 
+                        ? "hover:bg-purple-500/50" 
+                        : "hover:bg-white/10"
+                      }`}
+                  >
+                    Çıkış Yap
+                  </Button>
+                ) : (
+                  <>
+                    <Link href="/auth/login" className="w-full">
+                      <Button 
+                        variant="ghost" 
+                        className={`w-full text-base font-medium text-white/90 hover:text-white transition-all duration-200
+                          ${isAiMode 
+                            ? "hover:bg-purple-500/50" 
+                            : "hover:bg-white/10"
+                          }`}
+                      >
+                        Giriş Yap
+                      </Button>
+                    </Link>
+                    <Link href="/auth/register" className="w-full">
+                      <Button 
+                        className={`w-full text-base font-medium transition-all duration-200
+                          ${isAiMode 
+                            ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
+                            : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
+                          }`}
+                      >
+                        Kayıt Ol
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
