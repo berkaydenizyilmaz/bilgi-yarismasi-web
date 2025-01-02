@@ -159,7 +159,9 @@ export default function LogsPage() {
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <Card className="p-3 md:p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl md:text-2xl font-bold">Sistem Logları</h1>
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+            Sistem Logları
+          </h1>
         </div>
 
         {/* Masaüstü görünümü */}
