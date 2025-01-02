@@ -13,7 +13,7 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  params: any
+  { params }: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
@@ -25,23 +25,7 @@ export async function PUT(
     const body = await request.json();
     const validatedData = categorySchema.parse(body);
 
-    // Aynı isimde başka kategori var mı kontrol et
-    const existingCategory = await prisma.category.findFirst({
-      where: {
-        name: {
-          equals: validatedData.name,
-          mode: 'insensitive'
-        },
-        NOT: {
-          id: id
-        }
-      }
-    });
-
-    if (existingCategory) {
-      throw new ValidationError("Bu isimde bir kategori zaten mevcut");
-    }
-
+    // Kategoriyi güncelle
     const category = await prisma.category.update({
       where: { id },
       data: {
@@ -62,15 +46,8 @@ export async function PUT(
       questionCount: category._count.questions
     });
   } catch (error) {
-    logger.error('category', error as Error, {
-      action: 'update_attempt',
-      categoryId: params.id
-    });
-
     if (error instanceof z.ZodError) {
-      return apiResponse.error(
-        new ValidationError(error.errors[0].message)
-      );
+      return apiResponse.error(new ValidationError(error.errors[0].message));
     }
 
     if (error instanceof APIError) {
@@ -86,7 +63,7 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  params: any
+  { params }: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
@@ -95,26 +72,7 @@ export async function DELETE(
       throw new ValidationError("Geçersiz kategori ID'si");
     }
 
-    // Kategoride soru var mı kontrol et
-    const category = await prisma.category.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: {
-            questions: true
-          }
-        }
-      }
-    });
-
-    if (!category) {
-      throw new ValidationError("Kategori bulunamadı");
-    }
-
-    if (category._count.questions > 0) {
-      throw new ValidationError("Bu kategoride sorular bulunduğu için silinemez");
-    }
-
+    // Kategoriyi sil
     await prisma.category.delete({
       where: { id }
     });
@@ -123,11 +81,6 @@ export async function DELETE(
       message: "Kategori başarıyla silindi"
     });
   } catch (error) {
-    logger.error('category', error as Error, {
-      action: 'delete_attempt',
-      categoryId: params.id
-    });
-
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }

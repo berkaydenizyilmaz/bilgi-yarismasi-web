@@ -19,7 +19,7 @@ const questionSchema = z.object({
 // Soru güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  params: any
+  { params }: { params: { id: string } }
 ) {
   let categoryName = '';
   let oldCategoryName = '';
@@ -64,9 +64,7 @@ export async function PUT(
         category_id: validatedData.categoryId
       },
       include: {
-        category: {
-          select: { name: true }
-        }
+        category: true
       }
     });
 
@@ -82,7 +80,7 @@ export async function PUT(
       optionB: question.option_b,
       optionC: question.option_c,
       optionD: question.option_d,
-      correctOption: question.correct_option,
+      correctOption: question.correct_option.toLowerCase(),
       categoryId: question.category_id,
       categoryName: question.category.name
     };
@@ -115,13 +113,12 @@ export async function PUT(
 // Soru silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  params: any
+  { params }: { params: { id: string } }
 ) {
   let categoryName = '';
   
   try {
     await checkAdminRole(request);
-
     const id = parseInt(params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
