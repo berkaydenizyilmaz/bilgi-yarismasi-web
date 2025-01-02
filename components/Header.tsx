@@ -20,10 +20,10 @@ export default function Header() {
 
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
+    { name: 'İletişim', href: '/dashboard/contact' },
     ...(user ? [
       { name: 'Oyna', href: '/play' },
       { name: 'Lider Tablosu', href: '/dashboard/leaderboard' },
-      { name: 'İletişim', href: '/dashboard/contact' },
       { name: 'Profil', href: '/dashboard/profile' },
       ...(user.role === 'admin' ? [{ name: 'Admin Paneli', href: "/admin" }] : []),
     ] : [])
