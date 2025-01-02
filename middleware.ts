@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
             "/admin/categories",
         ];
 
-        const authPaths = ["/auth/login", "/auth/register"];
+        const authPaths = ["/auth"];
 
         if (path === "/" || path.startsWith("/api")) {
             return NextResponse.next();

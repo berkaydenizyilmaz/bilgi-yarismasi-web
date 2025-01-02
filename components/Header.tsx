@@ -181,7 +181,7 @@ export default function Header() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Link href="/auth/login">
+                      <Link href="/auth">
                         <Button 
                           variant="ghost" 
                           className={`group text-base font-medium text-white/90 hover:text-white transition-all duration-300
@@ -192,23 +192,6 @@ export default function Header() {
                         >
                           <LogIn className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                           Giriş Yap
-                        </Button>
-                      </Link>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Link href="/auth/register">
-                        <Button 
-                          className={`group text-base font-medium transition-all duration-300
-                            ${isAiMode 
-                              ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
-                              : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
-                            } hover:shadow-lg hover:-translate-y-0.5`}
-                        >
-                          <UserPlus className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
-                          Kayıt Ol
                         </Button>
                       </Link>
                     </motion.div>
@@ -320,7 +303,7 @@ export default function Header() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Link href="/auth/login" className="w-full">
+                      <Link href="/auth">
                         <Button 
                           variant="ghost" 
                           className={`w-full group text-base font-medium text-white/90 hover:text-white transition-all duration-300
@@ -331,23 +314,6 @@ export default function Header() {
                         >
                           <LogIn className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                           Giriş Yap
-                        </Button>
-                      </Link>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link href="/auth/register" className="w-full">
-                        <Button 
-                          className={`w-full group text-base font-medium transition-all duration-300
-                            ${isAiMode 
-                              ? "bg-white hover:bg-white/90 text-purple-600 hover:text-purple-700" 
-                              : "bg-white hover:bg-white/90 text-orange-600 hover:text-orange-700"
-                            } hover:shadow-lg`}
-                        >
-                          <UserPlus className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
-                          Kayıt Ol
                         </Button>
                       </Link>
                     </motion.div>
