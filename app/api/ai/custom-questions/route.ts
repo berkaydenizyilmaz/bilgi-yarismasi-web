@@ -96,9 +96,6 @@ export async function POST(request: NextRequest) {
         const response = await result.response;
         const text = response.text();
 
-        // Debug için ham yanıtı yazdır
-        logger.info('ai', 'generate', 'AI Ham Yanıt', { text });
-
         // JSON'ı temizle ve parse et
         const cleanedJson = cleanJsonResponse(text);
         const jsonData = JSON.parse(cleanedJson);

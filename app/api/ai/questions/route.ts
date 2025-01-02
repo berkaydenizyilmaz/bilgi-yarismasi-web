@@ -108,8 +108,6 @@ export async function POST(request: NextRequest) {
         const response = await result.response;
         const text = response.text();
 
-        logger.info('ai', 'generate', 'AI Ham Yanıt', { text });
-
         const cleanedJson = cleanJsonResponse(text);
         const jsonData = JSON.parse(cleanedJson);
         const validatedQuestions = validateQuestions(jsonData.questions);
