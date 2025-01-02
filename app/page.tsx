@@ -8,6 +8,41 @@ import { useCategories } from "@/lib/hooks/useCategories";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { motion } from "framer-motion";
 import { Category } from "@/types/category";
+import { cn } from "@/lib/utils";
+
+interface FeatureCardProps {
+  icon: React.ReactNode
+  title: string
+  description: string
+  className?: string
+}
+
+function FeatureCard({ icon, title, description, className }: FeatureCardProps) {
+  return (
+    <motion.div 
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 group",
+        className
+      )}
+    >
+      <div className="flex flex-col items-center text-center">
+        <motion.div 
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.2 }}
+          className="mb-6 p-4 bg-orange-50 rounded-xl group-hover:bg-orange-100 transition-colors duration-300"
+        >
+          {icon}
+        </motion.div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors duration-300">
+          {title}
+        </h3>
+        <p className="text-gray-600 leading-relaxed">{description}</p>
+      </div>
+    </motion.div>
+  )
+}
 
 export default function HomePage() {
     const { categories, isLoading, error } = useCategories();
@@ -346,34 +381,6 @@ export default function HomePage() {
                 </motion.div>
             </section>
         </div>
-    );
-}
-
-function FeatureCard({ icon, title, description }: {
-    icon: React.ReactNode
-    title: string
-    description: string
-}) {
-    return (
-        <motion.div 
-            whileHover={{ y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 group"
-        >
-            <div className="flex flex-col items-center text-center">
-                <motion.div 
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
-                    className="mb-6 p-4 bg-orange-50 rounded-xl group-hover:bg-orange-100 transition-colors duration-300"
-                >
-                    {icon}
-                </motion.div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors duration-300">
-                    {title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">{description}</p>
-            </div>
-        </motion.div>
     );
 }
 
