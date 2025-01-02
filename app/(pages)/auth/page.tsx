@@ -184,7 +184,7 @@ export default function AuthPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-orange-500" />
-                  <span>Kendi quizlerini oluştur ve paylaş</span>
+                  <span>Yapay zeka anlık sorular üretsin</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-orange-500" />
