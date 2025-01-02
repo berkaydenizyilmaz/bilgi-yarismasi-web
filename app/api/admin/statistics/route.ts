@@ -42,10 +42,6 @@ export async function GET(request: NextRequest) {
       count: quizzesCountByDate[date]
     }));
 
-    // Kontrol amaçlı log
-    console.log('Tarih bazlı quiz sayıları:', quizzesCountByDate);
-    console.log('Final quiz sayıları:', finalQuizzesCountByDate);
-    console.log('Toplam quiz sayısı:', totalQuizzes);
 
     // Kategorilerdeki toplam soru sayısını al
     const categories = await prisma.category.findMany({

@@ -14,9 +14,6 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const skip = (page - 1) * pageSize;
 
-    // Debug için log ekleyelim
-    console.log('Fetching logs with params:', { page, pageSize, skip });
-
     // Toplam log sayısı ve sayfalı logları al
     const [logs, total] = await Promise.all([
       prisma.log.findMany({
@@ -55,7 +52,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Log getirme hatası:', error);
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
