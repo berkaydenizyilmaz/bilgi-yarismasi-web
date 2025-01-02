@@ -97,42 +97,42 @@ export default function AiResultPage() {
   }, [categoryId, mode]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-6 sm:py-8 md:py-12 px-3 sm:px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-400 bg-clip-text text-transparent mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-400 bg-clip-text text-transparent mb-3 sm:mb-4">
             Quiz Tamamlandı!
           </h1>
           {mode === "ai" ? (
             categoryName && (
-              <p className="text-xl md:text-2xl text-gray-600 mt-2">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mt-2">
                 {categoryName}
               </p>
             )
           ) : (
             categoryId && (
-              <p className="text-xl md:text-2xl text-gray-600 mt-2">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mt-2">
                 {decodeURIComponent(categoryId)}
               </p>
             )
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
           <StatCard
-            icon={<Trophy className="w-8 h-8 text-purple-500" />}
+            icon={<Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />}
             title="Başarı Puanı"
             value={`%${score}`}
             className="bg-purple-50"
           />
           <StatCard
-            icon={<CheckCircle2 className="w-8 h-8 text-green-500" />}
+            icon={<CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />}
             title="Doğru Cevap"
             value={correct.toString()}
             className="bg-green-50"
           />
           <StatCard
-            icon={<XCircle className="w-8 h-8 text-red-500" />}
+            icon={<XCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />}
             title="Yanlış Cevap"
             value={incorrect.toString()}
             className="bg-red-50"
@@ -140,7 +140,7 @@ export default function AiResultPage() {
         </div>
 
         {/* Soru detayları */}
-        <div className="space-y-6 mb-12">
+        <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-12">
           {questions.map((question, index) => (
             <QuestionCard
               key={index}
@@ -150,10 +150,11 @@ export default function AiResultPage() {
           ))}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-8 sm:mt-12">
           <Link href="/play">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold py-6 px-8 rounded-xl text-lg">
-              <Sparkles className="w-5 h-5 mr-2" />
+            <Button className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 
+              text-white font-semibold py-4 sm:py-6 px-6 sm:px-8 rounded-xl text-base sm:text-lg">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Mod Seçimine Dön
             </Button>
           </Link>
@@ -163,13 +164,13 @@ export default function AiResultPage() {
   );
 }
 
-function StatCard({ icon, title, value, className = "" }: { icon: React.ReactNode; title: string; value: string; className?: string }) {
+function StatCard({ icon, title, value, className = "" }: { icon: any; title: string; value: string; className?: string }) {
   return (
-    <Card className={`text-center p-4 md:p-6 ${className}`}>
-      <div className="flex flex-col items-center gap-2">
+    <Card className={`text-center p-3 sm:p-4 md:p-6 ${className}`}>
+      <div className="flex flex-col items-center gap-1 sm:gap-2">
         {icon}
-        <p className="text-sm md:text-base text-gray-600">{title}</p>
-        <p className="text-2xl md:text-3xl font-bold text-gray-800">{value}</p>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">{title}</p>
+        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">{value}</p>
       </div>
     </Card>
   );

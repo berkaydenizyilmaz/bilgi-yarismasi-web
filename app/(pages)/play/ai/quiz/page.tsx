@@ -128,16 +128,16 @@ export default function AiQuizPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        <Card className="max-w-3xl mx-auto bg-gradient-to-br from-purple-600 to-pink-500 text-white p-4 md:p-6 mb-6 shadow-lg">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+        <Card className="max-w-3xl mx-auto bg-gradient-to-br from-purple-600 to-pink-500 text-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg md:text-xl font-medium opacity-90">Yapay Zeka Modu</h2>
-              <p className="text-sm md:text-base opacity-75">Yapay zeka tarafından üretilen sorular</p>
+              <h2 className="text-base sm:text-lg md:text-xl font-medium opacity-90">Yapay Zeka Modu</h2>
+              <p className="text-xs sm:text-sm md:text-base opacity-75">Yapay zeka tarafından üretilen sorular</p>
             </div>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 opacity-75" />
-              <span className="text-lg font-semibold">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
+              <span className="text-base sm:text-lg font-semibold">
                 {currentQuestionIndex + 1}/{questions.length}
               </span>
             </div>
@@ -145,7 +145,7 @@ export default function AiQuizPage() {
         </Card>
 
         <Card className="max-w-3xl mx-auto bg-white/80 backdrop-blur-sm rounded-lg shadow-lg">
-          <div className="h-2 bg-gray-100 rounded-t-lg overflow-hidden">
+          <div className="h-1.5 sm:h-2 bg-gray-100 rounded-t-lg overflow-hidden">
             <motion.div 
               className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
               initial={{ width: 0 }}
@@ -156,34 +156,34 @@ export default function AiQuizPage() {
             />
           </div>
 
-          <div className="p-6 md:p-8">
-            <div className="mb-8">
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-800 leading-relaxed">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 leading-relaxed">
                 {currentQuestion.question}
               </h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(currentQuestion.options).map(([key, value]) => (
                 <motion.button
                   key={key}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                   onClick={() => handleAnswer(key)}
-                  className="group w-full p-4 text-left rounded-xl border-2 border-gray-100 
+                  className="group w-full p-3 sm:p-4 text-left rounded-xl border-2 border-gray-100 
                     hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200
                     relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 
                     opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   
-                  <div className="relative flex items-center gap-3">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-lg 
-                      bg-purple-100 text-purple-600 font-semibold group-hover:bg-purple-200 
+                  <div className="relative flex items-center gap-2 sm:gap-3">
+                    <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg 
+                      bg-purple-100 text-purple-600 text-sm sm:text-base font-semibold group-hover:bg-purple-200 
                       transition-colors duration-200">
                       {key}
                     </span>
-                    <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">
+                    <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 transition-colors duration-200">
                       {value}
                     </span>
                   </div>
