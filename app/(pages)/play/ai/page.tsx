@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { AlertCircle, Sparkles, Stars, Brain, Zap } from "lucide-react"
 import Link from "next/link"
 import { memo } from "react"
@@ -36,7 +35,6 @@ const ErrorComponent = memo(({ error }: { error: string }) => (
 
 export default function AiPage() {
   const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
@@ -60,8 +58,6 @@ export default function AiPage() {
       setCategories(categoriesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kategoriler alınamadı");
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -117,7 +113,6 @@ export default function AiPage() {
     ));
   }, [categories, router]);
 
-  if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorComponent error={error} />;
 
   return (

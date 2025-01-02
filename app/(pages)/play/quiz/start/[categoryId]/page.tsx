@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
+import { BookOpen, AlertCircle } from "lucide-react"
 
 export default function QuizPage() {
   const { categoryId } = useParams<{ categoryId: string }>()
@@ -64,17 +66,20 @@ export default function QuizPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 md:p-6">
-            <h2 className="text-lg md:text-xl font-semibold text-red-700 mb-4">
-              Hata Oluştu
-            </h2>
-            <p className="text-red-600 mb-6">{error}</p>
-            <Link href="/play/classic">
-              <Button variant="outline" className="bg-white hover:bg-gray-50">
-                Kategorilere Geri Dön
-              </Button>
-            </Link>
-          </div>
+          <Card className="bg-red-50 border-red-200 p-6">
+            <div className="flex flex-col items-center gap-4">
+              <AlertCircle className="w-12 h-12 text-red-500" />
+              <h2 className="text-xl font-semibold text-red-700">
+                Hata Oluştu
+              </h2>
+              <p className="text-red-600 mb-4">{error}</p>
+              <Link href="/play/classic">
+                <Button variant="outline" className="bg-white hover:bg-gray-50">
+                  Kategorilere Geri Dön
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </div>
       </div>
     )
@@ -86,76 +91,128 @@ export default function QuizPage() {
   if (!currentQuestion) return null
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8 min-h-screen">
-      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-4 md:p-6">
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            {categoryName}
-          </h1>
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+        <Card className="max-w-3xl mx-auto bg-gradient-to-br from-orange-600 to-red-500 text-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-base md:text-lg text-gray-600">
-              Soru {currentQuestionIndex + 1}/{questions.length}
-            </span>
-            <div className="w-32 md:w-64 h-2 bg-gray-200 rounded-full">
-              <div 
-                className="h-2 bg-orange-600 rounded-full transition-all"
-                style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
-              />
+            <div>
+              <h2 className="text-base sm:text-lg md:text-xl font-medium opacity-90">
+                {categoryName}
+              </h2>
+              <p className="text-xs sm:text-sm md:text-base opacity-75">
+                Klasik Quiz Modu
+              </p>
             </div>
-          </div>
-        </div>
-
-        <Card className="p-4 md:p-8 mb-6 shadow-md" style={{ minHeight: '250px' }}>
-          <h2 className="text-xl md:text-2xl font-semibold mb-6">
-            {currentQuestion.question_text}
-          </h2>
-          <div className="space-y-3 md:space-y-4">
-            {currentQuestion.options.map((option, index) => (
-              <button
-                key={index}
-                className={cn(
-                  "w-full text-left p-3 md:p-4 rounded-lg border-2 transition-all text-sm md:text-base",
-                  selectedOption === option
-                    ? "border-orange-600 bg-orange-50"
-                    : "border-gray-200 hover:border-orange-300"
-                )}
-                onClick={() => setSelectedOption(option)}
-              >
-                <span className="font-medium">
-                  {String.fromCharCode(65 + index)}.
-                </span>{" "}
-                {option}
-              </button>
-            ))}
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
+              <span className="text-base sm:text-lg font-semibold">
+                {currentQuestionIndex + 1}/{questions.length}
+              </span>
+            </div>
           </div>
         </Card>
 
-        <div className="flex justify-end">
-          {isLastQuestion ? (
-            <Button
-              disabled={!selectedOption || isSubmitting}
-              onClick={handleFinishQuiz}
-              className="bg-green-600 hover:bg-green-700 text-base md:text-lg px-6 md:px-8 py-2 md:py-3 rounded-md transition duration-300"
+        <Card className="max-w-3xl mx-auto bg-white/80 backdrop-blur-sm rounded-lg shadow-lg">
+          <div className="h-1.5 sm:h-2 bg-gray-100 rounded-t-lg overflow-hidden">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-orange-500 to-red-500"
+              initial={{ width: 0 }}
+              animate={{ 
+                width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` 
+              }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+
+          <div className="p-4 sm:p-6 md:p-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentQuestionIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 sm:mb-8"
+              >
+                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 leading-relaxed">
+                  {currentQuestion.question_text}
+                </h2>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="space-y-3 sm:space-y-4">
+              {currentQuestion.options.map((option, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => setSelectedOption(option)}
+                  className={cn(
+                    "group w-full p-3 sm:p-4 text-left rounded-xl border-2 transition-all duration-200 relative overflow-hidden",
+                    selectedOption === option
+                      ? "border-orange-500 bg-orange-50/80"
+                      : "border-gray-100 hover:border-orange-300 hover:bg-orange-50/50"
+                  )}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+                  />
+                  
+                  <div className="relative flex items-center gap-2 sm:gap-3">
+                    <span className={cn(
+                      "flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg text-sm sm:text-base font-semibold transition-colors duration-200",
+                      selectedOption === option
+                        ? "bg-orange-500 text-white"
+                        : "bg-orange-100 text-orange-600 group-hover:bg-orange-200"
+                    )}>
+                      {String.fromCharCode(65 + index)}
+                    </span>
+                    <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 
+                      transition-colors duration-200">
+                      {option}
+                    </span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+            <motion.div 
+              className="flex justify-end mt-6 sm:mt-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
             >
-              {isSubmitting ? (
-                <div className="flex items-center gap-2">
-                  <LoadingSpinner />
-                  Sonuçlar Hesaplanıyor...
-                </div>
+              {isLastQuestion ? (
+                <Button
+                  disabled={!selectedOption || isSubmitting}
+                  onClick={handleFinishQuiz}
+                  className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600
+                    text-white font-semibold py-2 sm:py-3 px-6 sm:px-8 rounded-xl text-sm sm:text-base
+                    transition duration-300 flex items-center gap-2 min-w-[160px] justify-center"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <LoadingSpinner className="w-5 h-5" />
+                      <span>Hesaplanıyor...</span>
+                    </div>
+                  ) : (
+                    "Sınavı Bitir"
+                  )}
+                </Button>
               ) : (
-                "Sınavı Bitir"
+                <Button
+                  disabled={!selectedOption}
+                  onClick={handleNextQuestion}
+                  className="bg-gradient-to-r from-orange-600 to-red-500 hover:from-orange-700 hover:to-red-600
+                    text-white font-semibold py-2 sm:py-3 px-6 sm:px-8 rounded-xl text-sm sm:text-base
+                    transition duration-300"
+                >
+                  Sonraki Soru
+                </Button>
               )}
-            </Button>
-          ) : (
-            <Button
-              disabled={!selectedOption}
-              onClick={handleNextQuestion}
-              className="bg-orange-600 hover:bg-orange-700 text-base md:text-lg px-6 md:px-8 py-2 md:py-3 rounded-md transition duration-300"
-            >
-              Sonraki Soru
-            </Button>
-          )}
-        </div>
+            </motion.div>
+          </div>
+        </Card>
       </div>
     </div>
   )
