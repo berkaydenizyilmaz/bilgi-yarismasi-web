@@ -5,7 +5,12 @@ import { APIError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new APIError("Gemini API anahtarı bulunamadı", 500);
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 const cleanJsonResponse = (text: string): string => {
   try {
@@ -63,6 +68,11 @@ async function getCategoryName(categoryId: number): Promise<string> {
 
   return category.name;
 }
+
+logger.info('ai', 'error', 'API yapılandırması', {
+  hasApiKey: !!process.env.GEMINI_API_KEY,
+  apiKeyLength: process.env.GEMINI_API_KEY?.length || 0
+});
 
 export async function POST(request: NextRequest) {
   let body;
