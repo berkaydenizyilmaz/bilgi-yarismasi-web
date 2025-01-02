@@ -80,54 +80,48 @@ export default function PlayPage() {
 
           {/* Yapay Zeka Modu */}
           <motion.div variants={item}>
-            <Card className="group relative h-full overflow-hidden rounded-2xl border-2 border-gray-100">
-              <div className="flex flex-col items-center p-8 md:p-10">
-                <div className="mb-6 p-4 rounded-full bg-gray-100">
-                  <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
+            <Link href="/play/ai" className="block h-full">
+              <Card className="group relative h-full overflow-hidden rounded-2xl border-2 border-transparent hover:border-orange-200 transition-all duration-300">
+                <div className="flex flex-col items-center p-8 md:p-10">
+                  <div className="mb-6 p-4 rounded-full bg-orange-100 group-hover:bg-orange-200 transition-colors duration-300">
+                    <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-orange-500" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 group-hover:text-orange-600 transition-colors duration-300">
+                    Yapay Zeka Modu
+                  </h2>
+                  <p className="text-base md:text-lg text-gray-600 mb-8 text-center">
+                    Yapay zeka tarafından anlık üretilen sorularla yeni deneyimler yaşayın!
+                  </p>
+                  <Button className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3 px-8 rounded-xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+                    Başla
+                  </Button>
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-400 mb-4">
-                  Yapay Zeka Modu
-                </h2>
-                <p className="text-base md:text-lg text-gray-500 mb-8 text-center">
-                  Yapay zeka tarafından anlık üretilen sorularla yeni deneyimler yaşayın!
-                </p>
-                <Button 
-                  className="bg-gray-200 text-gray-400 font-semibold py-3 px-8 rounded-xl cursor-not-allowed"
-                  disabled
-                >
-                  Yakında
-                </Button>
-              </div>
-              <div className="absolute top-2 right-2 bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm">
-                Yakında
-              </div>
-            </Card>
+                <div className="absolute inset-0 bg-gradient-to-b from-orange-100/0 to-orange-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </Card>
+            </Link>
           </motion.div>
 
           {/* Yapay Zeka+ Modu */}
           <motion.div variants={item}>
-            <Card className="group relative h-full overflow-hidden rounded-2xl border-2 border-gray-100">
-              <div className="flex flex-col items-center p-8 md:p-10">
-                <div className="mb-6 p-4 rounded-full bg-gray-100">
-                  <Stars className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
+            <Link href="/play/aiplus" className="block h-full">
+              <Card className="group relative h-full overflow-hidden rounded-2xl border-2 border-transparent hover:border-orange-200 transition-all duration-300">
+                <div className="flex flex-col items-center p-8 md:p-10">
+                  <div className="mb-6 p-4 rounded-full bg-orange-100 group-hover:bg-orange-200 transition-colors duration-300">
+                    <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-orange-500" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 group-hover:text-orange-600 transition-colors duration-300">
+                    Yapay Zeka+ Modu
+                  </h2>
+                  <p className="text-base md:text-lg text-gray-600 mb-8 text-center">
+                    Kategoriyi siz belirleyin yapay zeka soruları üretsin.
+                  </p>
+                  <Button className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3 px-8 rounded-xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+                    Başla
+                  </Button>
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-400 mb-4">
-                  Yapay Zeka+ Modu
-                </h2>
-                <p className="text-base md:text-lg text-gray-500 mb-8 text-center">
-                  Kategoriyi siz belirleyin, yapay zeka soruları üretsin!
-                </p>
-                <Button 
-                  className="bg-gray-200 text-gray-400 font-semibold py-3 px-8 rounded-xl cursor-not-allowed"
-                  disabled
-                >
-                  Yakında
-                </Button>
-              </div>
-              <div className="absolute top-2 right-2 bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm">
-                Yakında
-              </div>
-            </Card>
+                <div className="absolute inset-0 bg-gradient-to-b from-orange-100/0 to-orange-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </Card>
+            </Link>
           </motion.div>
         </motion.div>
       </motion.div>

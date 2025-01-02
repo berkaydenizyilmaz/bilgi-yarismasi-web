@@ -7,7 +7,8 @@ type LogAction =
   | 'error' 
   | 'access'
   | 'list'
-  | 'read';
+  | 'read'
+  | 'generate';
 type LogModule = 
   | 'user' 
   | 'question' 
@@ -15,7 +16,8 @@ type LogModule =
   | 'quiz' 
   | 'auth' 
   | 'system' 
-  | 'feedback';
+  | 'feedback'
+  | 'ai';
 
 interface LogData {
   level: LogLevel;
@@ -146,6 +148,45 @@ class Logger {
   // Auth işlemleri için helper metodlar
   authLog(action: 'login' | 'logout' | 'register', message: string, metadata?: Record<string, any>) {
     this.info('auth', 'auth', message, metadata);
+  }
+
+  // AI işlemleri için yeni metodlar
+  aiQuestionGenerated(category: string, questionCount: number, metadata?: Record<string, any>) {
+    this.info('ai', 'generate', `${questionCount} soru üretildi - Kategori: ${category}`, {
+      category,
+      questionCount,
+      ...metadata
+    });
+  }
+
+  aiError(error: Error, context: string, metadata?: Record<string, any>) {
+    this.error('system', error, {
+      errorType: 'AI_ERROR',
+      errorContext: context,
+      ...metadata
+    });
+  }
+
+  aiRequestLog(prompt: string, metadata?: Record<string, any>) {
+    this.info('ai', 'create', 'AI isteği gönderildi', {
+      prompt,
+      ...metadata
+    });
+  }
+
+  aiResponseLog(success: boolean, metadata?: Record<string, any>) {
+    this.info('ai', 'read', `AI yanıtı ${success ? 'başarılı' : 'başarısız'}`, {
+      success,
+      ...metadata
+    });
+  }
+
+  // AI işlemleri için bilgi logu
+  aiInfo(message: string, metadata?: Record<string, any>) {
+    this.info('system', 'generate', message, {
+      type: 'AI_OPERATION',
+      ...metadata
+    });
   }
 
   // Public metodlar

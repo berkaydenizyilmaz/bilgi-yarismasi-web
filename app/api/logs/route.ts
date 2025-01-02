@@ -7,8 +7,27 @@ import { APIError } from '@/lib/errors';
 // Log verisi için Zod şeması
 const logSchema = z.object({
   level: z.enum(['info', 'warn', 'error']),
-  module: z.enum(['user', 'question', 'category', 'quiz', 'auth', 'system', 'feedback']),
-  action: z.enum(['create', 'update', 'delete', 'auth', 'error', 'access', 'list']),
+  module: z.enum([
+    'user',
+    'question',
+    'category',
+    'quiz',
+    'auth',
+    'system',
+    'feedback',
+    'ai'
+  ]),
+  action: z.enum([
+    'create',
+    'update',
+    'delete',
+    'auth',
+    'error',
+    'access',
+    'list',
+    'read',
+    'generate'
+  ]),
   message: z.string(),
   timestamp: z.string().datetime(),
   path: z.string().optional(),
