@@ -16,6 +16,10 @@ export async function middleware(request: NextRequest) {
             "/play/quiz/result",
             "/play/quiz/start",
             "/play/quiz/classic",
+            "/play/ai/quiz",
+            "/play/ai/result",
+            "/play/aiplus/quiz",
+            "/play/aiplus/result",
         ];
 
         const adminPaths = [
