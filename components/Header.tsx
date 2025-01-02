@@ -16,6 +16,8 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
 
+  const isAiMode = pathname.includes('/play/ai') || pathname.includes('/play/aiplus')
+
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
     ...(user ? [
@@ -39,7 +41,12 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="bg-gradient-to-r from-orange-600 to-orange-500 text-white py-6 shadow-lg relative z-50">
+    <header className={`
+      ${isAiMode 
+        ? "bg-gradient-to-r from-purple-600 to-pink-500" 
+        : "bg-gradient-to-r from-orange-600 to-orange-500"
+      } text-white py-6 shadow-lg relative z-50`}
+    >
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}

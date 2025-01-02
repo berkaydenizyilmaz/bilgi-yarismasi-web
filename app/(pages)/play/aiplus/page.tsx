@@ -30,7 +30,7 @@ export default function AiPlusModePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export default function AiPlusModePage() {
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent mb-4"
+            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-400 bg-clip-text text-transparent mb-4"
           >
             Yapay Zeka+ Modu
           </motion.h1>
@@ -54,7 +54,7 @@ export default function AiPlusModePage() {
           </motion.p>
         </div>
 
-        <Card className="p-6 md:p-8">
+        <Card className="p-6 md:p-8 bg-white/80 backdrop-blur-sm border-purple-100">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="category" className="text-lg font-medium text-gray-700">
@@ -68,11 +68,15 @@ export default function AiPlusModePage() {
                   setError("")
                 }}
                 placeholder="Örn: Türk Edebiyatı, Dünya Tarihi, Bilim..."
-                className={`text-lg py-6 ${error ? 'border-red-500' : 'border-gray-300'}`}
+                className="text-lg py-6 border-purple-200 focus:border-purple-400 focus:ring-purple-400"
               />
             </div>
-            <Button type="submit" className="w-full text-base px-6 py-2 md:px-8 md:py-3">
-              Kategori Seç
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Soruları Oluştur
             </Button>
           </form>
         </Card>

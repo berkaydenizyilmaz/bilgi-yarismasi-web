@@ -51,7 +51,7 @@ export default function AiModePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -61,7 +61,7 @@ export default function AiModePage() {
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent mb-4"
+            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-400 bg-clip-text text-transparent mb-4"
           >
             Yapay Zeka Modu
           </motion.h1>
@@ -99,19 +99,19 @@ export default function AiModePage() {
                     rounded-2xl
                     transition-all duration-300 gap-4
                     ${selectedCategory === category.id 
-                      ? 'bg-gradient-to-br from-orange-600 to-orange-400 text-white shadow-lg scale-105' 
-                      : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:shadow-lg hover:scale-[1.02]'
+                      ? 'bg-gradient-to-br from-purple-600 to-pink-400 text-white shadow-lg scale-105' 
+                      : 'bg-white text-gray-700 hover:bg-purple-50 hover:text-purple-600 hover:shadow-lg hover:scale-[1.02]'
                     }
                   `}
                 >
                   <div className={`
                     p-4 rounded-full 
-                    ${hoveredCategory === category.id ? 'bg-white/80' : 'bg-orange-50'}
+                    ${hoveredCategory === category.id ? 'bg-white/80' : 'bg-purple-50'}
                     transition-colors duration-300
                   `}>
                     <BookOpen className={`
                       h-8 w-8 md:h-10 md:w-10
-                      ${hoveredCategory === category.id ? 'text-orange-600' : 'text-orange-500'}
+                      ${hoveredCategory === category.id ? 'text-purple-600' : 'text-purple-500'}
                       transition-colors duration-300
                     `} />
                   </div>

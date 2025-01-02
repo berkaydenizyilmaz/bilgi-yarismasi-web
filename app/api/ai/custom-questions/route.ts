@@ -7,11 +7,49 @@ import { logger } from "@/lib/logger";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 const cleanJsonResponse = (text: string): string => {
-  // JSON içeriğini bul
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("JSON içeriği bulunamadı");
-  
-  return jsonMatch[0];
+  try {
+    // Markdown işaretlerini kaldır
+    text = text.replace(/```json\s*|\s*```/g, "").trim();
+    
+    // JSON formatını düzelt
+    text = text.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+    text = text.replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*([,}])/g, ':"$1"$2');
+    
+    // JSON içeriğini bul
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("JSON içeriği bulunamadı");
+    
+    // JSON'ı parse et ve tekrar stringify yap (format kontrolü için)
+    const parsed = JSON.parse(jsonMatch[0]);
+    return JSON.stringify(parsed);
+  } catch (error) {
+    throw new Error("JSON temizleme hatası: " + (error instanceof Error ? error.message : String(error)));
+  }
+};
+
+const validateQuestions = (questions: any[]) => {
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("Geçerli soru listesi bulunamadı");
+  }
+
+  questions.forEach((q, index) => {
+    if (!q.question || !q.options || !q.correct_option) {
+      throw new Error(`Soru ${index + 1} geçersiz format`);
+    }
+
+    // Şıkları kontrol et
+    const options = q.options;
+    if (!options.A || !options.B || !options.C || !options.D) {
+      throw new Error(`Soru ${index + 1}'de eksik şıklar var`);
+    }
+
+    // Doğru cevap kontrolü
+    if (!['A', 'B', 'C', 'D'].includes(q.correct_option)) {
+      throw new Error(`Soru ${index + 1}'de geçersiz doğru cevap`);
+    }
+  });
+
+  return questions;
 };
 
 export async function POST(request: NextRequest) {
@@ -31,6 +69,7 @@ export async function POST(request: NextRequest) {
     - 4 şık olmalı (A,B,C,D)
     - Tek bir doğru cevap olmalı
     - Şıklar kısa ve net olmalı
+    - Tüm metin değerleri çift tırnak içinde olmalı
     
     Yanıtı tam olarak aşağıdaki JSON formatında ver (başka metin ekleme):
     {
@@ -48,79 +87,38 @@ export async function POST(request: NextRequest) {
       ]
     }`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    let retryCount = 0;
+    const maxRetries = 3;
 
-    try {
-      const cleanJson = cleanJsonResponse(text);
-      const parsedData = JSON.parse(cleanJson);
+    while (retryCount < maxRetries) {
+      try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-      if (!parsedData.questions || !Array.isArray(parsedData.questions)) {
-        throw new Error("Geçersiz soru formatı");
+        // Debug için ham yanıtı yazdır
+        logger.info('ai', 'generate', 'AI Ham Yanıt', { text });
+
+        // JSON'ı temizle ve parse et
+        const cleanedJson = cleanJsonResponse(text);
+        const jsonData = JSON.parse(cleanedJson);
+
+        // Soruları doğrula
+        const validatedQuestions = validateQuestions(jsonData.questions);
+
+        return apiResponse.success({ questions: validatedQuestions });
+      } catch (error) {
+        retryCount++;
+
+        if (retryCount === maxRetries) {
+          throw new APIError("Sorular oluşturulamadı, lütfen tekrar deneyin", 500);
+        }
       }
-
-      const validatedQuestions = parsedData.questions.map((q: any, index: number) => {
-        if (!q.question || !q.options || !q.correct_option) {
-          throw new Error(`Soru ${index + 1} için eksik veri`);
-        }
-
-        const options = q.options;
-        if (!options.A || !options.B || !options.C || !options.D) {
-          throw new Error(`Soru ${index + 1} için eksik şıklar`);
-        }
-
-        const correctOption = q.correct_option.toUpperCase();
-        if (!['A', 'B', 'C', 'D'].includes(correctOption)) {
-          throw new Error(`Soru ${index + 1} için geçersiz doğru cevap`);
-        }
-
-        return {
-          question: String(q.question).trim(),
-          options: {
-            A: String(options.A).trim(),
-            B: String(options.B).trim(),
-            C: String(options.C).trim(),
-            D: String(options.D).trim()
-          },
-          correct_option: correctOption
-        };
-      });
-
-      if (validatedQuestions.length !== 10) {
-        throw new Error("Soru sayısı 10 olmalıdır");
-      }
-
-      logger.aiInfo("Özel kategori soruları başarıyla üretildi", {
-        category,
-        questionCount: validatedQuestions.length
-      });
-
-      return apiResponse.success({ questions: validatedQuestions });
-
-    } catch (parseError) {
-      logger.error('ai', parseError as Error, {
-        action: 'parse',
-        errorType: 'JSON_PARSE_ERROR',
-        rawResponse: text,
-        errorContext: 'parse_custom_questions'
-      });
-      throw new APIError("Üretilen sorular geçerli JSON formatında değil", 500);
     }
 
   } catch (error) {
-    logger.error('ai', error as Error, {
-      action: 'generate',
-      errorType: error instanceof APIError ? error.code : 'INTERNAL_SERVER_ERROR',
-      errorContext: 'generate_custom_questions'
-    });
-
-    if (error instanceof APIError) {
-      return apiResponse.error(error);
-    }
-
     return apiResponse.error(
-      new APIError("Sorular üretilirken bir hata oluştu", 500)
+      error instanceof APIError ? error : new APIError("Beklenmeyen bir hata oluştu", 500)
     );
   }
 }
