@@ -16,14 +16,7 @@ import {
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 import useSWR from "swr"
-
-interface Feedback {
-  id: number
-  name: string
-  email: string
-  message: string
-  createdAt: string
-}
+import { Feedback } from "@/types/feedback";
 
 interface FeedbackData {
   feedback: Feedback[]

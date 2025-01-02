@@ -34,18 +34,8 @@ import {
 import { ChevronLeft, ChevronRight, Edit, Plus, Search, Trash2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Question } from "@/types/quiz";
 
-interface Question {
-  id: number
-  questionText: string
-  optionA: string
-  optionB: string
-  optionC: string
-  optionD: string
-  correctOption: string
-  categoryId: number
-  categoryName: string
-}
 
 // Form validasyonu için bir interface ekleyelim
 interface FormErrors {

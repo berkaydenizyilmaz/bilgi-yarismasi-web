@@ -32,13 +32,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
-
-interface User {
-  id: number
-  email: string
-  username: string
-  role: string
-}
+import { User } from "@/types/user";
 
 // Form validasyonu için interface
 interface FormErrors {

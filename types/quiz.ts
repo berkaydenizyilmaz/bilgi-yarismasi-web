@@ -1,13 +1,14 @@
 export interface Question {
-    id: number
-    questionText: string
-    optionA: string
-    optionB: string
-    optionC: string
-    optionD: string
-    correctOption: 'A' | 'B' | 'C' | 'D'
-    categoryId: number
-  }
+  id: number
+  questionText: string
+  optionA: string
+  optionB: string
+  optionC: string
+  optionD: string
+  correctOption: string
+  categoryId: number
+  categoryName: string
+}
   
   export interface QuizResult {
     id: number

@@ -32,12 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Edit, Plus, Trash2 } from "lucide-react"
-
-interface Category {
-  id: number
-  name: string
-  questionCount: number
-}
+import { Category } from "@/types/category";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])

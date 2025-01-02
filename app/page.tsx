@@ -7,12 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { motion } from "framer-motion";
-
-interface Category {
-    id: number;
-    name: string;
-    description: string;
-}
+import { Category } from "@/types/category";
 
 export default function HomePage() {
     const { categories, isLoading, error } = useCategories();
