@@ -74,28 +74,30 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-20 px-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
-        {/* Başlık */}
-        <div className="text-center mb-12">
+        {/* Başlık Bölümü */}
+        <div className="text-center mb-20">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent mb-4"
+            className="text-5xl md:text-6xl font-bold mb-6"
           >
-            İletişime Geçin
+            <span className="bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent px-4">
+              İletişime Geçin
+            </span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-gray-600"
+            className="text-xl text-gray-600 max-w-2xl mx-auto"
           >
-            Sorularınız ve önerileriniz için bize ulaşın
+            Sorularınız ve önerileriniz için bize ulaşın. Size en kısa sürede dönüş yapacağız.
           </motion.p>
         </div>
 
@@ -103,48 +105,50 @@ export default function ContactPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100"
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
         >
           <div className="grid md:grid-cols-5 gap-0">
             {/* Sol taraf */}
-            <div className="hidden md:block md:col-span-2 bg-gradient-to-br from-orange-600 to-orange-500 p-8 text-white relative overflow-hidden">
+            <div className="hidden md:block md:col-span-2 bg-gradient-to-br from-orange-500 to-orange-600 p-12 text-white relative overflow-hidden">
               <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-6">Bizimle İletişime Geçin</h3>
-                <p className="text-orange-100 mb-6 leading-relaxed">
+                <h3 className="text-3xl font-bold mb-8">Bizimle İletişime Geçin</h3>
+                <p className="text-orange-50 mb-8 leading-relaxed text-lg">
                   Sorularınız veya önerileriniz için bize ulaşın. En kısa sürede size dönüş yapacağız.
                 </p>
-                <div className="mt-12">
-                  <div className="flex items-center gap-3 text-orange-100 mb-4">
-                    <Mail className="w-5 h-5" />
-                    <span>yilmazberkaydeniz@gmail.com</span>
+                <div className="mt-8">
+                  <div className="flex items-center gap-3 text-orange-50">
+                    <Mail className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-sm font-light break-words">
+                      yilmazberkaydeniz@gmail.com
+                    </span>
                   </div>
                 </div>
               </div>
               {/* Dekoratif arka plan deseni */}
               <div className="absolute inset-0 opacity-10">
-                <div className="absolute -right-20 -bottom-20 w-64 h-64 rounded-full border-4 border-orange-200" />
-                <div className="absolute -left-20 -top-20 w-64 h-64 rounded-full border-4 border-orange-200" />
+                <div className="absolute -right-32 -bottom-32 w-96 h-96 rounded-full border-8 border-orange-200" />
+                <div className="absolute -left-32 -top-32 w-96 h-96 rounded-full border-8 border-orange-200" />
               </div>
             </div>
 
             {/* Sağ taraf - Form */}
-            <div className="md:col-span-3 p-8">
+            <div className="md:col-span-3 p-12">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 font-medium">İsim</FormLabel>
+                        <FormLabel className="text-gray-700 font-semibold text-base">İsim</FormLabel>
                         <FormControl>
-                          <div className="relative">
+                          <div className="relative group">
                             <Input 
                               placeholder="Adınız Soyadınız" 
                               {...field}
-                              className="pl-10 rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-colors" 
+                              className="pl-11 h-12 rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-all group-hover:border-orange-300" 
                             />
-                            <User className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <User className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-hover:text-orange-500 transition-colors" />
                           </div>
                         </FormControl>
                         <FormMessage className="text-red-500" />
@@ -157,15 +161,15 @@ export default function ContactPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
+                        <FormLabel className="text-gray-700 font-semibold text-base">Email</FormLabel>
                         <FormControl>
-                          <div className="relative">
+                          <div className="relative group">
                             <Input 
                               placeholder="ornek@email.com" 
                               {...field}
-                              className="pl-10 rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-colors" 
+                              className="pl-11 h-12 rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-all group-hover:border-orange-300" 
                             />
-                            <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <Mail className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-hover:text-orange-500 transition-colors" />
                           </div>
                         </FormControl>
                         <FormMessage className="text-red-500" />
@@ -178,15 +182,15 @@ export default function ContactPage() {
                     name="message"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 font-medium">Mesajınız</FormLabel>
+                        <FormLabel className="text-gray-700 font-semibold text-base">Mesajınız</FormLabel>
                         <FormControl>
-                          <div className="relative">
+                          <div className="relative group">
                             <Textarea 
                               placeholder="Mesajınızı buraya yazın..." 
-                              className="pl-10 min-h-[150px] rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-colors" 
+                              className="pl-11 h-12 rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500 transition-all group-hover:border-orange-300" 
                               {...field} 
                             />
-                            <MessageSquare className="w-5 h-5 text-gray-400 absolute left-3 top-4" />
+                            <MessageSquare className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-hover:text-orange-500 transition-colors" />
                           </div>
                         </FormControl>
                         <FormMessage className="text-red-500" />
@@ -219,9 +223,22 @@ export default function ContactPage() {
                   <Button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70"
+                    className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-70 text-lg relative overflow-hidden group"
                   >
-                    {isSubmitting ? "Gönderiliyor..." : "Gönder"}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {isSubmitting ? (
+                        <>
+                          <span className="animate-pulse">Gönderiliyor</span>
+                          <span className="animate-bounce">...</span>
+                        </>
+                      ) : (
+                        <>
+                          Mesajı Gönder
+                          <Mail className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </Button>
                 </form>
               </Form>

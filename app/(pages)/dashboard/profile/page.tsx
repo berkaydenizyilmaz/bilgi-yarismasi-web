@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Trophy, PieChart, BarChart } from "lucide-react"
+import { Trophy, PieChart, BarChart, MessageSquare, CheckCircle, XCircle, Star, ChevronLeft, ChevronRight, ArrowRight, Calendar } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { QuizHistory } from "@/types/quiz"
 import { StatCardProps, DetailStatProps, QuizHistoryItemProps } from "@/types/components"
@@ -83,74 +83,104 @@ export default function ProfilePage() {
   const paginatedQuizHistory = quizHistory.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">{stats.username}</h1>
-          <p className="text-sm md:text-base text-gray-600">Üyelik: {formatDate(stats.created_at)}</p>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">
+            <span className="bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+              {stats?.username}
+            </span>
+          </h1>
+          <p className="text-gray-600 flex items-center justify-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-orange-400" />
+            Üyelik Tarihi: {formatDate(stats?.created_at || '')}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <StatCard
-            icon={<Trophy className="w-6 md:w-8 h-6 md:h-8 text-yellow-500" />}
+            icon={<Trophy className="w-8 h-8 text-yellow-500" />}
             title="Toplam Puan"
-            value={stats.total_score || 0}
+            value={stats?.total_score || 0}
             description="Tüm zamanlar"
+            gradient="from-yellow-500 to-orange-400"
           />
           <StatCard
-            icon={<PieChart className="w-6 md:w-8 h-6 md:h-8 text-blue-500" />}
+            icon={<PieChart className="w-8 h-8 text-blue-500" />}
             title="Başarı Oranı"
-            value={`%${stats.total_play_count > 0 
-              ? Math.round(stats.total_score / stats.total_play_count) 
-              : 0}`}
+            value={`%${stats?.total_play_count ? Math.round(stats.total_score / stats.total_play_count) : 0}`}
             description="Doğru cevap yüzdesi"
+            gradient="from-blue-500 to-cyan-400"
           />
           <StatCard
-            icon={<BarChart className="w-6 md:w-8 h-6 md:h-8 text-green-500" />}
+            icon={<BarChart className="w-8 h-8 text-green-500" />}
             title="Toplam Quiz"
-            value={stats.total_play_count || 0}
+            value={stats?.total_play_count || 0}
             description="Tamamlanan"
+            gradient="from-green-500 to-emerald-400"
           />
         </div>
 
-        <Card className="p-4 md:p-6 mb-8">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4">Detaylı İstatistikler</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <DetailStat title="Toplam Soru" value={stats.total_questions_attempted || 0} />
-            <DetailStat title="Doğru Cevap" value={stats.total_correct_answers || 0} />
-            <DetailStat title="Yanlış Cevap" value={(stats.total_questions_attempted || 0) - (stats.total_correct_answers || 0)} />
-            <DetailStat title="Ortalama Puan" value={Math.round((stats.total_score || 0) / (stats.total_play_count || 1))} />
+        <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl mb-12 border-0">
+          <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+            Detaylı İstatistikler
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <DetailStat 
+              title="Toplam Soru" 
+              value={stats?.total_questions_attempted || 0}
+              icon={<MessageSquare className="w-5 h-5 text-orange-500" />}
+            />
+            <DetailStat 
+              title="Doğru Cevap" 
+              value={stats?.total_correct_answers || 0}
+              icon={<CheckCircle className="w-5 h-5 text-green-500" />}
+            />
+            <DetailStat 
+              title="Yanlış Cevap" 
+              value={(stats?.total_questions_attempted || 0) - (stats?.total_correct_answers || 0)}
+              icon={<XCircle className="w-5 h-5 text-red-500" />}
+            />
+            <DetailStat 
+              title="Ortalama Puan" 
+              value={Math.round((stats?.total_score || 0) / (stats?.total_play_count || 1))}
+              icon={<Star className="w-5 h-5 text-yellow-500" />}
+            />
           </div>
         </Card>
 
-        <Card className="p-4 md:p-6">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4">Quiz Geçmişi</h2>
-          <div className="space-y-4">
+        <Card className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border-0">
+          <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+            Quiz Geçmişi
+          </h2>
+          <div className="space-y-6">
             {paginatedQuizHistory.map((quiz) => (
               <QuizHistoryItem key={quiz.id} quiz={quiz} />
             ))}
           </div>
 
           {quizHistory.length > itemsPerPage && (
-            <div className="flex justify-between mt-6">
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
               <Button 
                 onClick={handlePrevPage} 
                 disabled={currentPage === 0}
                 variant="outline"
-                className="text-sm md:text-base"
+                className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
               >
+                <ChevronLeft className="w-5 h-5 mr-2" />
                 Önceki
               </Button>
-              <span className="text-sm md:text-base text-gray-600">
+              <span className="text-gray-600 font-medium">
                 Sayfa {currentPage + 1} / {Math.ceil(quizHistory.length / itemsPerPage)}
               </span>
               <Button 
                 onClick={handleNextPage} 
                 disabled={(currentPage + 1) * itemsPerPage >= quizHistory.length}
                 variant="outline"
-                className="text-sm md:text-base"
+                className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
               >
                 Sonraki
+                <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           )}
@@ -160,27 +190,37 @@ export default function ProfilePage() {
   )
 }
 
-// Alt bileşenler
-function StatCard({ icon, title, value, description }: StatCardProps) {
+// Alt bileşenler güncellendi
+function StatCard({ icon, title, value, description, gradient }: StatCardProps & { gradient: string }) {
   return (
-    <Card className="p-4 md:p-6">
-      <div className="flex items-center space-x-4">
-        {icon}
-        <div>
-          <h3 className="text-base md:text-xl font-semibold text-gray-800">{title}</h3>
-          <p className="text-xl md:text-3xl font-bold text-orange-600">{value}</p>
-          <p className="text-xs md:text-sm text-gray-600">{description}</p>
+    <Card className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border-0 overflow-hidden group hover:shadow-2xl transition-shadow duration-300">
+      <div className="relative z-10">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 rounded-xl bg-gray-50 group-hover:scale-110 transition-transform duration-300">
+            {icon}
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
         </div>
+        <p className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-1`}>
+          {value}
+        </p>
+        <p className="text-sm text-gray-600">{description}</p>
       </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </Card>
   )
 }
 
-function DetailStat({ title, value }: DetailStatProps) {
+function DetailStat({ title, value, icon }: DetailStatProps & { icon: React.ReactNode }) {
   return (
-    <div className="text-center">
-      <p className="text-xs md:text-sm text-gray-600">{title}</p>
-      <p className="text-lg md:text-2xl font-bold text-gray-800">{value}</p>
+    <div className="text-center p-4 rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors group">
+      <div className="flex justify-center mb-3">
+        <div className="p-2 rounded-lg bg-white shadow-sm group-hover:scale-110 transition-transform">
+          {icon}
+        </div>
+      </div>
+      <p className="text-sm text-gray-600 mb-1">{title}</p>
+      <p className="text-2xl font-bold text-gray-800">{value}</p>
     </div>
   )
 }
@@ -189,23 +229,29 @@ function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
   const router = useRouter()
   
   return (
-    <div className="border-b border-gray-200 pb-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+    <div className="group p-4 rounded-xl hover:bg-gray-50/80 transition-colors border border-gray-100 hover:border-orange-200">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h3 className="font-semibold text-gray-800">{quiz.categoryName}</h3>
-          <p className="text-xs md:text-sm text-gray-600">{formatDate(quiz.playedAt)}</p>
+          <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">
+            {quiz.categoryName}
+          </h3>
+          <p className="text-sm text-gray-600 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            {formatDate(quiz.playedAt)}
+          </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <div className="text-right">
-            <p className="text-base md:text-lg font-bold text-orange-600">%{quiz.score}</p>
-            <p className="text-xs md:text-sm text-gray-600">{quiz.correctAnswers}/{quiz.totalQuestions} Doğru</p>
+            <p className="text-lg font-bold text-orange-600">%{quiz.score}</p>
+            <p className="text-sm text-gray-600">{quiz.correctAnswers}/{quiz.totalQuestions} Doğru</p>
           </div>
           <Button 
             variant="outline"
             onClick={() => router.push(`/play/quiz/result?quizId=${quiz.id}`)}
-            className="text-sm md:text-base"
+            className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
           >
             Detaylar
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>
