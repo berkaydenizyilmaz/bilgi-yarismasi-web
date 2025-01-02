@@ -250,14 +250,9 @@ export default function AuthPage() {
                                       placeholder="ornek@email.com"
                                       className={inputClassName}
                                     />
-                                    <motion.div
-                                      whileHover={{ scale: 1.1 }}
-                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    >
-                                      <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
-                                        transition-colors duration-300" />
-                                    </motion.div>
+                                    <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                      transition-colors duration-300" />
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -280,14 +275,9 @@ export default function AuthPage() {
                                       placeholder="••••••••"
                                       className={inputClassName}
                                     />
-                                    <motion.div
-                                      whileHover={{ scale: 1.1 }}
-                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    >
-                                      <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
-                                        transition-colors duration-300" />
-                                    </motion.div>
+                                    <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                      transition-colors duration-300" />
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -424,14 +414,9 @@ export default function AuthPage() {
                                       placeholder="kullaniciadi"
                                       className={inputClassName}
                                     />
-                                    <motion.div
-                                      whileHover={{ scale: 1.1 }}
-                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    >
-                                      <User className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
-                                        transition-colors duration-300" />
-                                    </motion.div>
+                                    <User className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                      transition-colors duration-300" />
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -453,14 +438,9 @@ export default function AuthPage() {
                                       placeholder="ornek@email.com"
                                       className={inputClassName}
                                     />
-                                    <motion.div
-                                      whileHover={{ scale: 1.1 }}
-                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    >
-                                      <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
-                                        transition-colors duration-300" />
-                                    </motion.div>
+                                    <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                      transition-colors duration-300" />
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -483,14 +463,9 @@ export default function AuthPage() {
                                       placeholder="••••••••"
                                       className={inputClassName}
                                     />
-                                    <motion.div
-                                      whileHover={{ scale: 1.1 }}
-                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    >
-                                      <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
-                                        transition-colors duration-300" />
-                                    </motion.div>
+                                    <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                      transition-colors duration-300" />
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -513,14 +488,9 @@ export default function AuthPage() {
                                       placeholder="••••••••"
                                       className={inputClassName}
                                     />
-                                    <motion.div
-                                      whileHover={{ scale: 1.1, rotate: 5 }}
-                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    >
-                                      <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
-                                        transition-colors duration-300" />
-                                    </motion.div>
+                                    <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                      transition-colors duration-300" />
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
