@@ -19,7 +19,7 @@ const questionSchema = z.object({
 // Soru güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   let categoryName = '';
   let oldCategoryName = '';
@@ -113,7 +113,7 @@ export async function PUT(
 // Soru silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   let categoryName = '';
   
