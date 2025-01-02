@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Brain, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react"
+import { Brain, ArrowRight, ArrowLeft, CheckCircle2, Mail, Lock, User, UserPlus, LogIn } from "lucide-react"
 
 // Form şemaları
 const loginSchema = z.object({
@@ -193,15 +193,27 @@ export default function AuthPage() {
                             control={loginForm.control}
                             name="email"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Email
+                                </FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    {...field} 
-                                    className="h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm focus:border-orange-300 dark:focus:border-orange-500 focus:ring-orange-200 dark:focus:ring-orange-500/30 transition-all duration-300" 
-                                  />
+                                  <div className="relative group">
+                                    <Input 
+                                      {...field} 
+                                      placeholder="ornek@email.com"
+                                      className="h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
+                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
+                                      focus:border-orange-300 dark:focus:border-orange-500 
+                                      focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500/30 
+                                      transition-all duration-300 pl-10
+                                      placeholder:text-gray-400 dark:placeholder:text-gray-500" 
+                                    />
+                                    <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-focus-within:text-orange-500 transition-colors duration-300" />
+                                  </div>
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
@@ -209,25 +221,63 @@ export default function AuthPage() {
                             control={loginForm.control}
                             name="password"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Şifre</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Şifre
+                                </FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    type="password" 
-                                    {...field} 
-                                    className="h-12 rounded-xl" 
-                                  />
+                                  <div className="relative group">
+                                    <Input 
+                                      type="password" 
+                                      {...field} 
+                                      placeholder="••••••••"
+                                      className="h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
+                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
+                                      focus:border-orange-300 dark:focus:border-orange-500 
+                                      focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500/30 
+                                      transition-all duration-300 pl-10
+                                      placeholder:text-gray-400 dark:placeholder:text-gray-500" 
+                                    />
+                                    <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-focus-within:text-orange-500 transition-colors duration-300" />
+                                  </div>
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
                           <Button 
                             type="submit" 
                             disabled={isLoading}
-                            className="w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 text-white rounded-xl shadow-lg shadow-orange-500/20 dark:shadow-orange-500/10 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 dark:hover:shadow-orange-500/20 hover:scale-[1.02]"
+                            className="w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 
+                            hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 
+                            text-white font-medium rounded-xl 
+                            shadow-lg shadow-orange-500/20 dark:shadow-orange-500/10 
+                            transition-all duration-300 
+                            hover:shadow-xl hover:shadow-orange-500/30 dark:hover:shadow-orange-500/20 
+                            hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed
+                            disabled:hover:scale-100"
                           >
-                            {isLoading ? <LoadingSpinner className="w-5 h-5" /> : "Giriş Yap"}
+                            {isLoading ? (
+                              <div className="flex items-center gap-2">
+                                <LoadingSpinner className="w-5 h-5" />
+                                <span>{isLogin ? "Giriş yapılıyor..." : "Kayıt olunuyor..."}</span>
+                              </div>
+                            ) : (
+                              <span className="flex items-center gap-2 justify-center">
+                                {isLogin ? (
+                                  <>
+                                    <LogIn className="w-5 h-5" />
+                                    Giriş Yap
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserPlus className="w-5 h-5" />
+                                    Kayıt Ol
+                                  </>
+                                )}
+                              </span>
+                            )}
                           </Button>
                         </form>
                       </Form>
@@ -264,16 +314,27 @@ export default function AuthPage() {
                             control={registerForm.control}
                             name="username"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Kullanıcı Adı</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Kullanıcı Adı
+                                </FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    placeholder="kullaniciadi" 
-                                    {...field} 
-                                    className="h-12 rounded-xl" 
-                                  />
+                                  <div className="relative group">
+                                    <Input 
+                                      {...field} 
+                                      placeholder="kullaniciadi"
+                                      className="h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
+                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
+                                      focus:border-orange-300 dark:focus:border-orange-500 
+                                      focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500/30 
+                                      transition-all duration-300 pl-10
+                                      placeholder:text-gray-400 dark:placeholder:text-gray-500" 
+                                    />
+                                    <User className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                      group-focus-within:text-orange-500 transition-colors duration-300" />
+                                  </div>
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
