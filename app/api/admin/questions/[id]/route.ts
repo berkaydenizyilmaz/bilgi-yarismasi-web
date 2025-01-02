@@ -19,7 +19,7 @@ const questionSchema = z.object({
 // Soru güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } } & { searchParams: { [key: string]: string | string[] | undefined } }
+  context: { params: { id: string } }
 ) {
   let categoryName = '';
   let oldCategoryName = '';
@@ -28,7 +28,7 @@ export async function PUT(
     await checkAdminRole(request);
     const body = await request.json();
 
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
@@ -90,7 +90,7 @@ export async function PUT(
   } catch (error) {
     logger.error('question', error as Error, {
       action: 'update',
-      questionId: params.id,
+      questionId: context.params.id,
       oldCategoryName,
       newCategoryName: categoryName,
       errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
@@ -113,13 +113,13 @@ export async function PUT(
 // Soru silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } } & { searchParams: { [key: string]: string | string[] | undefined } }
+  context: { params: { id: string } }
 ) {
   let categoryName = '';
   
   try {
     await checkAdminRole(request);
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
@@ -155,7 +155,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('question', error as Error, {
       action: 'delete',
-      questionId: params.id,
+      questionId: context.params.id,
       categoryName,
       errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });

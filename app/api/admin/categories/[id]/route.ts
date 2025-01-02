@@ -13,11 +13,11 @@ const categorySchema = z.object({
 // Kategori güncelleme (PUT)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } } & { searchParams: { [key: string]: string | string[] | undefined } }
+  context: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
-    const id = parseInt(params.id); 
+    const id = parseInt(context.params.id); 
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -63,11 +63,11 @@ export async function PUT(
 // Kategori silme (DELETE)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } } & { searchParams: { [key: string]: string | string[] | undefined } }
+  context: { params: { id: string } }
 ) {
   try {
     await checkAdminRole(request);
-    const id = parseInt(params.id); 
+    const id = parseInt(context.params.id); 
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
