@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ interface Question {
   isCorrect?: boolean;
 }
 
-export default function AiPlusQuizPage() {
+function QuizContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
@@ -69,7 +70,6 @@ export default function AiPlusQuizPage() {
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = selectedOption === currentQuestion.correct_option;
 
-    // Soruyu güncelle
     const updatedQuestions = [...questions];
     updatedQuestions[currentQuestionIndex] = {
       ...currentQuestion,
@@ -78,16 +78,13 @@ export default function AiPlusQuizPage() {
     };
     setQuestions(updatedQuestions);
 
-    // Doğru/yanlış sayısını güncelle
     if (isCorrect) {
       setCorrectCount(prev => prev + 1);
     } else {
       setIncorrectCount(prev => prev + 1);
     }
 
-    // Son soru ise sonuç sayfasına yönlendir
     if (currentQuestionIndex === questions.length - 1) {
-      // Soruları localStorage'a kaydet
       localStorage.setItem('aiQuizQuestions', JSON.stringify(questions));
       
       router.push(
@@ -162,27 +159,33 @@ export default function AiPlusQuizPage() {
             </div>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-xl md:text-2xl font-semibold mb-6">
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
               {currentQuestion.question}
             </h2>
             <div className="space-y-3">
               {Object.entries(currentQuestion.options).map(([key, value]) => (
-                <motion.button
+                <button
                   key={key}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleAnswer(key)}
-                  className="w-full p-4 text-left rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200"
+                  className="w-full p-4 text-left rounded-lg bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-200 transition-colors duration-200"
                 >
-                  <span className="font-medium text-purple-600 mr-2">{key}.</span>
-                  {value}
-                </motion.button>
+                  <span className="font-medium text-gray-600">{key}.</span>{" "}
+                  <span className="text-gray-800">{value}</span>
+                </button>
               ))}
             </div>
           </div>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function AiPlusQuizPage() {
+  return (
+    <Suspense fallback={<AiLoading />}>
+      <QuizContent />
+    </Suspense>
   );
 }
