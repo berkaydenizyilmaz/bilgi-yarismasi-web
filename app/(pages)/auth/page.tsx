@@ -45,6 +45,21 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 })
 
+// Tüm input alanları için ortak className (hem login hem register formunda)
+const inputClassName = `h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
+bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
+focus:border-orange-300 dark:focus:border-orange-500 
+focus:ring-2 focus:ring-orange-200/50 dark:focus:ring-orange-500/30 
+transition-all duration-300 pl-10
+placeholder:text-gray-400 dark:placeholder:text-gray-500
+focus:outline-none
+focus-visible:outline-none
+focus-visible:ring-0
+focus-visible:ring-offset-0
+ring-offset-0
+outline-none
+selection:bg-orange-200 dark:selection:bg-orange-500/30`
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [error, setError] = useState<string>("")
@@ -105,10 +120,34 @@ export default function AuthPage() {
           >
             <motion.div
               className="inline-block p-6 bg-gradient-to-br from-rose-500 to-orange-500 rounded-3xl mb-6 shadow-xl"
-              whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
+              whileHover={{ 
+                scale: 1.05, 
+                rotate: [0, -5, 5, 0],
+                boxShadow: "0 20px 25px -5px rgb(251 113 133 / 0.2)"
+              }}
               whileTap={{ scale: 0.95 }}
+              animate={{ 
+                y: [0, -10, 0],
+                transition: {
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }
+              }}
             >
-              <Brain className="w-12 h-12 text-white" />
+              <motion.div
+                animate={{ 
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <Brain className="w-12 h-12 text-white" />
+              </motion.div>
             </motion.div>
             <h1 className="text-4xl lg:text-5xl font-bold mb-6">
               <span className="bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 bg-clip-text text-transparent">
@@ -202,15 +241,16 @@ export default function AuthPage() {
                                     <Input 
                                       {...field} 
                                       placeholder="ornek@email.com"
-                                      className="h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
-                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
-                                      focus:border-orange-300 dark:focus:border-orange-500 
-                                      focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500/30 
-                                      transition-all duration-300 pl-10
-                                      placeholder:text-gray-400 dark:placeholder:text-gray-500" 
+                                      className={inputClassName}
                                     />
-                                    <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                      group-focus-within:text-orange-500 transition-colors duration-300" />
+                                    <motion.div
+                                      whileHover={{ scale: 1.1 }}
+                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                    >
+                                      <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                        transition-colors duration-300" />
+                                    </motion.div>
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -231,15 +271,16 @@ export default function AuthPage() {
                                       type="password" 
                                       {...field} 
                                       placeholder="••••••••"
-                                      className="h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
-                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
-                                      focus:border-orange-300 dark:focus:border-orange-500 
-                                      focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500/30 
-                                      transition-all duration-300 pl-10
-                                      placeholder:text-gray-400 dark:placeholder:text-gray-500" 
+                                      className={inputClassName}
                                     />
-                                    <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                      group-focus-within:text-orange-500 transition-colors duration-300" />
+                                    <motion.div
+                                      whileHover={{ scale: 1.1 }}
+                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                    >
+                                      <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                        transition-colors duration-300" />
+                                    </motion.div>
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -249,34 +290,85 @@ export default function AuthPage() {
                           <Button 
                             type="submit" 
                             disabled={isLoading}
-                            className="w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 
+                            className="relative w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 
                             hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 
-                            text-white font-medium rounded-xl 
+                            text-white font-medium rounded-xl overflow-hidden
                             shadow-lg shadow-orange-500/20 dark:shadow-orange-500/10 
                             transition-all duration-300 
                             hover:shadow-xl hover:shadow-orange-500/30 dark:hover:shadow-orange-500/20 
                             hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed
-                            disabled:hover:scale-100"
+                            disabled:hover:scale-100 group"
                           >
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                              animate={{
+                                x: [-500, 500],
+                              }}
+                              transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                            />
                             {isLoading ? (
-                              <div className="flex items-center gap-2">
-                                <LoadingSpinner className="w-5 h-5" />
-                                <span>{isLogin ? "Giriş yapılıyor..." : "Kayıt olunuyor..."}</span>
-                              </div>
+                              <motion.div 
+                                className="flex items-center gap-2 justify-center"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <motion.div
+                                  className="relative w-5 h-5"
+                                  animate={{
+                                    rotate: 360
+                                  }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear"
+                                  }}
+                                >
+                                  <motion.div
+                                    className="absolute inset-0 rounded-full border-2 border-white/20"
+                                    animate={{
+                                      scale: [1, 1.2, 1],
+                                      opacity: [1, 0.5, 1]
+                                    }}
+                                    transition={{
+                                      duration: 1,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  />
+                                  <LoadingSpinner className="w-5 h-5" />
+                                </motion.div>
+                                <motion.span
+                                  animate={{
+                                    opacity: [1, 0.7, 1]
+                                  }}
+                                  transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                  }}
+                                >
+                                  Giriş yapılıyor...
+                                </motion.span>
+                              </motion.div>
                             ) : (
-                              <span className="flex items-center gap-2 justify-center">
-                                {isLogin ? (
-                                  <>
-                                    <LogIn className="w-5 h-5" />
-                                    Giriş Yap
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="w-5 h-5" />
-                                    Kayıt Ol
-                                  </>
-                                )}
-                              </span>
+                              <motion.span 
+                                className="flex items-center gap-2 justify-center relative z-10"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <motion.div
+                                  whileHover={{ rotate: 15 }}
+                                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                >
+                                  <LogIn className="w-5 h-5" />
+                                </motion.div>
+                                Giriş Yap
+                              </motion.span>
                             )}
                           </Button>
                         </form>
@@ -323,15 +415,16 @@ export default function AuthPage() {
                                     <Input 
                                       {...field} 
                                       placeholder="kullaniciadi"
-                                      className="h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
-                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
-                                      focus:border-orange-300 dark:focus:border-orange-500 
-                                      focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-500/30 
-                                      transition-all duration-300 pl-10
-                                      placeholder:text-gray-400 dark:placeholder:text-gray-500" 
+                                      className={inputClassName}
                                     />
-                                    <User className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
-                                      group-focus-within:text-orange-500 transition-colors duration-300" />
+                                    <motion.div
+                                      whileHover={{ scale: 1.1 }}
+                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                    >
+                                      <User className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                        transition-colors duration-300" />
+                                    </motion.div>
                                   </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
@@ -342,16 +435,28 @@ export default function AuthPage() {
                             control={registerForm.control}
                             name="email"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Email
+                                </FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    placeholder="ornek@email.com" 
-                                    {...field} 
-                                    className="h-12 rounded-xl" 
-                                  />
+                                  <div className="relative group">
+                                    <Input 
+                                      {...field} 
+                                      placeholder="ornek@email.com"
+                                      className={inputClassName}
+                                    />
+                                    <motion.div
+                                      whileHover={{ scale: 1.1 }}
+                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                    >
+                                      <Mail className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                        transition-colors duration-300" />
+                                    </motion.div>
+                                  </div>
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
@@ -359,16 +464,29 @@ export default function AuthPage() {
                             control={registerForm.control}
                             name="password"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Şifre</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Şifre
+                                </FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    type="password" 
-                                    {...field} 
-                                    className="h-12 rounded-xl" 
-                                  />
+                                  <div className="relative group">
+                                    <Input 
+                                      type="password" 
+                                      {...field} 
+                                      placeholder="••••••••"
+                                      className={inputClassName}
+                                    />
+                                    <motion.div
+                                      whileHover={{ scale: 1.1 }}
+                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                    >
+                                      <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                        transition-colors duration-300" />
+                                    </motion.div>
+                                  </div>
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
@@ -376,25 +494,115 @@ export default function AuthPage() {
                             control={registerForm.control}
                             name="confirmPassword"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Şifre Tekrar</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Şifre Tekrar
+                                </FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    type="password" 
-                                    {...field} 
-                                    className="h-12 rounded-xl" 
-                                  />
+                                  <div className="relative group">
+                                    <Input 
+                                      type="password" 
+                                      {...field} 
+                                      placeholder="••••••••"
+                                      className={inputClassName}
+                                    />
+                                    <motion.div
+                                      whileHover={{ scale: 1.1, rotate: 5 }}
+                                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                    >
+                                      <Lock className="w-5 h-5 absolute left-3 top-3.5 text-gray-400 dark:text-gray-500 
+                                        group-hover:text-orange-400 group-focus-within:text-orange-500 
+                                        transition-colors duration-300" />
+                                    </motion.div>
+                                  </div>
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
                           <Button 
                             type="submit" 
                             disabled={isLoading}
-                            className="w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 text-white rounded-xl shadow-lg shadow-orange-500/20 dark:shadow-orange-500/10 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 dark:hover:shadow-orange-500/20 hover:scale-[1.02]"
+                            className="relative w-full h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 
+                            hover:from-rose-600 hover:via-orange-600 hover:to-amber-600 
+                            text-white font-medium rounded-xl overflow-hidden
+                            shadow-lg shadow-orange-500/20 dark:shadow-orange-500/10 
+                            transition-all duration-300 
+                            hover:shadow-xl hover:shadow-orange-500/30 dark:hover:shadow-orange-500/20 
+                            hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed
+                            disabled:hover:scale-100 group"
                           >
-                            {isLoading ? <LoadingSpinner className="w-5 h-5" /> : "Kayıt Ol"}
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                              animate={{
+                                x: [-500, 500],
+                              }}
+                              transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                            />
+                            {isLoading ? (
+                              <motion.div 
+                                className="flex items-center gap-2 justify-center"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <motion.div
+                                  className="relative w-5 h-5"
+                                  animate={{
+                                    rotate: 360
+                                  }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear"
+                                  }}
+                                >
+                                  <motion.div
+                                    className="absolute inset-0 rounded-full border-2 border-white/20"
+                                    animate={{
+                                      scale: [1, 1.2, 1],
+                                      opacity: [1, 0.5, 1]
+                                    }}
+                                    transition={{
+                                      duration: 1,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  />
+                                  <LoadingSpinner className="w-5 h-5" />
+                                </motion.div>
+                                <motion.span
+                                  animate={{
+                                    opacity: [1, 0.7, 1]
+                                  }}
+                                  transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                  }}
+                                >
+                                  Kayıt olunuyor...
+                                </motion.span>
+                              </motion.div>
+                            ) : (
+                              <motion.span 
+                                className="flex items-center gap-2 justify-center relative z-10"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <motion.div
+                                  whileHover={{ rotate: 15 }}
+                                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                >
+                                  <UserPlus className="w-5 h-5" />
+                                </motion.div>
+                                Kayıt Ol
+                              </motion.span>
+                            )}
                           </Button>
                         </form>
                       </Form>
@@ -407,9 +615,20 @@ export default function AuthPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-4 bg-red-50/80 dark:bg-red-900/30 backdrop-blur-sm text-red-600 dark:text-red-400 rounded-2xl text-sm text-center border border-red-100 dark:border-red-800"
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  className="mt-4 p-4 bg-red-50/80 dark:bg-red-900/30 backdrop-blur-sm 
+                  text-red-600 dark:text-red-400 rounded-2xl text-sm text-center 
+                  border border-red-100 dark:border-red-800
+                  hover:bg-red-100/80 dark:hover:bg-red-900/40
+                  transition-colors duration-300"
                 >
-                  {error}
+                  <motion.div
+                    animate={{ x: [0, -3, 3, -3, 3, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {error}
+                  </motion.div>
                 </motion.div>
               )}
 
