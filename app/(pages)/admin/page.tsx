@@ -61,16 +61,60 @@ export default function AdminStatistics() {
   }
 
   const chartData = {
-    labels: data.data.quizzesCountByDate.map(item => item.date),
+    labels: [...data.data.quizzesCountByDate, {
+      date: new Date().toISOString().split('T')[0],
+      count: 0
+    }]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(item => {
+        // Tarihi daha okunabilir formata çevirelim
+        const date = new Date(item.date);
+        return date.toLocaleDateString('tr-TR', { 
+          day: 'numeric',
+          month: 'short'
+        });
+      }),
     datasets: [
       {
         label: 'Günlük Quiz Sayısı',
-        data: data.data.quizzesCountByDate.map(item => item.count),
+        data: [...data.data.quizzesCountByDate, {
+          date: new Date().toISOString().split('T')[0],
+          count: 0
+        }]
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .map(item => item.count),
         backgroundColor: 'rgba(249, 115, 22, 0.5)',
         borderColor: 'rgb(249, 115, 22)',
         borderWidth: 1,
       },
     ],
+  }
+
+  const chartOptions = {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'Günlük Quiz İstatistikleri'
+      }
+    }
   }
 
   return (
@@ -90,7 +134,7 @@ export default function AdminStatistics() {
       <Card className="p-4 md:p-6 mt-6 md:mt-8">
         <h3 className="text-xl md:text-2xl font-semibold mb-4">Tarihe Göre Çözülen Quiz İstatistikleri</h3>
         <div className="h-[300px] md:h-[400px]">
-          <Bar data={chartData} options={{ maintainAspectRatio: false }} />
+          <Bar data={chartData} options={chartOptions} />
         </div>
       </Card>
 

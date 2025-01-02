@@ -13,35 +13,39 @@ export async function GET(request: NextRequest) {
 
     // Tüm zamanlarda çözülen quizlerin tarihlerini al
     const quizzesByDate = await prisma.quiz.findMany({
-      where: {},
       select: {
         played_at: true,
       },
+      orderBy: {
+        played_at: 'asc'
+      }
     });
 
     // Tarihleri gruplama
     const quizzesCountByDate: Record<string, number> = {};
     quizzesByDate.forEach(quiz => {
-      const date = quiz.played_at.toISOString().split('T')[0]; // YYYY-MM-DD formatı
-      quizzesCountByDate[date] = (quizzesCountByDate[date] || 0) + 1; // Güncellenmiş nesne
+      const date = quiz.played_at.toISOString().split('T')[0];
+      quizzesCountByDate[date] = (quizzesCountByDate[date] || 0) + 1;
     });
 
-    // Tüm tarihleri sıralama
-    const allDates = Object.keys(quizzesCountByDate).sort(); // Tüm tarihleri al ve sıralama
+    // Bugünün tarihini al
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
 
-    // Tüm tarih aralığını oluşturma
-    const startDate = new Date(Math.min(...quizzesByDate.map(q => q.played_at.getTime())));
-    const endDate = new Date(Math.max(...quizzesByDate.map(q => q.played_at.getTime())));
-    const dateRange = [];
-    for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
-      dateRange.push(d.toISOString().split('T')[0]); // YYYY-MM-DD formatı
-    }
+    // Tüm tarihleri sıralı bir şekilde al
+    const dates = Object.keys(quizzesCountByDate).sort();
 
-    // Eksik tarihler için 0 değeri ekleme
-    const finalQuizzesCountByDate = dateRange.map(date => ({
+    // Final veriyi oluştur
+    const finalQuizzesCountByDate = dates.map(date => ({
       date,
-      count: quizzesCountByDate[date] || 0, // Eğer tarih yoksa 0 ata
+      count: quizzesCountByDate[date]
     }));
+
+    // Kontrol amaçlı log
+    console.log('Tarih bazlı quiz sayıları:', quizzesCountByDate);
+    console.log('Final quiz sayıları:', finalQuizzesCountByDate);
+    console.log('Toplam quiz sayısı:', totalQuizzes);
 
     // Kategorilerdeki toplam soru sayısını al
     const categories = await prisma.category.findMany({
