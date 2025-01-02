@@ -14,24 +14,28 @@ interface Category {
   description: string | null
 }
 
-const ErrorComponent = memo(({ error }: { error: string }) => (
-  <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-8 px-4">
-    <div className="max-w-2xl mx-auto">
-      <Card className="p-6 bg-red-50 border-red-200">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertCircle className="w-12 h-12 text-red-500" />
-          <h2 className="text-xl font-semibold text-red-700">Hata Oluştu</h2>
-          <p className="text-red-600">{error}</p>
-          <Link href="/play">
-            <button className="text-gray-600 hover:text-purple-600 transition-colors">
-              Ana Sayfaya Dön
-            </button>
-          </Link>
-        </div>
-      </Card>
+const ErrorComponent = memo(function ErrorComponent({ error }: { error: string }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <Card className="p-6 bg-red-50 border-red-200">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500" />
+            <h2 className="text-xl font-semibold text-red-700">Hata Oluştu</h2>
+            <p className="text-red-600">{error}</p>
+            <Link href="/play">
+              <button className="text-gray-600 hover:text-purple-600 transition-colors">
+                Ana Sayfaya Dön
+              </button>
+            </Link>
+          </div>
+        </Card>
+      </div>
     </div>
-  </div>
-));
+  );
+});
+
+ErrorComponent.displayName = "ErrorComponent";
 
 export default function AiPage() {
   const [categories, setCategories] = useState<Category[]>([])
