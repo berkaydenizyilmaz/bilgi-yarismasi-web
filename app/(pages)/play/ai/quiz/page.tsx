@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { AiLoading } from "@/components/ui/ai-loading"
+import { AiLoading } from "@/components/ui/ai-loading";
 import { Sparkles } from "lucide-react";
 
 interface Question {
@@ -23,7 +24,7 @@ interface Question {
   isCorrect?: boolean;
 }
 
-export default function AiQuizPage() {
+function QuizContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("categoryId");
@@ -194,5 +195,13 @@ export default function AiQuizPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function AiQuizPage() {
+  return (
+    <Suspense fallback={<AiLoading />}>
+      <QuizContent />
+    </Suspense>
   );
 }
