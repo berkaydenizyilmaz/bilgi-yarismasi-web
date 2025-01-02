@@ -7,7 +7,7 @@ export interface Question {
   optionD: string
   correctOption: string
   categoryId: number
-  categoryName: string
+  categoryName?: string
 }
   
   export interface QuizResult {
