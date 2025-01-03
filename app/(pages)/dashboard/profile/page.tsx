@@ -1,5 +1,5 @@
 "use client"
-
+import React from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -11,7 +11,7 @@ import { QuizHistory } from "@/types/quiz"
 import { StatCardProps, DetailStatProps, QuizHistoryItemProps } from "@/types/components"
 import { motion } from "framer-motion"
 
-// Tip tanımlamaları
+// Kullanıcı istatistikleri için tip tanımı
 interface UserStats {
   username: string
   created_at: string
@@ -22,6 +22,7 @@ interface UserStats {
 }
 
 export default function ProfilePage() {
+  // State tanımlamaları ve sayfalama değişkenleri
   const [stats, setStats] = useState<UserStats | null>(null)
   const [quizHistory, setQuizHistory] = useState<QuizHistory[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -29,21 +30,27 @@ export default function ProfilePage() {
   const [currentPage, setCurrentPage] = useState(0)
   const itemsPerPage = 5
 
-  // Profil verilerini çek
+  // Profil verilerini ve quiz geçmişini paralel olarak çek
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
+        // API isteklerini paralel olarak yap
         const [statsResponse, historyResponse] = await Promise.all([
           fetch("/api/auth"),
           fetch("/api/users/history"),
         ])
 
-        const statsData = await statsResponse.json()
-        const historyData = await historyResponse.json()
+        // Yanıtları JSON formatına dönüştür
+        const [statsData, historyData] = await Promise.all([
+          statsResponse.json(),
+          historyResponse.json(),
+        ])
 
+        // Hata kontrolü
         if (!statsResponse.ok) throw new Error(statsData.error)
         if (!historyResponse.ok) throw new Error(historyData.error)
 
+        // State'leri güncelle
         setStats(statsData.data.user)
         setQuizHistory(Array.isArray(historyData.data.data) ? historyData.data.data : [])
       } catch (err) {
@@ -56,23 +63,25 @@ export default function ProfilePage() {
     fetchProfileData()
   }, [])
 
-  // Sayfalama işlemleri
+  // Sayfalama işleyicileri
   const handleNextPage = () => {
     if ((currentPage + 1) * itemsPerPage < quizHistory.length) {
-      setCurrentPage(currentPage + 1)
+      setCurrentPage(prev => prev + 1)
     }
   }
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
-      setCurrentPage(currentPage - 1)
+      setCurrentPage(prev => prev - 1)
     }
   }
 
+  // Yükleme durumu
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-[60vh]"><LoadingSpinner className="h-8 w-8" /></div>
   }
 
+  // Hata durumu
   if (error || !stats) {
     return (
       <div className="text-center p-4">
@@ -81,7 +90,11 @@ export default function ProfilePage() {
     )
   }
 
-  const paginatedQuizHistory = quizHistory.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
+  // Mevcut sayfadaki quiz geçmişi verilerini hesapla
+  const paginatedQuizHistory = quizHistory.slice(
+    currentPage * itemsPerPage, 
+    (currentPage + 1) * itemsPerPage
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-12 px-4">
@@ -233,8 +246,8 @@ export default function ProfilePage() {
   )
 }
 
-// Alt bileşenler güncellendi
-function StatCard({ icon, title, value, description, gradient }: StatCardProps & { gradient: string }) {
+// Alt bileşenler için performans optimizasyonları
+const StatCard = React.memo(({ icon, title, value, description, gradient }: StatCardProps & { gradient: string }) => {
   return (
     <Card className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border-0 overflow-hidden group hover:shadow-2xl transition-shadow duration-300">
       <div className="relative z-10">
@@ -252,9 +265,9 @@ function StatCard({ icon, title, value, description, gradient }: StatCardProps &
       <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </Card>
   )
-}
+})
 
-function DetailStat({ title, value, icon }: DetailStatProps & { icon: React.ReactNode }) {
+const DetailStat = React.memo(({ title, value, icon }: DetailStatProps & { icon: React.ReactNode }) => {
   return (
     <div className="text-center p-4 rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors group">
       <div className="flex justify-center mb-3">
@@ -266,9 +279,9 @@ function DetailStat({ title, value, icon }: DetailStatProps & { icon: React.Reac
       <p className="text-2xl font-bold text-gray-800">{value}</p>
     </div>
   )
-}
+})
 
-function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
+const QuizHistoryItem = React.memo(({ quiz }: QuizHistoryItemProps) => {
   const router = useRouter()
   
   return (
@@ -305,4 +318,4 @@ function QuizHistoryItem({ quiz }: QuizHistoryItemProps) {
       </div>
     </motion.div>
   )
-}
+})
