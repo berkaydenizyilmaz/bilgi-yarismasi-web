@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Brain, Trophy, Users, ArrowRight, BookOpen, Sparkles, Stars } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,14 +11,23 @@ import { motion } from "framer-motion";
 import { Category } from "@/types/category";
 import { cn } from "@/lib/utils";
 
+// Özellik kartı için tip tanımlaması
 interface FeatureCardProps {
-  icon: React.ReactNode
-  title: string
-  description: string
-  className?: string
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  className?: string;
 }
 
-function FeatureCard({ icon, title, description, className }: FeatureCardProps) {
+// Kategori kartı için tip tanımlaması
+interface CategoryCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+// Özellik kartı bileşeni - Performans için memoize edildi
+const FeatureCard = memo<FeatureCardProps>(({ icon, title, description, className }) => {
   return (
     <motion.div 
       whileHover={{ y: -8 }}
@@ -41,17 +51,58 @@ function FeatureCard({ icon, title, description, className }: FeatureCardProps) 
         <p className="text-gray-600 leading-relaxed">{description}</p>
       </div>
     </motion.div>
-  )
-}
+  );
+});
 
+FeatureCard.displayName = 'FeatureCard';
+
+// Kategori kartı bileşeni - Performans için memoize edildi
+const CategoryCard = memo<CategoryCardProps>(({ icon, title, description }) => {
+  return (
+    <motion.div 
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 group"
+    >
+      <div className="flex items-start space-x-4">
+        <motion.div 
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.2 }}
+          className="bg-orange-50 p-3 rounded-lg group-hover:bg-orange-100 transition-colors duration-300"
+        >
+          {icon}
+        </motion.div>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors duration-300">
+            {title}
+          </h3>
+          <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+CategoryCard.displayName = 'CategoryCard';
+
+// Animasyon sabitleri
+const ANIMATION_VARIANTS = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+};
+
+// Ana sayfa bileşeni
 export default function HomePage() {
     const { categories, isLoading, error } = useCategories();
     const { user } = useAuth();
 
+    // Yükleme durumu kontrolü
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-10 w-10" /></div>;
     }
 
+    // Hata durumu kontrolü
     if (error) {
         return (
             <div className="text-center p-4">
@@ -59,6 +110,48 @@ export default function HomePage() {
             </div>
         );
     }
+
+    // CTA içeriğini belirle
+    const CTAContent = !user ? (
+        <>
+            <Sparkles className="h-12 w-12 mx-auto mb-8 text-white/80" />
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                QuizVerse Topluluğuna Katılın!
+            </h2>
+            <p className="text-xl md:text-2xl mb-12 text-white/90">
+                Hemen üye olun ve bilgi evreninin bir parçası olun.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Link href="/auth">
+                    <Button className="w-full sm:w-auto bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
+                        Üye Ol
+                    </Button>
+                </Link>
+            </div>
+        </>
+    ) : (
+        <>
+            <Sparkles className="h-12 w-12 mx-auto mb-8 text-white/80" />
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Yeni Bir Maceraya Hazır mısınız?
+            </h2>
+            <p className="text-xl md:text-2xl mb-12 text-white/90">
+                QuizVerse'de keşfedilecek daha çok şey var!
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Link href="/play">
+                    <Button className="w-full sm:w-auto bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
+                        Quiz'e Başla
+                    </Button>
+                </Link>
+                <Link href="/dashboard/profile">
+                    <Button variant="outline" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
+                        Profilim
+                    </Button>
+                </Link>
+            </div>
+        </>
+    );
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50">
@@ -142,9 +235,10 @@ export default function HomePage() {
             {/* Özellikler Section */}
             <section className="py-20 px-4 bg-gradient-to-b from-orange-50 via-white to-white relative overflow-hidden">
                 <motion.div 
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                    initial="initial"
+                    whileInView="animate"
                     viewport={{ once: true }}
+                    variants={ANIMATION_VARIANTS}
                     className="max-w-6xl mx-auto"
                 >
                     <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-16">
@@ -176,10 +270,10 @@ export default function HomePage() {
             {/* Yapay Zeka Özellikler Section */}
             <section className="py-20 px-4 bg-gradient-to-b from-white via-purple-50/30 to-purple-50 relative overflow-hidden">
                 <motion.div 
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                    initial="initial"
+                    whileInView="animate"
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
+                    variants={ANIMATION_VARIANTS}
                     className="max-w-6xl mx-auto"
                 >
                     <motion.div
@@ -198,6 +292,7 @@ export default function HomePage() {
                     </p>
                     
                     <div className="grid md:grid-cols-2 gap-8">
+                        {/* AI Quiz Card */}
                         <motion.div 
                             whileHover={{ y: -8, scale: 1.02 }}
                             transition={{ duration: 0.3 }}
@@ -232,6 +327,7 @@ export default function HomePage() {
                             </motion.div>
                         </motion.div>
 
+                        {/* AI+ Quiz Card */}
                         <motion.div 
                             whileHover={{ y: -8, scale: 1.02 }}
                             transition={{ duration: 0.3 }}
@@ -293,9 +389,10 @@ export default function HomePage() {
             {categories.length > 0 && (
                 <section className="py-20 px-4 bg-gradient-to-b from-purple-50 via-white to-orange-50 relative overflow-hidden">
                     <motion.div 
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
+                        initial="initial"
+                        whileInView="animate"
                         viewport={{ once: true }}
+                        variants={ANIMATION_VARIANTS}
                         className="max-w-6xl mx-auto"
                     >
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-16 text-center">
@@ -305,15 +402,13 @@ export default function HomePage() {
                             {categories.slice(0, 6).map((category: Category, index: number) => (
                                 <motion.div
                                     key={category.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
+                                    variants={ANIMATION_VARIANTS}
                                     transition={{ delay: index * 0.1 }}
-                                    viewport={{ once: true }}
                                 >
                                     <CategoryCard
                                         icon={<BookOpen className="h-8 w-8 text-orange-600" />}
                                         title={category.name}
-                                        description={"Bu kategori hakkında daha fazla bilgi yakında eklenecek"}
+                                        description="Bu kategori hakkında daha fazla bilgi yakında eklenecek"
                                     />
                                 </motion.div>
                             ))}
@@ -324,87 +419,16 @@ export default function HomePage() {
 
             {/* CTA Section */}
             <section className="py-24 px-4 bg-gradient-to-r from-orange-600 via-orange-500 to-pink-500 text-white relative overflow-hidden">
-                <div className="absolute inset-0">
-                    <div className="absolute inset-0 opacity-5" />
-                </div>
                 <motion.div 
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                    initial="initial"
+                    whileInView="animate"
                     viewport={{ once: true }}
+                    variants={ANIMATION_VARIANTS}
                     className="max-w-4xl mx-auto text-center relative z-10"
                 >
-                    {!user ? (
-                        <>
-                            <Sparkles className="h-12 w-12 mx-auto mb-8 text-white/80" />
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                                QuizVerse Topluluğuna Katılın!
-                            </h2>
-                            <p className="text-xl md:text-2xl mb-12 text-white/90">
-                                Hemen üye olun ve bilgi evreninin bir parçası olun.
-                            </p>
-                            <div className="flex flex-col sm:flex-row justify-center gap-4">
-                                <Link href="/auth">
-                                    <Button className="w-full sm:w-auto bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
-                                        Üye Ol
-                                    </Button>
-                                </Link>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <Sparkles className="h-12 w-12 mx-auto mb-8 text-white/80" />
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                                Yeni Bir Maceraya Hazır mısınız?
-                            </h2>
-                            <p className="text-xl md:text-2xl mb-12 text-white/90">
-                                QuizVerse'de keşfedilecek daha çok şey var!
-                            </p>
-                            <div className="flex flex-col sm:flex-row justify-center gap-4">
-                                <Link href="/play">
-                                    <Button className="w-full sm:w-auto bg-white text-orange-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
-                                        Quiz'e Başla
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/profile">
-                                    <Button variant="outline" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-105">
-                                        Profilim
-                                    </Button>
-                                </Link>
-                            </div>
-                        </>
-                    )}
+                    {CTAContent}
                 </motion.div>
             </section>
         </div>
-    );
-}
-
-function CategoryCard({ icon, title, description }: {
-    icon: React.ReactNode
-    title: string
-    description: string
-}) {
-    return (
-        <motion.div 
-            whileHover={{ y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 group"
-        >
-            <div className="flex items-start space-x-4">
-                <motion.div 
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-orange-50 p-3 rounded-lg group-hover:bg-orange-100 transition-colors duration-300"
-                >
-                    {icon}
-                </motion.div>
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors duration-300">
-                        {title}
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
-                </div>
-            </div>
-        </motion.div>
     );
 }

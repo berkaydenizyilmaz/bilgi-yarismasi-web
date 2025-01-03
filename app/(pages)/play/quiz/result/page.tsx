@@ -238,7 +238,7 @@ function QuizResultContent() {
         };
 
         fetchResult();
-    }, [quizId, router, refreshLeaderboard]);
+    }, [quizId, router]);
 
     // Yükleme ve hata durumları kontrolü
     if (isLoading) return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
