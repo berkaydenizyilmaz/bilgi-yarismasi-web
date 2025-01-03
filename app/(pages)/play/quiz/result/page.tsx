@@ -1,18 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useLeaderboard } from "@/lib/hooks/useLeaderboard";
 import { Trophy, CheckCircle2, XCircle, Home, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { memo } from "react";
 
-// Temel veri tipleri için interface tanımlamaları
+// Tip tanımlamaları
 interface Question {
     question_text: string;
     correct_option: string;
@@ -40,25 +38,17 @@ interface QuizResult {
     user_interactions: UserInteraction[];
 }
 
+// StatCard bileşeni için prop tipleri
 interface StatCardProps {
+    icon: React.ReactNode;
     title: string;
     value: number | string;
     className?: string;
+    delay?: number;
 }
 
-const StatCard = memo(({ 
-  icon, 
-  title, 
-  value, 
-  className = "",
-  delay = 0 
-}: { 
-  icon: any; 
-  title: string; 
-  value: number | string; 
-  className?: string;
-  delay?: number;
-}) => {
+// İstatistik kartı bileşeni
+const StatCard = memo<StatCardProps>(({ icon, title, value, className = "", delay = 0 }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -83,18 +73,57 @@ const StatCard = memo(({
   );
 });
 
+StatCard.displayName = 'StatCard';
+
+// Soru kartı için prop tipleri
 interface QuestionCardProps {
     questionNumber: number;
     interaction: UserInteraction;
 }
 
-const QuestionCard = memo(({ questionNumber, interaction }: QuestionCardProps) => {
+// Soru kartı bileşeni
+const QuestionCard = memo<QuestionCardProps>(({ questionNumber, interaction }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const options = {
+  
+  // Seçenekleri bir obje olarak tanımlama
+  const options: Record<string, string> = {
     A: interaction.question.option_a,
     B: interaction.question.option_b,
     C: interaction.question.option_c,
     D: interaction.question.option_d,
+  };
+
+  // Stil hesaplamaları için yardımcı fonksiyon
+  const getOptionStyles = (key: string) => {
+    const isUserAnswer = interaction.user_answer.toUpperCase() === key;
+    const isCorrectAnswer = interaction.question.correct_option.toUpperCase() === key;
+
+    if (isUserAnswer && interaction.is_correct) {
+      return {
+        option: "bg-green-100 border border-green-200",
+        text: "text-green-700",
+        key: "bg-green-500 text-white"
+      };
+    }
+    if (isUserAnswer && !interaction.is_correct) {
+      return {
+        option: "bg-red-100 border border-red-200",
+        text: "text-red-700",
+        key: "bg-red-500 text-white"
+      };
+    }
+    if (isCorrectAnswer && !interaction.is_correct) {
+      return {
+        option: "bg-green-100 border border-green-200",
+        text: "text-green-700",
+        key: "bg-green-500 text-white"
+      };
+    }
+    return {
+      option: "bg-white/50 border border-gray-100",
+      text: "text-gray-600",
+      key: "bg-gray-100 text-gray-600"
+    };
   };
 
   return (
@@ -127,43 +156,24 @@ const QuestionCard = memo(({ questionNumber, interaction }: QuestionCardProps) =
               className="space-y-2 mt-4"
             >
               {Object.entries(options).map(([key, value]) => {
-                const isUserAnswer = interaction.user_answer.toUpperCase() === key;
-                const isCorrectAnswer = interaction.question.correct_option.toUpperCase() === key;
-
-                let optionStyle = "bg-white/50 border border-gray-100";
-                let textStyle = "text-gray-600";
-                let keyStyle = "bg-gray-100 text-gray-600";
-
-                if (isUserAnswer && interaction.is_correct) {
-                  optionStyle = "bg-green-100 border border-green-200";
-                  textStyle = "text-green-700";
-                  keyStyle = "bg-green-500 text-white";
-                } else if (isUserAnswer && !interaction.is_correct) {
-                  optionStyle = "bg-red-100 border border-red-200";
-                  textStyle = "text-red-700";
-                  keyStyle = "bg-red-500 text-white";
-                } else if (isCorrectAnswer && !interaction.is_correct) {
-                  optionStyle = "bg-green-100 border border-green-200";
-                  textStyle = "text-green-700";
-                  keyStyle = "bg-green-500 text-white";
-                }
+                const { option, text, key: keyStyle } = getOptionStyles(key);
 
                 return (
                   <div
                     key={key}
-                    className={`p-3 rounded-lg flex justify-between items-center ${optionStyle}`}
+                    className={`p-3 rounded-lg flex justify-between items-center ${option}`}
                   >
-                    <span className={`flex items-center gap-2 ${textStyle}`}>
+                    <span className={`flex items-center gap-2 ${text}`}>
                       <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md 
                         font-medium ${keyStyle}`}>
                         {key}
                       </span>
                       {value}
                     </span>
-                    {(isUserAnswer || isCorrectAnswer) && (
+                    {(interaction.user_answer.toUpperCase() === key || interaction.question.correct_option.toUpperCase() === key) && (
                       <span className="ml-2">
-                        {isCorrectAnswer && <CheckCircle2 className="w-5 h-5 text-green-500" />}
-                        {isUserAnswer && !interaction.is_correct && <XCircle className="w-5 h-5 text-red-500" />}
+                        {interaction.question.correct_option.toUpperCase() === key && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                        {interaction.user_answer.toUpperCase() === key && !interaction.is_correct && <XCircle className="w-5 h-5 text-red-500" />}
                       </span>
                     )}
                   </div>
@@ -177,7 +187,19 @@ const QuestionCard = memo(({ questionNumber, interaction }: QuestionCardProps) =
   );
 });
 
-// Quiz sonuçlarını görüntülemek için ana bileşen
+QuestionCard.displayName = 'QuestionCard';
+
+// Quiz sonuçları için yardımcı fonksiyonlar
+const getScoreDetails = (score: number) => ({
+  message: score >= 90 ? "Mükemmel!" : 
+           score >= 70 ? "Çok İyi!" :
+           score >= 50 ? "İyi!" : "Geliştirebilirsin!",
+  color: score >= 90 ? "text-orange-600" :
+         score >= 70 ? "text-green-600" :
+         score >= 50 ? "text-blue-600" : "text-red-600"
+});
+
+// Ana içerik bileşeni
 function QuizResultContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -187,6 +209,7 @@ function QuizResultContent() {
     const [error, setError] = useState<string | null>(null);
     const { refreshLeaderboard } = useLeaderboard();
 
+    // Quiz sonuçlarını getirme
     useEffect(() => {
         const fetchResult = async () => {
             if (!quizId) {
@@ -204,7 +227,6 @@ function QuizResultContent() {
                 }
 
                 setResult(data.data);
-                // Leaderboard'u sadece bir kere güncelle
                 refreshLeaderboard();
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : "Sonuçlar alınamadı";
@@ -216,27 +238,10 @@ function QuizResultContent() {
         };
 
         fetchResult();
-    }, [quizId]); // Sadece quizId değiştiğinde çalışacak
+    }, [quizId, router, refreshLeaderboard]);
 
-    const getScoreMessage = (score: number) => {
-        if (score >= 90) return "Mükemmel!";
-        if (score >= 70) return "Çok İyi!";
-        if (score >= 50) return "İyi!";
-        return "Geliştirebilirsin!";
-    };
-
-    const getScoreColor = (score: number) => {
-        if (score >= 90) return "text-orange-600";
-        if (score >= 70) return "text-green-600";
-        if (score >= 50) return "text-blue-600";
-        return "text-red-600";
-    };
-
-    // Yükleme durumu kontrolü
-    if (isLoading) {
-        return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
-    }
-
+    // Yükleme ve hata durumları kontrolü
+    if (isLoading) return <div className="flex justify-center items-center h-screen"><LoadingSpinner className="h-6 w-6" /></div>;
     if (error || !result) {
         return (
             <div className="text-center p-4">
@@ -248,8 +253,7 @@ function QuizResultContent() {
         );
     }
 
-    const scoreMessage = getScoreMessage(result.score);
-    const scoreColor = getScoreColor(result.score);
+    const { message: scoreMessage, color: scoreColor } = getScoreDetails(result.score);
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50 py-6 sm:py-8 md:py-12 px-3 sm:px-4">
@@ -336,7 +340,7 @@ function QuizResultContent() {
     );
 }
 
-// Sayfa yüklenirken Suspense ile sarmalanmış ana bileşen
+// Sayfa bileşeni
 export default function QuizResultPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
