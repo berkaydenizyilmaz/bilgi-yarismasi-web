@@ -1,20 +1,49 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react"
+import React, { useEffect, useState, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { AlertCircle, Sparkles, Stars, Brain, Zap } from "lucide-react"
 import Link from "next/link"
-import { memo } from "react"
 
+// Tip tanımlamaları
 interface Category {
   id: number
   name: string
   description: string | null
 }
 
-const ErrorComponent = memo(function ErrorComponent({ error }: { error: string }) {
+// Sabit değerler
+const FEATURE_CARDS = [
+  {
+    icon: <Sparkles className="w-5 h-5 text-purple-600" />,
+    title: "Özgün Sorular",
+    description: "Her quiz benzersiz sorularla oluşturulur",
+    gradient: "from-purple-50 to-white",
+    border: "border-purple-100",
+    iconBg: "bg-purple-100",
+  },
+  {
+    icon: <Brain className="w-5 h-5 text-pink-600" />,
+    title: "Yapay Zeka Destekli",
+    description: "En son AI teknolojisiyle hazırlanır",
+    gradient: "from-pink-50 to-white",
+    border: "border-pink-100",
+    iconBg: "bg-pink-100",
+  },
+  {
+    icon: <Zap className="w-5 h-5 text-purple-600" />,
+    title: "Anında Hazır",
+    description: "Seçiminizi yapın ve hemen başlayın",
+    gradient: "from-purple-50 to-white",
+    border: "border-purple-100",
+    iconBg: "bg-purple-100",
+  },
+] as const
+
+// Hata bileşeni - Performans için memoize edildi
+const ErrorComponent = React.memo(function ErrorComponent({ error }: { error: string }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -32,43 +61,59 @@ const ErrorComponent = memo(function ErrorComponent({ error }: { error: string }
         </Card>
       </div>
     </div>
-  );
-});
+  )
+})
 
-ErrorComponent.displayName = "ErrorComponent";
+// Özellik kartı bileşeni - Performans için memoize edildi
+const FeatureCard = React.memo(({ feature }: { feature: typeof FEATURE_CARDS[number] }) => (
+  <Card className={`p-4 bg-gradient-to-br ${feature.gradient} border-${feature.border}`}>
+    <div className="flex items-start gap-3">
+      <div className={`p-2 rounded-lg ${feature.iconBg}`}>
+        {feature.icon}
+      </div>
+      <div>
+        <h3 className="font-medium text-purple-900">{feature.title}</h3>
+        <p className="text-sm text-purple-700">{feature.description}</p>
+      </div>
+    </div>
+  </Card>
+))
 
 export default function AiPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  // Kategorileri getir - Memoized
   const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch("/api/categories", {
         cache: 'force-cache'
-      });
-      const result = await response.json();
+      })
+      const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error?.message || "Kategoriler alınamadı");
+        throw new Error(result.error?.message || "Kategoriler alınamadı")
       }
 
-      const categoriesData = Array.isArray(result.data.data) ? result.data.data : [];
+      const categoriesData = Array.isArray(result.data.data) ? result.data.data : []
       
       if (categoriesData.length === 0) {
-        throw new Error("Kategori bulunamadı");
+        throw new Error("Kategori bulunamadı")
       }
 
-      setCategories(categoriesData);
+      setCategories(categoriesData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kategoriler alınamadı");
+      setError(err instanceof Error ? err.message : "Kategoriler alınamadı")
     }
-  }, []);
+  }, [])
 
+  // İlk yüklemede kategorileri getir
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    fetchCategories()
+  }, [fetchCategories])
 
+  // Kategori kartlarını render et - Memoized
   const renderCategoryCards = useMemo(() => {
     return categories.map((category, index) => (
       <motion.div
@@ -114,14 +159,15 @@ export default function AiPage() {
           </div>
         </Card>
       </motion.div>
-    ));
-  }, [categories, router]);
+    ))
+  }, [categories, router])
 
-  if (error) return <ErrorComponent error={error} />;
+  if (error) return <ErrorComponent error={error} />
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Başlık Bölümü */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -139,47 +185,19 @@ export default function AiPage() {
           </p>
         </motion.div>
 
+        {/* Özellik Kartları */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12"
         >
-          <Card className="p-4 bg-gradient-to-br from-purple-50 to-white border-purple-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-purple-100">
-                <Sparkles className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-purple-900">Özgün Sorular</h3>
-                <p className="text-sm text-purple-700">Her quiz benzersiz sorularla oluşturulur</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-pink-50 to-white border-pink-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-pink-100">
-                <Brain className="w-5 h-5 text-pink-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-pink-900">Yapay Zeka Destekli</h3>
-                <p className="text-sm text-pink-700">En son AI teknolojisiyle hazırlanır</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-purple-50 to-white border-purple-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-purple-100">
-                <Zap className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-purple-900">Anında Hazır</h3>
-                <p className="text-sm text-purple-700">Seçiminizi yapın ve hemen başlayın</p>
-              </div>
-            </div>
-          </Card>
+          {FEATURE_CARDS.map((feature, index) => (
+            <FeatureCard key={index} feature={feature} />
+          ))}
         </motion.div>
 
+        {/* Kategori Başlığı */}
         <motion.h2 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -189,6 +207,7 @@ export default function AiPage() {
           Kategori Seçin
         </motion.h2>
 
+        {/* Kategori Kartları */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -198,6 +217,7 @@ export default function AiPage() {
           {renderCategoryCards}
         </motion.div>
 
+        {/* Alt Bilgi */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
