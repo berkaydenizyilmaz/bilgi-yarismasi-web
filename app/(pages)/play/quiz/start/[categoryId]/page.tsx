@@ -59,7 +59,7 @@ export default function QuizPage() {
     let isMounted = true
 
     const initQuiz = async () => {
-      if (!questions.length) { // Sadece sorular boşsa yükle
+      if (questions.length === 0 && initialLoading) {
         await fetchQuestions()
       }
       if (isMounted) {
@@ -67,14 +67,12 @@ export default function QuizPage() {
       }
     }
 
-    if (!isLoading) {
-      initQuiz()
-    }
+    initQuiz()
 
     return () => {
       isMounted = false
     }
-  }, [categoryId, fetchQuestions, isLoading, questions.length])
+  }, [categoryId])
 
   // Yükleme durumu
   if (initialLoading || isLoading) {
