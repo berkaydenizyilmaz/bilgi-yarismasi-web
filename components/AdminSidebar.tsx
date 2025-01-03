@@ -1,13 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, FileText, MessageSquare, Users, Menu, X, FileQuestion, FolderTree } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 
-const menuItems = [
+// Menü öğeleri için tip tanımı
+interface MenuItem {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+// Sabit menü öğeleri
+const menuItems: MenuItem[] = [
   { href: "/admin", label: "Genel", icon: <Home className="h-5 w-5" /> },
   { href: "/admin/users", label: "Kullanıcılar", icon: <Users className="h-5 w-5" /> },
   { href: "/admin/questions", label: "Sorular", icon: <FileQuestion className="h-5 w-5" /> },
@@ -16,22 +24,58 @@ const menuItems = [
   { href: "/admin/feedbacks", label: "Geri Bildirimler", icon: <MessageSquare className="h-5 w-5" /> },
 ]
 
+// Animasyon varyantları
+const sidebarVariants = {
+  open: { x: 0 },
+  closed: { x: -280 }
+}
+
+// Menü öğesi bileşeni
+const MenuItem = memo<{ item: MenuItem; isActive: boolean; onClick?: () => void }>(({ item, isActive, onClick }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+  >
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={`
+        flex items-center gap-3 px-4 py-3 rounded-xl
+        text-base font-medium
+        transition-all duration-200 
+        ${isActive 
+          ? 'bg-orange-100 text-orange-600 shadow-sm' 
+          : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+        }
+      `}
+    >
+      {item.icon}
+      <span>{item.label}</span>
+    </Link>
+  </motion.div>
+))
+
+MenuItem.displayName = 'MenuItem'
+
+// Ana bileşen
 export default function AdminSidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
+  // Ekran boyutu değişikliklerini takip et
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 1024)
-      if (window.innerWidth >= 1024) {
-        setIsOpen(true)
-      } else {
-        setIsOpen(false)
-      }
+      const isMobileView = window.innerWidth < 1024
+      setIsMobile(isMobileView)
+      setIsOpen(!isMobileView) // Masaüstünde otomatik aç
     }
 
+    // İlk yükleme kontrolü
     checkScreenSize()
+
+    // Pencere boyutu değişikliklerini dinle
     window.addEventListener('resize', checkScreenSize)
     return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
@@ -48,7 +92,7 @@ export default function AdminSidebar() {
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
 
-      {/* Overlay */}
+      {/* Mobil overlay */}
       {isMobile && isOpen && (
         <motion.div 
           initial={{ opacity: 0 }}
@@ -61,8 +105,9 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
       <motion.aside 
-        initial={isMobile ? { x: -280 } : { x: 0 }}
-        animate={{ x: isOpen ? 0 : -280 }}
+        initial={isMobile ? "closed" : "open"}
+        animate={isOpen ? "open" : "closed"}
+        variants={sidebarVariants}
         transition={{ type: "spring", damping: 20 }}
         className={`
           fixed lg:sticky
@@ -80,6 +125,7 @@ export default function AdminSidebar() {
         `}
       >
         <div className="space-y-6">
+          {/* Başlık */}
           <motion.h2 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -87,36 +133,17 @@ export default function AdminSidebar() {
           >
             Admin Paneli
           </motion.h2>
+
+          {/* Navigasyon menüsü */}
           <nav className="space-y-1">
-            {menuItems.map((item, index) => {
-              const isActive = pathname === item.href
-              
-              return (
-                <motion.div
-                  key={item.href}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    href={item.href}
-                    onClick={() => isMobile && setIsOpen(false)}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl
-                      text-base font-medium
-                      transition-all duration-200 
-                      ${isActive 
-                        ? 'bg-orange-100 text-orange-600 shadow-sm' 
-                        : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                      }
-                    `}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </Link>
-                </motion.div>
-              )
-            })}
+            {menuItems.map((item, index) => (
+              <MenuItem
+                key={item.href}
+                item={item}
+                isActive={pathname === item.href}
+                onClick={() => isMobile && setIsOpen(false)}
+              />
+            ))}
           </nav>
         </div>
       </motion.aside>

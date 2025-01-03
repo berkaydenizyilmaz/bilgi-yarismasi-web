@@ -1,15 +1,80 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Brain, Menu, X, LogOut, LogIn, UserPlus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Brain, Menu, X, LogOut, LogIn } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
+// Navigasyon öğesi için tip tanımı
+interface NavigationItem {
+  name: string;
+  href: string;
+}
+
+// Logo animasyon varyantları
+const logoVariants = {
+  initial: { opacity: 0, x: -20 },
+  animate: { opacity: 1, x: 0 },
+  hover: { scale: 1.1 },
+  tap: { scale: 0.9 }
+}
+
+// Logo bileşeni
+const Logo = memo(() => (
+  <motion.div 
+    variants={logoVariants}
+    initial="initial"
+    animate="animate"
+    className="flex items-center space-x-3 group"
+  >
+    <motion.div 
+      className="bg-white/10 p-2.5 rounded-xl transition-all duration-300 ease-out"
+      whileHover="hover"
+      whileTap="tap"
+      transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }}
+    >
+      <motion.div
+        animate={{ rotate: 0 }}
+        whileHover={{ 
+          rotate: 360,
+          transition: {
+            duration: 1,
+            ease: "linear",
+            repeat: Infinity
+          }
+        }}
+      >
+        <Brain className="h-9 w-9 transition-colors duration-300 ease-out" />
+      </motion.div>
+    </motion.div>
+    <motion.span 
+      className="text-3xl font-bold bg-gradient-to-r from-white via-orange-100 to-yellow-200 bg-clip-text text-transparent"
+      whileHover={{
+        scale: 1.05,
+        transition: {
+          type: "spring",
+          stiffness: 400,
+          damping: 17
+        }
+      }}
+    >
+      QuizVerse
+    </motion.span>
+  </motion.div>
+))
+
+Logo.displayName = 'Logo'
+
+// Ana bileşen
 export default function Header() {
   const pathname = usePathname()
   const { user, logout, isLoading } = useAuth()
@@ -18,7 +83,8 @@ export default function Header() {
 
   const isAiMode = pathname.includes('/play/ai') || pathname.includes('/play/aiplus')
 
-  const navigation = [
+  // Navigasyon öğelerini oluştur
+  const navigation: NavigationItem[] = [
     { name: 'Ana Sayfa', href: '/' },
     { name: 'İletişim', href: '/dashboard/contact' },
     ...(user ? [
@@ -29,85 +95,39 @@ export default function Header() {
     ] : [])
   ]
 
+  // Ekran boyutu değişikliklerini takip et
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
     
     checkMobile()
-    
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Stil sınıfları
+  const headerBgClass = isAiMode 
+    ? "bg-gradient-to-br from-purple-600 to-pink-500 shadow-purple-500/20"
+    : "bg-gradient-to-r from-orange-600 to-orange-500 shadow-orange-500/20"
+
+  const linkClass = (isActive: boolean) => cn(
+    "px-5 py-2.5 rounded-xl text-base font-medium",
+    "transition-all duration-200",
+    isAiMode ? "hover:bg-white/10" : "hover:bg-white/10",
+    isActive 
+      ? isAiMode 
+        ? "bg-white/20 text-white" 
+        : "bg-white/20 text-white"
+      : "text-white/90 hover:text-white"
+  )
+
   return (
-    <div className={`
-      ${isAiMode 
-        ? "bg-gradient-to-br from-purple-600 to-pink-500 shadow-purple-500/20"
-        : "bg-gradient-to-r from-orange-600 to-orange-500 shadow-orange-500/20"
-      } relative z-50`}
-    >
+    <div className={`${headerBgClass} relative z-50`}>
       <header className="text-white py-6">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
-            {/* Logo - Geliştirilmiş animasyonlar */}
+            {/* Logo */}
             <Link href="/">
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center space-x-3 group"
-              >
-                <motion.div 
-                  className="bg-white/10 p-2.5 rounded-xl transition-all duration-300 ease-out"
-                  whileHover={{
-                    scale: 1.1,
-                    transition: {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 10
-                    }
-                  }}
-                  whileTap={{ 
-                    scale: 0.9,
-                    transition: {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 10
-                    }
-                  }}
-                >
-                  <motion.div
-                    animate={{ rotate: 0 }}
-                    whileHover={{ 
-                      rotate: 360,
-                      transition: {
-                        duration: 1,
-                        ease: "linear",
-                        repeat: Infinity
-                      }
-                    }}
-                  >
-                    <Brain className="h-9 w-9 transition-colors duration-300 ease-out" />
-                  </motion.div>
-                </motion.div>
-                <motion.span 
-                  className={`text-3xl font-bold ${
-                    isAiMode 
-                      ? "bg-gradient-to-r from-white via-purple-200 to-pink-200"
-                      : "bg-gradient-to-r from-white via-orange-100 to-yellow-200"
-                  } bg-clip-text text-transparent`}
-                  whileHover={{
-                    scale: 1.05,
-                    transition: {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 17
-                    }
-                  }}
-                >
-                  QuizVerse
-                </motion.span>
-              </motion.div>
+              <Logo />
             </Link>
 
             {/* Masaüstü navigasyon */}
@@ -117,18 +137,7 @@ export default function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={cn(
-                      "px-5 py-2.5 rounded-xl text-base font-medium",
-                      "transition-all duration-200",
-                      isAiMode
-                        ? "hover:bg-white/10"
-                        : "hover:bg-white/10",
-                      (pathname === item.href) || (pathname.includes(item.href) && item.href !== '/')
-                        ? isAiMode 
-                          ? "bg-white/20 text-white" 
-                          : "bg-white/20 text-white"
-                        : "text-white/90 hover:text-white"
-                    )}
+                    className={linkClass(pathname === item.href || (pathname.includes(item.href) && item.href !== '/'))}
                   >
                     {item.name}
                   </Link>
@@ -200,17 +209,16 @@ export default function Header() {
               </div>
             </nav>
 
-            {/* Geliştirilmiş mobil menü butonu */}
+            {/* Mobil menü butonu */}
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className={`md:hidden p-2 rounded-lg transition-all duration-300
-                ${isAiMode 
-                  ? "hover:bg-purple-500/50" 
-                  : "hover:bg-white/10"
-                }`}
+              className={cn(
+                "md:hidden p-2 rounded-lg transition-all duration-300",
+                isAiMode ? "hover:bg-purple-500/50" : "hover:bg-white/10"
+              )}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <motion.div
@@ -224,7 +232,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobil menü - Geliştirilmiş butonlar */}
+      {/* Mobil menü */}
       <AnimatePresence>
         {(isMenuOpen && isMobile) && (
           <motion.nav
@@ -257,25 +265,14 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={cn(
-                    "px-5 py-2.5 rounded-xl text-base font-medium",
-                    "transition-all duration-200",
-                    isAiMode
-                      ? "hover:bg-white/10"
-                      : "hover:bg-white/10",
-                    (pathname === item.href) || (pathname.includes(item.href) && item.href !== '/')
-                      ? isAiMode 
-                        ? "bg-white/20 text-white" 
-                        : "bg-white/20 text-white"
-                      : "text-white/90 hover:text-white"
-                  )}
+                  className={linkClass(pathname === item.href || (pathname.includes(item.href) && item.href !== '/'))}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
 
-              {/* Mobil kullanıcı işlemleri - Geliştirilmiş butonlar */}
+              {/* Mobil kullanıcı işlemleri */}
               <div className="flex flex-col space-y-2 mt-2">
                 {isLoading ? (
                   <LoadingSpinner className="w-6 h-6" />
@@ -285,7 +282,10 @@ export default function Header() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <Button 
-                      onClick={logout} 
+                      onClick={() => {
+                        logout();
+                        setIsMenuOpen(false);
+                      }} 
                       variant="ghost"
                       className={`w-full group text-base font-medium text-white/90 hover:text-white transition-all duration-300
                         ${isAiMode 
@@ -298,26 +298,25 @@ export default function Header() {
                     </Button>
                   </motion.div>
                 ) : (
-                  <>
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link href="/auth">
-                        <Button 
-                          variant="ghost" 
-                          className={`w-full group text-base font-medium text-white/90 hover:text-white transition-all duration-300
-                            ${isAiMode 
-                              ? "hover:bg-purple-500/50" 
-                              : "hover:bg-white/10"
-                            }`}
-                        >
-                          <LogIn className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-                          Giriş Yap
-                        </Button>
-                      </Link>
-                    </motion.div>
-                  </>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link href="/auth">
+                      <Button 
+                        variant="ghost" 
+                        className={`w-full group text-base font-medium text-white/90 hover:text-white transition-all duration-300
+                          ${isAiMode 
+                            ? "hover:bg-purple-500/50" 
+                            : "hover:bg-white/10"
+                          }`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <LogIn className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+                        Giriş Yap
+                      </Button>
+                    </Link>
+                  </motion.div>
                 )}
               </div>
             </motion.div>
