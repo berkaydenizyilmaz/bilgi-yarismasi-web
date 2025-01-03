@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/lib/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,11 +33,27 @@ import {
 import { ChevronLeft, ChevronRight, Edit, Plus, Search, Trash2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Question } from "@/types/quiz";
 import { motion } from "framer-motion"
+import debounce from "lodash/debounce"
 
+// Form validasyon kuralları
+const VALIDATION_RULES = {
+  questionText: {
+    minLength: 10,
+    required: true,
+  },
+  options: {
+    required: true,
+  },
+  correctOption: {
+    required: true,
+  },
+  categoryId: {
+    required: true,
+  },
+}
 
-// Form validasyonu için bir interface ekleyelim
+// Form hata tipleri
 interface FormErrors {
   questionText?: string
   optionA?: string
@@ -49,7 +64,78 @@ interface FormErrors {
   categoryId?: string
 }
 
+// Yeni soru tipi
+interface NewQuestion {
+  questionText: string
+  optionA: string
+  optionB: string
+  optionC: string
+  optionD: string
+  correctOption: "A" | "B" | "C" | "D"
+  categoryId: number
+}
+
+// Question tipini güncelle
+interface Question extends NewQuestion {
+  id: number
+  createdAt: string
+  updatedAt: string
+  categoryName: string
+}
+
+// API fonksiyonları
+const questionsApi = {
+  // Soruları getir
+  fetchQuestions: async (page: number, searchTerm: string, category: string) => {
+    const response = await fetch(`/api/admin/questions?page=${page}&search=${searchTerm}&category=${category}`)
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Sorular yüklenemedi")
+    return data.data
+  },
+
+  // Kategorileri getir
+  fetchCategories: async () => {
+    const response = await fetch('/api/admin/categories')
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Kategoriler yüklenemedi")
+    return data.data
+  },
+
+  // Soru sil
+  deleteQuestion: async (id: number) => {
+    const response = await fetch(`/api/admin/questions/${id}`, { method: 'DELETE' })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Silme işlemi başarısız")
+    return data
+  },
+
+  // Soru ekle
+  addQuestion: async (question: NewQuestion) => {
+    const response = await fetch('/api/admin/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(question),
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Soru eklenemedi")
+    return data
+  },
+
+  // Soru güncelle
+  updateQuestion: async (question: Question) => {
+    const response = await fetch(`/api/admin/questions/${question.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(question),
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Soru güncellenemedi")
+    return data
+  }
+}
+
 export default function QuestionsPage() {
+  // State tanımlamaları
   const [questions, setQuestions] = useState<Question[]>([])
   const [categories, setCategories] = useState<{id: number, name: string}[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -60,8 +146,11 @@ export default function QuestionsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
   const { toast } = useToast()
-  const [newQuestion, setNewQuestion] = useState({
+
+  // Yeni soru için başlangıç durumu
+  const initialNewQuestion: NewQuestion = {
     questionText: "",
     optionA: "",
     optionB: "",
@@ -69,17 +158,49 @@ export default function QuestionsPage() {
     optionD: "",
     correctOption: "A",
     categoryId: 1
-  })
-  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  }
+  const [newQuestion, setNewQuestion] = useState<NewQuestion>(initialNewQuestion)
 
-  // Validasyon fonksiyonu ekleyelim
-  const validateForm = (question: typeof newQuestion): FormErrors => {
+  // Verileri yükle
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [questionsData, categoriesData] = await Promise.all([
+          questionsApi.fetchQuestions(page, searchTerm, selectedCategory),
+          questionsApi.fetchCategories()
+        ])
+
+        // Doğru cevapları büyük harfe çevir
+        const formattedQuestions = questionsData.questions.map((q: Question) => ({
+          ...q,
+          correctOption: q.correctOption.toUpperCase()
+        }))
+
+        setQuestions(formattedQuestions)
+        setTotalPages(questionsData.totalPages)
+        setCategories(categoriesData)
+      } catch (error) {
+        toast({
+          title: "Hata",
+          description: error instanceof Error ? error.message : "Veriler yüklenirken bir hata oluştu",
+          variant: "destructive"
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [page, searchTerm, selectedCategory, toast])
+
+  // Form validasyonu - Memoized
+  const validateForm = useCallback((question: NewQuestion): FormErrors => {
     const errors: FormErrors = {}
     
     if (!question.questionText.trim()) {
       errors.questionText = "Soru metni boş bırakılamaz"
-    } else if (question.questionText.length < 10) {
-      errors.questionText = "Soru metni en az 10 karakter olmalıdır"
+    } else if (question.questionText.length < VALIDATION_RULES.questionText.minLength) {
+      errors.questionText = `Soru metni en az ${VALIDATION_RULES.questionText.minLength} karakter olmalıdır`
     }
 
     if (!question.optionA.trim()) errors.optionA = "A şıkkı boş bırakılamaz"
@@ -91,78 +212,44 @@ export default function QuestionsPage() {
     if (!question.categoryId) errors.categoryId = "Kategori seçilmelidir"
 
     return errors
-  }
+  }, [])
 
-  // Soruları ve kategorileri yükle
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [questionsRes, categoriesRes] = await Promise.all([
-          fetch(`/api/admin/questions?page=${page}&search=${searchTerm}&category=${selectedCategory}`),
-          fetch('/api/admin/categories')
-        ])
-        
-        const questionsData = await questionsRes.json()
-        const categoriesData = await categoriesRes.json()
-
-        if (questionsData.success) {
-          // Doğru cevapları büyük harfe çevir
-          const formattedQuestions = questionsData.data.questions.map((q:any) => ({
-            ...q,
-            correctOption: q.correctOption.toUpperCase()
-          }))
-          setQuestions(formattedQuestions)
-          setTotalPages(questionsData.data.totalPages)
-        }
-
-        if (categoriesData.success) {
-          setCategories(categoriesData.data)
-        }
-      } catch (error) {
-        toast({
-          title: "Hata",
-          description: "Veriler yüklenirken bir hata oluştu",
-          variant: "destructive"
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [page, searchTerm, selectedCategory])
-
-  // Soru silme işlemi
-  const handleDelete = async (id: number) => {
+  // Soru silme işleyicisi - Memoized
+  const handleDelete = useCallback(async (id: number) => {
     try {
-      const response = await fetch(`/api/admin/questions/${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error?.message || "Silme işlemi başarısız");
-      }
-
-      // Başarılı silme işleminden sonra listeyi güncelle
-      setQuestions(questions.filter(q => q.id !== id));
+      await questionsApi.deleteQuestion(id)
+      setQuestions(questions => questions.filter(q => q.id !== id))
       
       toast({
         title: "Başarılı",
         description: "Soru başarıyla silindi",
-      });
+      })
     } catch (error) {
-      console.error('Silme hatası:', error);
       toast({
         title: "Hata",
         description: error instanceof Error ? error.message : "Soru silinirken bir hata oluştu",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }, [toast])
 
-  const handleAddQuestion = async (e: React.FormEvent) => {
+  // Arama ve filtreleme işleyicisi - Memoized
+  const handleSearch = useCallback(
+    debounce((term: string) => {
+      setSearchTerm(term)
+      setPage(1)
+    }, 500),
+    []
+  )
+
+  // Kategori filtreleme işleyicisi - Memoized
+  const handleCategoryChange = useCallback((category: string) => {
+    setSelectedCategory(category)
+    setPage(1)
+  }, [])
+
+  // Soru ekleme işleyicisi - Memoized
+  const handleAddQuestion = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     const errors = validateForm(newQuestion)
@@ -177,38 +264,12 @@ export default function QuestionsPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...newQuestion,
-          correctOption: newQuestion.correctOption.toUpperCase()
-        }),
-      })
-
-      if (!response.ok) throw new Error('Soru eklenemedi')
-
-      // Soruları yeniden yükle
-      const updatedQuestionsRes = await fetch(`/api/admin/questions?page=${page}&search=${searchTerm}&category=${selectedCategory}`)
-      const updatedQuestionsData = await updatedQuestionsRes.json()
-
-      if (updatedQuestionsData.success) {
-        setQuestions(updatedQuestionsData.data.questions)
-        setTotalPages(updatedQuestionsData.data.totalPages)
-      }
-
+      await questionsApi.addQuestion(newQuestion)
+      const updatedData = await questionsApi.fetchQuestions(page, searchTerm, selectedCategory)
+      setQuestions(updatedData.questions)
+      setTotalPages(updatedData.totalPages)
       setIsAddModalOpen(false)
-      setNewQuestion({
-        questionText: "",
-        optionA: "",
-        optionB: "",
-        optionC: "",
-        optionD: "",
-        correctOption: "A",
-        categoryId: 1
-      })
+      setNewQuestion(initialNewQuestion)
       
       toast({
         title: "Başarılı",
@@ -217,60 +278,50 @@ export default function QuestionsPage() {
     } catch (error) {
       toast({
         title: "Hata",
-        description: "Soru eklenirken bir hata oluştu",
+        description: error instanceof Error ? error.message : "Soru eklenirken bir hata oluştu",
         variant: "destructive"
       })
     }
-  }
+  }, [newQuestion, page, searchTerm, selectedCategory, toast, validateForm, initialNewQuestion])
 
-  const handleEditQuestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingQuestion) return;
+  // Soru güncelleme işleyicisi - Memoized
+  const handleEditQuestion = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingQuestion) return
+
+    const errors = validateForm(editingQuestion)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm alanları doğru şekilde doldurun",
+        variant: "destructive"
+      })
+      return
+    }
 
     try {
-      const response = await fetch(`/api/admin/questions/${editingQuestion.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          questionText: editingQuestion.questionText,
-          optionA: editingQuestion.optionA,
-          optionB: editingQuestion.optionB,
-          optionC: editingQuestion.optionC,
-          optionD: editingQuestion.optionD,
-          correctOption: editingQuestion.correctOption.toUpperCase(),
-          categoryId: editingQuestion.categoryId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error?.message || 'Güncelleme işlemi başarısız');
-      }
-
-      setQuestions(questions.map(q => 
-        q.id === editingQuestion.id ? data.data : q
-      ));
-      
-      setIsEditModalOpen(false);
-      setEditingQuestion(null);
+      await questionsApi.updateQuestion(editingQuestion)
+      const updatedData = await questionsApi.fetchQuestions(page, searchTerm, selectedCategory)
+      setQuestions(updatedData.questions)
+      setTotalPages(updatedData.totalPages)
+      setIsEditModalOpen(false)
+      setEditingQuestion(null)
       
       toast({
         title: "Başarılı",
-        description: "Soru başarıyla güncellendi",
-      });
+        description: "Soru başarıyla güncellendi"
+      })
     } catch (error) {
-      console.error('Güncelleme hatası:', error);
       toast({
         title: "Hata",
         description: error instanceof Error ? error.message : "Soru güncellenirken bir hata oluştu",
-        variant: "destructive",
-      });
+        variant: "destructive"
+      })
     }
-  };
+  }, [editingQuestion, page, searchTerm, selectedCategory, toast, validateForm])
 
+  // Yükleme durumu
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -311,11 +362,13 @@ export default function QuestionsPage() {
               <Input
                 placeholder="Soru ara..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  handleSearch(e.target.value)
+                }}
                 className="pl-10 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all duration-200 focus:border-orange-500 focus:ring-orange-500"
               />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
               <SelectTrigger className="w-full md:w-[200px] h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all duration-200">
                 <SelectValue placeholder="Kategori seç" />
               </SelectTrigger>
@@ -537,7 +590,7 @@ export default function QuestionsPage() {
                 <Select
                   value={newQuestion.correctOption}
                   onValueChange={(value) => {
-                    setNewQuestion({ ...newQuestion, correctOption: value })
+                    setNewQuestion({ ...newQuestion, correctOption: value as "A" | "B" | "C" | "D" })
                     setFormErrors({ ...formErrors, correctOption: undefined })
                   }}
                 >
@@ -691,7 +744,7 @@ export default function QuestionsPage() {
                   <Select
                     value={editingQuestion.correctOption}
                     onValueChange={(value) => {
-                      setEditingQuestion({ ...editingQuestion, correctOption: value });
+                      setEditingQuestion({ ...editingQuestion, correctOption: value as "A" | "B" | "C" | "D" });
                       setFormErrors({ ...formErrors, correctOption: undefined });
                     }}
                   >

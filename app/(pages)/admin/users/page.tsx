@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/lib/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
   Table,
@@ -34,48 +33,62 @@ import { Edit, Trash2, ChevronLeft, ChevronRight, User, Mail, AlertCircle, Shiel
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
 
+// Tip tanımlamaları
+interface User {
+  id: number
+  username: string
+  email: string
+  role: "admin" | "user" // Role tipini sınırlandırdık
+}
 
-// Form validasyonu için interface
 interface FormErrors {
   username?: string
   email?: string
   role?: string
 }
 
-interface User {
-  id: number
-  username: string
-  email: string
-  role: string
+// Form validasyon kuralları
+const VALIDATION_RULES = {
+  username: {
+    minLength: 3,
+    required: true,
+  },
+  email: {
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    required: true,
+  },
+  role: {
+    required: true,
+  },
 }
 
 export default function UsersPage() {
+  // State tanımlamaları
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  const { toast } = useToast()
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const { toast } = useToast()
   const pageSize = 15
-  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
+  // Kullanıcıları getir
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await fetch(`/api/admin/users?page=${page}&pageSize=${pageSize}`)
         const data = await response.json()
 
-        if (data.success) {
-          setUsers(data.data.users)
-          setTotalPages(Math.ceil(data.data.total / pageSize))
-        } else {
-          throw new Error(data.error?.message || "Kullanıcılar yüklenemedi")
-        }
+        if (!response.ok) throw new Error(data.error?.message || "Kullanıcılar yüklenemedi")
+
+        setUsers(data.data.users)
+        setTotalPages(Math.ceil(data.data.total / pageSize))
       } catch (error) {
         toast({
           title: "Hata",
-          description: "Kullanıcılar yüklenirken bir hata oluştu",
+          description: error instanceof Error ? error.message : "Kullanıcılar yüklenirken bir hata oluştu",
           variant: "destructive"
         })
       } finally {
@@ -84,36 +97,36 @@ export default function UsersPage() {
     }
 
     fetchUsers()
-  }, [page])
+  }, [page, toast])
 
-  // Validasyon fonksiyonu
-  const validateForm = (user: User): FormErrors => {
+  // Form validasyonu - Memoized
+  const validateForm = useCallback((user: User): FormErrors => {
     const errors: FormErrors = {}
     
-    if (!user.username.trim()) {
+    if (!VALIDATION_RULES.username.required && !user.username.trim()) {
       errors.username = "Kullanıcı adı boş bırakılamaz"
-    } else if (user.username.length < 3) {
-      errors.username = "Kullanıcı adı en az 3 karakter olmalıdır"
+    } else if (user.username.length < VALIDATION_RULES.username.minLength) {
+      errors.username = `Kullanıcı adı en az ${VALIDATION_RULES.username.minLength} karakter olmalıdır`
     }
 
-    if (!user.email.trim()) {
+    if (!VALIDATION_RULES.email.required && !user.email.trim()) {
       errors.email = "E-posta adresi boş bırakılamaz"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+    } else if (!VALIDATION_RULES.email.pattern.test(user.email)) {
       errors.email = "Geçerli bir e-posta adresi giriniz"
     }
 
-    if (!user.role) {
+    if (!VALIDATION_RULES.role.required && !user.role) {
       errors.role = "Rol seçilmelidir"
     }
 
     return errors
-  }
+  }, [])
 
-  const handleEditUser = async (e: React.FormEvent) => {
+  // Kullanıcı düzenleme işleyicisi - Memoized
+  const handleEditUser = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingUser) return
 
-    // Form validasyonunu kontrol et
     const errors = validateForm(editingUser)
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -128,21 +141,14 @@ export default function UsersPage() {
     try {
       const response = await fetch(`/api/admin/users?id=${editingUser.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingUser),
       })
 
       const data = await response.json()
+      if (!response.ok) throw new Error(data.error?.message || "Kullanıcı güncellenemedi")
 
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Kullanıcı güncellenemedi")
-      }
-
-      setUsers(users.map(u => 
-        u.id === editingUser.id ? data.data.user : u
-      ))
+      setUsers(users.map(u => u.id === editingUser.id ? data.data.user : u))
       setIsEditModalOpen(false)
       setEditingUser(null)
       
@@ -157,9 +163,10 @@ export default function UsersPage() {
         variant: "destructive"
       })
     }
-  }
+  }, [editingUser, users, toast, validateForm])
 
-  const handleDelete = async (id: number) => {
+  // Kullanıcı silme işleyicisi - Memoized
+  const handleDelete = useCallback(async (id: number) => {
     try {
       const response = await fetch(`/api/admin/users?id=${id}`, {
         method: 'DELETE',
@@ -183,8 +190,9 @@ export default function UsersPage() {
         variant: "destructive"
       })
     }
-  }
+  }, [users, toast])
 
+  // Yükleme durumu
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -401,14 +409,13 @@ export default function UsersPage() {
                     onChange={(e) => {
                       setEditingUser({
                         ...editingUser,
-                        role: e.target.value
+                        role: e.target.value as "admin" | "user"
                       })
                       setFormErrors({ ...formErrors, role: undefined })
                     }}
                     className={`w-full h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white px-4 transition-all duration-200
                       ${formErrors.role ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-orange-500 focus:ring-orange-500'}`}
                   >
-                    <option value="">Rol Seçin</option>
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                   </select>

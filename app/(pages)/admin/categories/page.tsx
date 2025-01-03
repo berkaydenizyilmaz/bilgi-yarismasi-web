@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/lib/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -34,37 +34,85 @@ import { Edit, Plus, Trash2, Save, FolderPlus, Folder, AlertCircle } from "lucid
 import { Category } from "@/types/category"
 import { motion } from "framer-motion"
 
-// Form validasyonu için interface
+// Form validasyon kuralları
+const VALIDATION_RULES = {
+  name: {
+    minLength: 2,
+    required: true,
+  }
+}
+
+// Form hata tipleri
 interface FormErrors {
   name?: string
 }
 
+// Kategori işlemleri için API fonksiyonları
+const categoryApi = {
+  // Kategorileri getir
+  fetchCategories: async () => {
+    const response = await fetch('/api/admin/categories')
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Kategoriler yüklenemedi")
+    return data.data
+  },
+
+  // Yeni kategori ekle
+  addCategory: async (name: string) => {
+    const response = await fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Kategori eklenemedi")
+    return data
+  },
+
+  // Kategori güncelle
+  updateCategory: async (category: Category) => {
+    const response = await fetch(`/api/admin/categories/${category.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: category.name }),
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Kategori güncellenemedi")
+    return data
+  },
+
+  // Kategori sil
+  deleteCategory: async (id: number) => {
+    const response = await fetch(`/api/admin/categories/${id}`, {
+      method: 'DELETE',
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || "Silme işlemi başarısız")
+    return data
+  }
+}
+
 export default function CategoriesPage() {
+  // State tanımlamaları
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [newCategoryName, setNewCategoryName] = useState("")
-  const { toast } = useToast()
   const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const { toast } = useToast()
 
   // Kategorileri yükle
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadCategories = async () => {
       try {
-        const response = await fetch('/api/admin/categories')
-        const data = await response.json()
-
-        if (data.success) {
-          setCategories(data.data)
-        } else {
-          throw new Error(data.error?.message || "Kategoriler yüklenemedi")
-        }
+        const data = await categoryApi.fetchCategories()
+        setCategories(data)
       } catch (error) {
         toast({
           title: "Hata",
-          description: "Kategoriler yüklenirken bir hata oluştu",
+          description: error instanceof Error ? error.message : "Kategoriler yüklenirken bir hata oluştu",
           variant: "destructive"
         })
       } finally {
@@ -72,27 +120,26 @@ export default function CategoriesPage() {
       }
     }
 
-    fetchCategories()
-  }, [])
+    loadCategories()
+  }, [toast])
 
-  // Validasyon fonksiyonu
-  const validateForm = (name: string): FormErrors => {
+  // Form validasyonu - Memoized
+  const validateForm = useCallback((name: string): FormErrors => {
     const errors: FormErrors = {}
     
-    if (!name.trim()) {
+    if (!VALIDATION_RULES.name.required && !name.trim()) {
       errors.name = "Kategori adı boş bırakılamaz"
-    } else if (name.length < 2) {
-      errors.name = "Kategori adı en az 2 karakter olmalıdır"
+    } else if (name.length < VALIDATION_RULES.name.minLength) {
+      errors.name = `Kategori adı en az ${VALIDATION_RULES.name.minLength} karakter olmalıdır`
     }
 
     return errors
-  }
+  }, [])
 
-  // Kategori ekleme
-  const handleAddCategory = async (e: React.FormEvent) => {
+  // Kategori ekleme işleyicisi - Memoized
+  const handleAddCategory = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Form validasyonunu kontrol et
     const errors = validateForm(newCategoryName)
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -105,28 +152,9 @@ export default function CategoriesPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/categories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newCategoryName }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Kategori eklenemedi")
-      }
-
-      // Kategorileri yeniden yükle
-      const updatedCategoriesRes = await fetch('/api/admin/categories')
-      const updatedCategoriesData = await updatedCategoriesRes.json()
-      
-      if (updatedCategoriesData.success) {
-        setCategories(updatedCategoriesData.data)
-      }
-
+      await categoryApi.addCategory(newCategoryName)
+      const updatedCategories = await categoryApi.fetchCategories()
+      setCategories(updatedCategories)
       setIsAddModalOpen(false)
       setNewCategoryName("")
       
@@ -141,38 +169,17 @@ export default function CategoriesPage() {
         variant: "destructive"
       })
     }
-  }
+  }, [newCategoryName, toast, validateForm])
 
-  // Kategori güncelleme
-  const handleEditCategory = async (e: React.FormEvent) => {
+  // Kategori güncelleme işleyicisi - Memoized
+  const handleEditCategory = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingCategory) return
 
     try {
-      const response = await fetch(`/api/admin/categories/${editingCategory.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          name: editingCategory.name
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Kategori güncellenemedi")
-      }
-
-      // Kategorileri yeniden yükle
-      const updatedCategoriesRes = await fetch('/api/admin/categories')
-      const updatedCategoriesData = await updatedCategoriesRes.json()
-      
-      if (updatedCategoriesData.success) {
-        setCategories(updatedCategoriesData.data)
-      }
-
+      await categoryApi.updateCategory(editingCategory)
+      const updatedCategories = await categoryApi.fetchCategories()
+      setCategories(updatedCategories)
       setIsEditModalOpen(false)
       setEditingCategory(null)
       
@@ -187,28 +194,14 @@ export default function CategoriesPage() {
         variant: "destructive"
       })
     }
-  }
+  }, [editingCategory, toast])
 
-  // Kategori silme
-  const handleDelete = async (id: number) => {
+  // Kategori silme işleyicisi - Memoized
+  const handleDelete = useCallback(async (id: number) => {
     try {
-      const response = await fetch(`/api/admin/categories/${id}`, {
-        method: 'DELETE',
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Silme işlemi başarısız")
-      }
-
-      // Kategorileri yeniden yükle
-      const updatedCategoriesRes = await fetch('/api/admin/categories')
-      const updatedCategoriesData = await updatedCategoriesRes.json()
-      
-      if (updatedCategoriesData.success) {
-        setCategories(updatedCategoriesData.data)
-      }
+      await categoryApi.deleteCategory(id)
+      const updatedCategories = await categoryApi.fetchCategories()
+      setCategories(updatedCategories)
       
       toast({
         title: "Başarılı",
@@ -221,8 +214,9 @@ export default function CategoriesPage() {
         variant: "destructive"
       })
     }
-  }
+  }, [toast])
 
+  // Yükleme durumu
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
