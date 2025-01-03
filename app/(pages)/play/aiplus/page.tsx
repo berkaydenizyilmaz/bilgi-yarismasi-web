@@ -8,66 +8,77 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Sparkles, AlertCircle } from "lucide-react";
 
-// Kategori minimum ve maksimum uzunlukları
-const MIN_CATEGORY_LENGTH = 3;
-const MAX_CATEGORY_LENGTH = 50;
+// Kategori validasyon kuralları
+const VALIDATION_RULES = {
+  category: {
+    minLength: 3,
+    maxLength: 50,
+    pattern: /^[a-zA-ZğüşıöçĞÜŞİÖÇ0-9\s]+$/,
+    noConsecutiveSpaces: /\s\s/
+  }
+} as const
+
+// Form validasyon fonksiyonu
+const validateCategory = (value: string): string | null => {
+  if (!value.trim()) {
+    return "Lütfen bir kategori girin"
+  }
+
+  if (value.length < VALIDATION_RULES.category.minLength) {
+    return `Kategori en az ${VALIDATION_RULES.category.minLength} karakter olmalıdır`
+  }
+
+  if (value.length > VALIDATION_RULES.category.maxLength) {
+    return `Kategori en fazla ${VALIDATION_RULES.category.maxLength} karakter olabilir`
+  }
+
+  if (!VALIDATION_RULES.category.pattern.test(value)) {
+    return "Kategori sadece harf, rakam ve boşluk içerebilir"
+  }
+
+  if (VALIDATION_RULES.category.noConsecutiveSpaces.test(value)) {
+    return "Art arda boşluk kullanılamaz"
+  }
+
+  return null
+}
+
+// Örnek kategoriler
+const EXAMPLE_CATEGORIES = [
+  "Türk Tarihi", "Genel Kültür", "Bilim ve Teknoloji", 
+  "Coğrafya", "Edebiyat", "Spor", "Sanat", "Müzik", "Sinema",
+  "Bilgisayar", "Matematik", "Fizik", "Kimya", "Biyoloji"
+] as const
 
 export default function AiPlusModePage() {
-  const router = useRouter();
-  const [category, setCategory] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter()
+  const [category, setCategory] = useState("")
+  const [error, setError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const validateCategory = (value: string): string | null => {
-    // Boş kontrolü
-    if (!value.trim()) {
-      return "Lütfen bir kategori girin";
-    }
-
-    // Uzunluk kontrolü
-    if (value.length < MIN_CATEGORY_LENGTH) {
-      return `Kategori en az ${MIN_CATEGORY_LENGTH} karakter olmalıdır`;
-    }
-
-    if (value.length > MAX_CATEGORY_LENGTH) {
-      return `Kategori en fazla ${MAX_CATEGORY_LENGTH} karakter olabilir`;
-    }
-
-    // Sadece harf, rakam ve boşluk kontrolü
-    if (!/^[a-zA-ZğüşıöçĞÜŞİÖÇ0-9\s]+$/.test(value)) {
-      return "Kategori sadece harf, rakam ve boşluk içerebilir";
-    }
-
-    // Art arda boşluk kontrolü
-    if (/\s\s/.test(value)) {
-      return "Art arda boşluk kullanılamaz";
-    }
-
-    return null;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Form gönderme işleyicisi
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     
     // Form gönderilirken yeni gönderimi engelle
-    if (isSubmitting) return;
+    if (isSubmitting) return
 
-    // Kategoriyi temizle (baştaki ve sondaki boşlukları kaldır)
-    const cleanedCategory = category.trim();
+    // Kategoriyi temizle
+    const cleanedCategory = category.trim()
     
     // Validasyon kontrolü
-    const validationError = validateCategory(cleanedCategory);
+    const validationError = validateCategory(cleanedCategory)
     if (validationError) {
-      setError(validationError);
-      return;
+      setError(validationError)
+      return
     }
 
-    setIsSubmitting(true);
-    setError("");
+    setIsSubmitting(true)
+    setError("")
 
-    // Yönlendirme
-    router.push(`/play/aiplus/quiz?category=${encodeURIComponent(cleanedCategory)}`);
-  };
+    // Quiz sayfasına yönlendir
+    router.push(`/play/aiplus/quiz?category=${encodeURIComponent(cleanedCategory)}`)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4">
@@ -76,6 +87,7 @@ export default function AiPlusModePage() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-xl mx-auto"
       >
+        {/* Başlık Bölümü */}
         <div className="text-center mb-12">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
@@ -94,6 +106,7 @@ export default function AiPlusModePage() {
           </motion.p>
         </div>
 
+        {/* Form Kartı */}
         <Card className="p-6 md:p-8 bg-white/80 backdrop-blur-sm border-purple-100">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -104,8 +117,8 @@ export default function AiPlusModePage() {
                 id="category"
                 value={category}
                 onChange={(e) => {
-                  setCategory(e.target.value);
-                  setError("");
+                  setCategory(e.target.value)
+                  setError("")
                 }}
                 placeholder="Örn: Türk Edebiyatı, Dünya Tarihi, Bilim..."
                 className={`text-lg py-6 transition-all duration-200 ${
@@ -114,7 +127,7 @@ export default function AiPlusModePage() {
                     : "border-purple-200 focus:border-purple-400 focus:ring-purple-400"
                 }`}
                 disabled={isSubmitting}
-                maxLength={MAX_CATEGORY_LENGTH}
+                maxLength={VALIDATION_RULES.category.maxLength}
               />
               {error && (
                 <div className="flex items-center gap-2 mt-2 text-red-600">
@@ -135,30 +148,28 @@ export default function AiPlusModePage() {
               </Button>
 
               <p className="text-xs text-gray-500 text-center">
-                Not: Kategori adı {MIN_CATEGORY_LENGTH}-{MAX_CATEGORY_LENGTH} karakter arasında olmalı ve 
+                Not: Kategori adı {VALIDATION_RULES.category.minLength}-{VALIDATION_RULES.category.maxLength} karakter arasında olmalı ve 
                 sadece harf, rakam ve boşluk içermelidir.
               </p>
             </div>
           </form>
         </Card>
 
-        {/* Bilgilendirme kartı */}
+        {/* Bilgilendirme Kartı */}
         <Card className="mt-6 p-4 bg-purple-50/50 border-purple-100">
           <div className="flex gap-3">
             <div className="flex-shrink-0">
               <AlertCircle className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-purple-900">Kategori Önerileri</h3>
+              <h3 className="text-sm font-medium text-purple-900 mb-1">Kategori Önerileri</h3>
               <p className="mt-1 text-sm text-purple-700">
-                Örnek kategoriler: Türk Tarihi, Genel Kültür, Bilim ve Teknoloji, 
-                Coğrafya, Edebiyat, Spor, Sanat, Müzik, Sinema, Bilgisayar, 
-                Matematik, Fizik, Kimya, Biyoloji
+                Örnek kategoriler: {EXAMPLE_CATEGORIES.join(", ")}
               </p>
             </div>
           </div>
         </Card>
       </motion.div>
     </div>
-  );
+  )
 }

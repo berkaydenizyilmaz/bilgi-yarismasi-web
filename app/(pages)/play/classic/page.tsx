@@ -1,31 +1,44 @@
 "use client"
 
+import React, { useCallback, useMemo, useState } from "react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Category, useCategories } from "@/lib/hooks/useCategories"
 import { BookOpen, Sparkles, Stars } from "lucide-react"
-import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 
-// Animasyon varyantlarını component dışına taşıyalım
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
+// Animasyon varyantları
+const ANIMATION_VARIANTS = {
+  container: {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
     }
+  },
+  item: {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
   }
+} as const
+
+// Özellik kartları için tip tanımı
+type FeatureCard = {
+  icon: typeof Sparkles | typeof BookOpen | typeof Stars
+  title: string
+  description: string
+  gradient: string
+  border: string
+  iconBg: string
+  textColor: string
+  descColor: string
 }
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-}
-
-// Özellik kartları verilerini statik olarak component dışında tanımlayalım
-const FEATURE_CARDS = [
+// Özellik kartları sabitleri
+const FEATURE_CARDS: FeatureCard[] = [
   {
     icon: Sparkles,
     title: "Test Edilmiş Sorular",
@@ -58,77 +71,101 @@ const FEATURE_CARDS = [
   }
 ] as const
 
+// Özellik kartı bileşeni - Performans için memoize edildi
+const FeatureCard = React.memo(({ feature }: { feature: FeatureCard }) => (
+  <Card className={`p-4 bg-gradient-to-br ${feature.gradient} ${feature.border}`}>
+    <div className="flex items-start gap-3">
+      <div className={`p-2 rounded-lg ${feature.iconBg}`}>
+        <feature.icon className="w-5 h-5 text-orange-600" />
+      </div>
+      <div>
+        <h3 className={`font-medium ${feature.textColor}`}>{feature.title}</h3>
+        <p className={`text-sm ${feature.descColor}`}>{feature.description}</p>
+      </div>
+    </div>
+  </Card>
+))
+
+// Kategori kartı bileşeni - Performans için memoize edildi
+const CategoryCard = React.memo(({ 
+  category, 
+  index, 
+  onClick 
+}: { 
+  category: Category
+  index: number
+  onClick: () => void 
+}) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: index * 0.05 }}
+    onClick={onClick}
+    className="group cursor-pointer"
+  >
+    <Card className="relative h-32 sm:h-40 overflow-hidden transition-all duration-300 
+      hover:shadow-lg border-2 border-orange-100 hover:border-orange-200
+      bg-gradient-to-br from-white to-orange-50"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 to-red-500/5 
+        opacity-50 group-hover:opacity-100 transition-opacity duration-300" 
+      />
+      
+      <div className="relative h-full p-4 flex flex-col items-center justify-center">
+        <div className="mb-3 p-2 rounded-full bg-gradient-to-br from-orange-100 to-red-100 
+          group-hover:from-orange-200 group-hover:to-red-200 transition-colors duration-300">
+          {index % 2 === 0 ? (
+            <Sparkles className="w-5 h-5 text-orange-500" />
+          ) : (
+            <Stars className="w-5 h-5 text-orange-500" />
+          )}
+        </div>
+
+        <h2 className="text-base sm:text-lg font-medium text-center text-gray-800 
+          group-hover:text-orange-600 transition-colors duration-300">
+          {category.name}
+        </h2>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500 
+          transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" 
+        />
+      </div>
+    </Card>
+  </motion.div>
+))
+
 export default function ClassicModePage() {
+  // Hooks ve state
   const { categories, isLoading, error } = useCategories()
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
 
-  // handleCategorySelect'i useCallback ile sarmalayalım
+  // Kategori seçim işleyicisi - Memoized
   const handleCategorySelect = useCallback((categoryId: number) => {
     setSelectedCategory(categoryId)
     router.push(`/play/quiz/start/${categoryId}`)
   }, [router])
 
-  // Özellik kartlarını render eden fonksiyonu memoize edelim
+  // Özellik kartlarını render et - Memoized
   const renderFeatureCards = useMemo(() => (
-    FEATURE_CARDS.map((card, index) => (
-      <Card key={index} className={`p-4 bg-gradient-to-br ${card.gradient} ${card.border}`}>
-        <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-lg ${card.iconBg}`}>
-            <card.icon className="w-5 h-5 text-orange-600" />
-          </div>
-          <div>
-            <h3 className={`font-medium ${card.textColor}`}>{card.title}</h3>
-            <p className={`text-sm ${card.descColor}`}>{card.description}</p>
-          </div>
-        </div>
-      </Card>
+    FEATURE_CARDS.map((feature, index) => (
+      <FeatureCard key={index} feature={feature} />
     ))
   ), [])
 
-  // Kategori kartlarını render eden fonksiyonu memoize edelim
+  // Kategori kartlarını render et - Memoized
   const renderCategoryCards = useMemo(() => (
     categories.map((category: Category, index: number) => (
-      <motion.div
+      <CategoryCard 
         key={category.id}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.05 }}
+        category={category}
+        index={index}
         onClick={() => handleCategorySelect(category.id)}
-        className="group cursor-pointer"
-      >
-        <Card className="relative h-32 sm:h-40 overflow-hidden transition-all duration-300 
-          hover:shadow-lg border-2 border-orange-100 hover:border-orange-200
-          bg-gradient-to-br from-white to-orange-50"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 to-red-500/5 
-            opacity-50 group-hover:opacity-100 transition-opacity duration-300" 
-          />
-          
-          <div className="relative h-full p-4 flex flex-col items-center justify-center">
-            <div className="mb-3 p-2 rounded-full bg-gradient-to-br from-orange-100 to-red-100 
-              group-hover:from-orange-200 group-hover:to-red-200 transition-colors duration-300">
-              {index % 2 === 0 ? (
-                <Sparkles className="w-5 h-5 text-orange-500" />
-              ) : (
-                <Stars className="w-5 h-5 text-orange-500" />
-              )}
-            </div>
-
-            <h2 className="text-base sm:text-lg font-medium text-center text-gray-800 
-              group-hover:text-orange-600 transition-colors duration-300">
-              {category.name}
-            </h2>
-
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500 
-              transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" 
-            />
-          </div>
-        </Card>
-      </motion.div>
+      />
     ))
   ), [categories, handleCategorySelect])
 
+  // Yükleme durumu
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -137,6 +174,7 @@ export default function ClassicModePage() {
     )
   }
 
+  // Hata durumu
   if (error) {
     return (
       <div className="text-center p-4 text-red-500">
@@ -148,6 +186,7 @@ export default function ClassicModePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Başlık Bölümü */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -164,6 +203,7 @@ export default function ClassicModePage() {
           </p>
         </motion.div>
 
+        {/* Özellik Kartları */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -173,6 +213,7 @@ export default function ClassicModePage() {
           {renderFeatureCards}
         </motion.div>
 
+        {/* Kategori Başlığı */}
         <motion.h2 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -182,6 +223,7 @@ export default function ClassicModePage() {
           Kategori Seçin
         </motion.h2>
 
+        {/* Kategori Kartları */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -191,6 +233,7 @@ export default function ClassicModePage() {
           {renderCategoryCards}
         </motion.div>
 
+        {/* Alt Bilgi */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
