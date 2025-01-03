@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams } from "next/navigation"
 import { useQuiz } from "@/lib/hooks/useQuiz"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -11,7 +11,18 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookOpen, AlertCircle } from "lucide-react"
 
+// Animasyon sabitleri
+const ANIMATION_VARIANTS = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+} as const
+
+// Seçenek tipi
+type Option = string
+
 export default function QuizPage() {
+  // State ve hooks
   const { categoryId } = useParams<{ categoryId: string }>()
   const searchParams = useSearchParams()
   const categoryName = searchParams.get("name")
@@ -28,32 +39,44 @@ export default function QuizPage() {
     handleAnswer,
   } = useQuiz(categoryId)
 
-  // Sonraki soruya geçme işlemi
-  const handleNextQuestion = () => {
+  // Sonraki soruya geçme işleyicisi - Memoized
+  const handleNextQuestion = useCallback(() => {
     if (!selectedOption) return
     handleAnswer(selectedOption)
     setSelectedOption(null)
-  }
+  }, [selectedOption, handleAnswer])
 
-  // Quiz'i bitirme işlemi
-  const handleFinishQuiz = async () => {
+  // Quiz'i bitirme işleyicisi - Memoized
+  const handleFinishQuiz = useCallback(async () => {
     if (!selectedOption) return
     setIsSubmitting(true)
     await handleAnswer(selectedOption)
     setIsSubmitting(false)
-  }
+  }, [selectedOption, handleAnswer])
 
+  // İlk yüklemede soruları bir kez getir
   useEffect(() => {
+    let isMounted = true
+
     const initQuiz = async () => {
-      await fetchQuestions()
-      setInitialLoading(false)
+      if (!questions.length) { // Sadece sorular boşsa yükle
+        await fetchQuestions()
+      }
+      if (isMounted) {
+        setInitialLoading(false)
+      }
     }
 
     if (!isLoading) {
       initQuiz()
     }
-  }, [categoryId])
 
+    return () => {
+      isMounted = false
+    }
+  }, [categoryId, fetchQuestions, isLoading, questions.length])
+
+  // Yükleme durumu
   if (initialLoading || isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -62,6 +85,7 @@ export default function QuizPage() {
     )
   }
 
+  // Hata durumu
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -93,6 +117,7 @@ export default function QuizPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+        {/* Üst Bilgi Kartı */}
         <Card className="max-w-3xl mx-auto bg-gradient-to-br from-orange-600 to-red-500 text-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
@@ -112,7 +137,9 @@ export default function QuizPage() {
           </div>
         </Card>
 
+        {/* Soru Kartı */}
         <Card className="max-w-3xl mx-auto bg-white/80 backdrop-blur-sm rounded-lg shadow-lg">
+          {/* İlerleme Çubuğu */}
           <div className="h-1.5 sm:h-2 bg-gray-100 rounded-t-lg overflow-hidden">
             <motion.div 
               className="h-full bg-gradient-to-r from-orange-500 to-red-500"
@@ -125,12 +152,13 @@ export default function QuizPage() {
           </div>
 
           <div className="p-4 sm:p-6 md:p-8">
+            {/* Soru Metni */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestionIndex}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={ANIMATION_VARIANTS.initial}
+                animate={ANIMATION_VARIANTS.animate}
+                exit={ANIMATION_VARIANTS.exit}
                 transition={{ duration: 0.3 }}
                 className="mb-6 sm:mb-8"
               >
@@ -140,8 +168,9 @@ export default function QuizPage() {
               </motion.div>
             </AnimatePresence>
 
+            {/* Seçenekler */}
             <div className="space-y-3 sm:space-y-4">
-              {currentQuestion.options.map((option, index) => (
+              {currentQuestion.options.map((option: Option, index: number) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.01 }}
@@ -176,6 +205,7 @@ export default function QuizPage() {
               ))}
             </div>
 
+            {/* İlerleme Butonu */}
             <motion.div 
               className="flex justify-end mt-6 sm:mt-8"
               initial={{ opacity: 0 }}
