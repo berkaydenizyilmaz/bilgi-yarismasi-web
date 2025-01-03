@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Brain, ArrowRight, ArrowLeft, CheckCircle2, Mail, Lock, User, UserPlus, LogIn } from "lucide-react"
 
-// Form şemaları
+// Form validasyon şemaları
 const loginSchema = z.object({
   email: z.string().email({
     message: "Geçerli bir email adresi giriniz.",
@@ -29,6 +29,7 @@ const loginSchema = z.object({
   }),
 })
 
+// Kayıt formu için genişletilmiş validasyon şeması
 const registerSchema = z.object({
   username: z.string().min(3, {
     message: "Kullanıcı adı en az 3 karakter olmalıdır.",
@@ -36,36 +37,36 @@ const registerSchema = z.object({
   email: z.string().email({
     message: "Geçerli bir email adresi giriniz.",
   }),
-  password: z.string().min(6, {
-    message: "Şifre en az 6 karakter olmalıdır.",
-  }),
+  password: z.string()
+    .min(6, { message: "Şifre en az 6 karakter olmalıdır." }),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Şifreler eşleşmiyor.",
   path: ["confirmPassword"],
 })
 
-// Tüm input alanları için ortak className (hem login hem register formunda)
+// Form input alanları için ortak stil tanımlaması
 const inputClassName = `h-12 px-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 
-bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
-focus:border-orange-300 dark:focus:border-orange-500 
-focus:ring-2 focus:ring-orange-200/50 dark:focus:ring-orange-500/30 
-transition-all duration-300 pl-10
-placeholder:text-gray-400 dark:placeholder:text-gray-500
-focus:outline-none
-focus-visible:outline-none
-focus-visible:ring-0
-focus-visible:ring-offset-0
-ring-offset-0
-outline-none
-selection:bg-orange-200 dark:selection:bg-orange-500/30`
+  bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm 
+  focus:border-orange-300 dark:focus:border-orange-500 
+  focus:ring-2 focus:ring-orange-200/50 dark:focus:ring-orange-500/30 
+  transition-all duration-300 pl-10
+  placeholder:text-gray-400 dark:placeholder:text-gray-500
+  focus:outline-none focus-visible:outline-none
+  focus-visible:ring-0 focus-visible:ring-offset-0
+  ring-offset-0 outline-none
+  selection:bg-orange-200 dark:selection:bg-orange-500/30`
 
 export default function AuthPage() {
+  // State yönetimi için açıklayıcı gruplandırma
   const [isLogin, setIsLogin] = useState(true)
   const [error, setError] = useState<string>("")
-  const { login, register, isLoading } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Auth context hook'u
+  const { login, register, isLoading } = useAuth()
 
+  // Form hook'ları ve varsayılan değerler
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -84,7 +85,8 @@ export default function AuthPage() {
     },
   })
 
-  async function onLoginSubmit(values: z.infer<typeof loginSchema>) {
+  // Form submit işleyicileri
+  const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     try {
       setError("")
       setIsSubmitting(true)
@@ -96,7 +98,7 @@ export default function AuthPage() {
     }
   }
 
-  async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
+  const onRegisterSubmit = async (values: z.infer<typeof registerSchema>) => {
     try {
       setError("")
       setIsSubmitting(true)
@@ -105,6 +107,19 @@ export default function AuthPage() {
       setError(error instanceof Error ? error.message : "Kayıt olurken bir hata oluştu")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Form geçiş işleyicisi
+  const handleFormSwitch = () => {
+    setError("")
+    setIsLogin(!isLogin)
+    
+    // Form değerlerini sıfırla
+    if (isLogin) {
+      registerForm.reset()
+    } else {
+      loginForm.reset()
     }
   }
 
@@ -619,16 +634,7 @@ export default function AuthPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => {
-                    setError("");
-                    setIsLogin(!isLogin);
-                    
-                    if (isLogin) {
-                      registerForm.reset();
-                    } else {
-                      loginForm.reset();
-                    }
-                  }}
+                  onClick={handleFormSwitch}
                   className="relative overflow-hidden group text-rose-600 hover:text-orange-700 transition-all duration-500"
                 >
                   {isLogin ? (
