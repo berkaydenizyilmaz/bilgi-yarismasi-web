@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useEffect, useState } from "react"
 import useSWR from "swr"
 import { fetcher } from "@/lib/swr-config"
 import { Bar } from 'react-chartjs-2'
@@ -9,10 +10,10 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Users, MessageSquare, BarChart3, ClipboardList, FileText } from "lucide-react"
 import { motion } from "framer-motion"
 
-// Chart.js kayıt
+// Chart.js bileşenlerini kaydet
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-// Tip tanımlamaları
+// Veri tipleri
 interface QuizCountByDate {
   date: string
   count: number
@@ -34,28 +35,85 @@ interface StatisticsData {
   questionsCountByCategory: QuestionsCountByCategory[]
 }
 
-function StatCard({ title, value, icon, gradient }: { title: string; value: number; icon: React.ReactNode; gradient: string }) {
-  return (
-    <Card className="relative bg-white/80 backdrop-blur-sm p-4 md:p-6 rounded-2xl shadow-xl border-0 overflow-hidden group hover:shadow-2xl transition-all duration-300">
-      <div className="relative z-10">
-        <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-3">
-          <div className="p-2 md:p-3 rounded-xl bg-gray-50 group-hover:scale-110 transition-transform duration-300">
-            {icon}
-          </div>
-          <h3 className="text-sm md:text-base text-gray-600">{title}</h3>
+// İstatistik kartı bileşeni - Performans için memoize edildi
+const StatCard = React.memo(({ 
+  title, 
+  value, 
+  icon, 
+  gradient 
+}: { 
+  title: string
+  value: number
+  icon: React.ReactNode
+  gradient: string 
+}) => (
+  <Card className="relative bg-white/80 backdrop-blur-sm p-4 md:p-6 rounded-2xl shadow-xl border-0 overflow-hidden group hover:shadow-2xl transition-all duration-300">
+    <div className="relative z-10">
+      <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-3">
+        <div className="p-2 md:p-3 rounded-xl bg-gray-50 group-hover:scale-110 transition-transform duration-300">
+          {icon}
         </div>
-        <p className={`text-xl md:text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
-          {value.toLocaleString()}
-        </p>
+        <h3 className="text-sm md:text-base text-gray-600">{title}</h3>
       </div>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-    </Card>
-  )
+      <p className={`text-xl md:text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+        {value.toLocaleString()}
+      </p>
+    </div>
+    <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+  </Card>
+))
+
+// Chart wrapper bileşeni
+const ResponsiveChart = React.memo(({ data, options }: { data: any, options: any }) => {
+  const [key, setKey] = useState(0)
+
+  useEffect(() => {
+    // Pencere boyutu değiştiğinde Chart'ı yeniden render et
+    const handleResize = () => {
+      setKey(prev => prev + 1)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  return <Bar key={key} data={data} options={options} />
+})
+
+// Grafik seçenekleri - Performans için dışarıda tanımlandı
+const baseChartOptions = {
+  maintainAspectRatio: false,
+  responsive: true,
+  resizeDelay: 0, // Yeniden boyutlandırma gecikmesini kaldır
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        precision: 0
+      }
+    },
+    x: {
+      grid: {
+        display: false
+      }
+    }
+  },
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'Günlük Quiz İstatistikleri'
+    }
+  }
 }
 
 export default function AdminStatistics() {
+  // SWR ile veri çekme
   const { data, error, isLoading } = useSWR<{ data: StatisticsData }>('/api/admin/statistics', fetcher)
 
+  // Yükleme durumu
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -64,6 +122,7 @@ export default function AdminStatistics() {
     )
   }
 
+  // Hata durumu
   if (error || !data) {
     return (
       <div className="text-center p-4">
@@ -72,59 +131,63 @@ export default function AdminStatistics() {
     )
   }
 
+  // Grafik verilerini hazırla
+  const sortedQuizData = [...data.data.quizzesCountByDate, {
+    date: new Date().toISOString().split('T')[0],
+    count: 0
+  }].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
   const chartData = {
-    labels: [...data.data.quizzesCountByDate, {
-      date: new Date().toISOString().split('T')[0],
-      count: 0
-    }]
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map(item => {
-        // Tarihi daha okunabilir formata çevirelim
-        const date = new Date(item.date);
-        return date.toLocaleDateString('tr-TR', { 
-          day: 'numeric',
-          month: 'short'
-        });
-      }),
-    datasets: [
-      {
-        label: 'Günlük Quiz Sayısı',
-        data: [...data.data.quizzesCountByDate, {
-          date: new Date().toISOString().split('T')[0],
-          count: 0
-        }]
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-          .map(item => item.count),
-        backgroundColor: 'rgba(249, 115, 22, 0.5)',
-        borderColor: 'rgb(249, 115, 22)',
-        borderWidth: 1,
-      },
-    ],
+    labels: sortedQuizData.map(item => {
+      const date = new Date(item.date)
+      return date.toLocaleDateString('tr-TR', { 
+        day: 'numeric',
+        month: 'short'
+      })
+    }),
+    datasets: [{
+      label: 'Günlük Quiz Sayısı',
+      data: sortedQuizData.map(item => item.count),
+      backgroundColor: 'rgba(249, 115, 22, 0.5)',
+      borderColor: 'rgb(249, 115, 22)',
+      borderWidth: 1,
+    }],
   }
 
-  const chartOptions = {
-    maintainAspectRatio: false,
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          precision: 0
-        }
-      },
-      x: {
-        grid: {
-          display: false
+  // Responsive grafik seçenekleri
+  const responsiveChartOptions = {
+    ...baseChartOptions,
+    plugins: {
+      ...baseChartOptions.plugins,
+      legend: {
+        ...baseChartOptions.plugins.legend,
+        labels: {
+          font: {
+            size: window.innerWidth < 768 ? 12 : 14
+          }
         }
       }
     },
-    plugins: {
-      legend: {
-        position: 'top' as const,
+    scales: {
+      ...baseChartOptions.scales,
+      y: {
+        ...baseChartOptions.scales.y,
+        grid: {
+          color: 'rgba(0,0,0,0.05)'
+        },
+        ticks: {
+          font: {
+            size: window.innerWidth < 768 ? 10 : 12
+          }
+        }
       },
-      title: {
-        display: true,
-        text: 'Günlük Quiz İstatistikleri'
+      x: {
+        ...baseChartOptions.scales.x,
+        ticks: {
+          font: {
+            size: window.innerWidth < 768 ? 10 : 12
+          }
+        }
       }
     }
   }
@@ -136,6 +199,7 @@ export default function AdminStatistics() {
         animate={{ opacity: 1 }}
         className="max-w-7xl mx-auto"
       >
+        {/* Başlık */}
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -144,6 +208,7 @@ export default function AdminStatistics() {
           Admin İstatistikleri
         </motion.h1>
 
+        {/* İstatistik Kartları */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -182,6 +247,7 @@ export default function AdminStatistics() {
           />
         </motion.div>
 
+        {/* Grafik */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -192,51 +258,12 @@ export default function AdminStatistics() {
               Tarihe Göre Quiz İstatistikleri
             </h3>
             <div className="h-[300px] md:h-[400px]">
-              <Bar data={chartData} options={{
-                ...chartOptions,
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  ...chartOptions.plugins,
-                  legend: {
-                    ...chartOptions.plugins.legend,
-                    labels: {
-                      font: {
-                        size: window.innerWidth < 768 ? 12 : 14
-                      }
-                    }
-                  }
-                },
-                scales: {
-                  ...chartOptions.scales,
-                  y: {
-                    ...chartOptions.scales.y,
-                    grid: {
-                      color: 'rgba(0,0,0,0.05)'
-                    },
-                    ticks: {
-                      font: {
-                        size: window.innerWidth < 768 ? 10 : 12
-                      }
-                    }
-                  },
-                  x: {
-                    ...chartOptions.scales.x,
-                    grid: {
-                      display: false
-                    },
-                    ticks: {
-                      font: {
-                        size: window.innerWidth < 768 ? 10 : 12
-                      }
-                    }
-                  }
-                }
-              }} />
+              <ResponsiveChart data={chartData} options={responsiveChartOptions} />
             </div>
           </Card>
         </motion.div>
 
+        {/* Kategori İstatistikleri */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
