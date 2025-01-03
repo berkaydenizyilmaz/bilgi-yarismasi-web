@@ -1,31 +1,39 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Trophy, CheckCircle2, XCircle, Sparkles, Home, RotateCcw } from "lucide-react";
-import { Suspense } from "react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { motion, AnimatePresence } from "framer-motion";
-import { memo } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { Card } from "@/components/ui/card"
+import { Trophy, CheckCircle2, XCircle, Sparkles, Home, RotateCcw } from "lucide-react"
+import { Suspense } from "react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { motion, AnimatePresence } from "framer-motion"
+import { memo } from "react"
 
+// Tip tanımlamaları
 interface Question {
-  question: string;
+  question: string
   options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  correct_option: string;
-  userAnswer?: string;
-  isCorrect?: boolean;
+    A: string
+    B: string
+    C: string
+    D: string
+  }
+  correct_option: "A" | "B" | "C" | "D"
+  userAnswer?: string
+  isCorrect?: boolean
 }
 
-const QuestionCard = memo(({ questionNumber, question }: { questionNumber: number; question: Question }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+// Soru kartı bileşeni - Performans için memoize edildi
+const QuestionCard = memo(({ 
+  questionNumber, 
+  question 
+}: { 
+  questionNumber: number
+  question: Question 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <motion.div
@@ -38,6 +46,7 @@ const QuestionCard = memo(({ questionNumber, question }: { questionNumber: numbe
           hover:shadow-md ${isExpanded ? 'ring-2 ring-purple-400' : ''}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
+        {/* Soru Başlığı */}
         <div className="flex items-start justify-between">
           <h3 className="text-base md:text-lg font-semibold mb-2 flex-1 pr-4">
             <span className="text-purple-600 mr-2">#{questionNumber}</span>
@@ -48,6 +57,7 @@ const QuestionCard = memo(({ questionNumber, question }: { questionNumber: numbe
           </span>
         </div>
 
+        {/* Seçenekler - Genişletildiğinde göster */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div 
@@ -57,28 +67,26 @@ const QuestionCard = memo(({ questionNumber, question }: { questionNumber: numbe
               className="space-y-2 mt-4"
             >
               {Object.entries(question.options).map(([key, value]) => {
-                const isUserAnswer = question.userAnswer === key;
-                const isCorrectAnswer = question.correct_option === key;
+                const isUserAnswer = question.userAnswer === key
+                const isCorrectAnswer = question.correct_option === key
 
-                let optionStyle = "bg-white/50 border border-gray-100";
-                let textStyle = "text-gray-600";
-                let keyStyle = "bg-gray-100 text-gray-600";
+                // Seçenek stilleri
+                let optionStyle = "bg-white/50 border border-gray-100"
+                let textStyle = "text-gray-600"
+                let keyStyle = "bg-gray-100 text-gray-600"
 
                 if (isUserAnswer && question.isCorrect) {
-                  // Doğru cevap verilmiş
-                  optionStyle = "bg-green-100 border border-green-200";
-                  textStyle = "text-green-700";
-                  keyStyle = "bg-green-500 text-white";
+                  optionStyle = "bg-green-100 border border-green-200"
+                  textStyle = "text-green-700"
+                  keyStyle = "bg-green-500 text-white"
                 } else if (isUserAnswer && !question.isCorrect) {
-                  // Yanlış cevap verilmiş
-                  optionStyle = "bg-red-100 border border-red-200";
-                  textStyle = "text-red-700";
-                  keyStyle = "bg-red-500 text-white";
+                  optionStyle = "bg-red-100 border border-red-200"
+                  textStyle = "text-red-700"
+                  keyStyle = "bg-red-500 text-white"
                 } else if (isCorrectAnswer && !question.isCorrect) {
-                  // Doğru cevap (kullanıcı yanlış yapmışsa)
-                  optionStyle = "bg-green-100 border border-green-200";
-                  textStyle = "text-green-700";
-                  keyStyle = "bg-green-500 text-white";
+                  optionStyle = "bg-green-100 border border-green-200"
+                  textStyle = "text-green-700"
+                  keyStyle = "bg-green-500 text-white"
                 }
 
                 return (
@@ -100,16 +108,17 @@ const QuestionCard = memo(({ questionNumber, question }: { questionNumber: numbe
                       </span>
                     )}
                   </div>
-                );
+                )
               })}
             </motion.div>
           )}
         </AnimatePresence>
       </Card>
     </motion.div>
-  );
-});
+  )
+})
 
+// İstatistik kartı bileşeni - Performans için memoize edildi
 const StatCard = memo(({ 
   icon, 
   title, 
@@ -117,11 +126,11 @@ const StatCard = memo(({
   className = "",
   delay = 0 
 }: { 
-  icon: any; 
-  title: string; 
-  value: string; 
-  className?: string;
-  delay?: number;
+  icon: React.ReactNode
+  title: string
+  value: string
+  className?: string
+  delay?: number
 }) => {
   return (
     <motion.div
@@ -129,91 +138,87 @@ const StatCard = memo(({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.3 }}
     >
-      <Card className={`text-center p-3 sm:p-4 md:p-6 ${className}`}>
-        <div className="flex flex-col items-center gap-1 sm:gap-2">
+      <Card className={`p-4 ${className}`}>
+        <div className="flex items-center gap-4">
           {icon}
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">{title}</p>
-          <motion.p 
-            className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: delay + 0.2, duration: 0.3 }}
-          >
-            {value}
-          </motion.p>
+          <div>
+            <p className="text-sm text-gray-600">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+          </div>
         </div>
       </Card>
     </motion.div>
-  );
-});
+  )
+})
 
+// Ana içerik bileşeni
 function ResultContent() {
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode");
-  const categoryId = searchParams.get("category");
-  const score = Number(searchParams.get("score") || 0);
-  const correct = Number(searchParams.get("correct") || 0);
-  const incorrect = Number(searchParams.get("incorrect") || 0);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [categoryName, setCategoryName] = useState<string>("");
-  const router = useRouter();
+  // State ve hooks
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const mode = searchParams.get("mode")
+  const categoryId = searchParams.get("category")
+  const score = parseInt(searchParams.get("score") || "0")
+  const correct = parseInt(searchParams.get("correct") || "0")
+  const incorrect = parseInt(searchParams.get("incorrect") || "0")
+  
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [categoryName, setCategoryName] = useState("")
 
+  // Kategori adını getir
   const fetchCategoryName = useCallback(async () => {
-    if (categoryId && !isNaN(Number(categoryId))) {
-      try {
-        const response = await fetch(`/api/categories/${categoryId}`, {
-          cache: 'force-cache'
-        });
-        const data = await response.json();
-        if (data.success) {
-          setCategoryName(data.data.name);
-        }
-      } catch (error) {
-        console.error("Kategori adı alınamadı:", error);
-      }
-    }
-  }, [categoryId]);
+    if (!categoryId) return
 
+    try {
+      const response = await fetch(`/api/categories/${categoryId}`)
+      const data = await response.json()
+      setCategoryName(data.data.name)
+    } catch (error) {
+      console.error("Kategori adı alınamadı:", error)
+    }
+  }, [categoryId])
+
+  // Soruları ve kategori adını yükle
   useEffect(() => {
-    const savedQuestions = localStorage.getItem('aiQuizQuestions');
+    const savedQuestions = localStorage.getItem('aiQuizQuestions')
     if (savedQuestions) {
-      setQuestions(JSON.parse(savedQuestions));
+      setQuestions(JSON.parse(savedQuestions))
     }
 
     if (mode === "ai") {
-      fetchCategoryName();
+      fetchCategoryName()
     }
-  }, [mode, fetchCategoryName]);
+  }, [mode, fetchCategoryName])
 
+  // Geri tuşu yönetimi
   useEffect(() => {
     const handlePopState = () => {
-      router.push('/play');
-    };
+      router.push('/play')
+    }
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [router]);
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [router])
 
-  const getScoreMessage = (score: number) => {
-    if (score >= 90) return "Mükemmel!";
-    if (score >= 70) return "Çok İyi!";
-    if (score >= 50) return "İyi!";
-    return "Geliştirebilirsin!";
-  };
+  // Skor mesajı ve rengi - Memoized
+  const scoreMessage = useMemo(() => {
+    if (score >= 90) return "Mükemmel!"
+    if (score >= 70) return "Çok İyi!"
+    if (score >= 50) return "İyi!"
+    return "Geliştirebilirsin!"
+  }, [score])
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-purple-600";
-    if (score >= 70) return "text-green-600";
-    if (score >= 50) return "text-blue-600";
-    return "text-orange-600";
-  };
-
-  const scoreMessage = useMemo(() => getScoreMessage(score), [score]);
-  const scoreColor = useMemo(() => getScoreColor(score), [score]);
+  const scoreColor = useMemo(() => {
+    if (score >= 90) return "text-purple-600"
+    if (score >= 70) return "text-green-600"
+    if (score >= 50) return "text-blue-600"
+    return "text-orange-600"
+  }, [score])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 py-6 sm:py-8 md:py-12 px-3 sm:px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Başlık ve Skor */}
         <motion.div 
           className="text-center mb-8 sm:mb-12"
           initial={{ opacity: 0, y: -20 }}
@@ -238,6 +243,7 @@ function ResultContent() {
           </motion.p>
         </motion.div>
 
+        {/* İstatistik Kartları */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
           <StatCard
             icon={<Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />}
@@ -262,6 +268,7 @@ function ResultContent() {
           />
         </div>
 
+        {/* Soru Listesi */}
         <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-12">
           {questions.map((question, index) => (
             <QuestionCard
@@ -272,6 +279,7 @@ function ResultContent() {
           ))}
         </div>
 
+        {/* Aksiyon Butonları */}
         <motion.div 
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 sm:mt-12"
           initial={{ opacity: 0, y: 20 }}
@@ -295,13 +303,14 @@ function ResultContent() {
         </motion.div>
       </div>
     </div>
-  );
+  )
 }
 
-export default function AiResultPage() {
+// Ana bileşen
+export default function ResultPage() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <ResultContent />
     </Suspense>
-  );
+  )
 }

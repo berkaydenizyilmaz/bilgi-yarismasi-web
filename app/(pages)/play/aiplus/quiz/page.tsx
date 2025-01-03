@@ -1,47 +1,58 @@
-"use client";
+"use client"
 
-import { Suspense, useCallback, useMemo } from "react";
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { AiLoading } from "@/components/ui/ai-loading";
-import { Stars } from "@/components/ui/stars";
-import { AlertCircle } from "lucide-react";
+import { Suspense, useCallback, useMemo } from "react"
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
+import { AiLoading } from "@/components/ui/ai-loading"
+import { Stars } from "@/components/ui/stars"
+import { AlertCircle } from "lucide-react"
 
+// Soru tipi tanımı
 interface Question {
-  question: string;
+  question: string
   options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  correct_option: string;
-  userAnswer?: string;
-  isCorrect?: boolean;
+    A: string
+    B: string
+    C: string
+    D: string
+  }
+  correct_option: "A" | "B" | "C" | "D"
+  userAnswer?: string
+  isCorrect?: boolean
 }
 
-function QuizContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const category = searchParams.get("category");
-  
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [incorrectCount, setIncorrectCount] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [isAnswerSubmitting, setIsAnswerSubmitting] = useState(false);
+// Animasyon sabitleri
+const ANIMATION_VARIANTS = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+} as const
 
+// Quiz içerik bileşeni
+function QuizContent() {
+  // State ve hooks
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const category = searchParams.get("category")
+  
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [correctCount, setCorrectCount] = useState(0)
+  const [incorrectCount, setIncorrectCount] = useState(0)
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [isAnswerSubmitting, setIsAnswerSubmitting] = useState(false)
+
+  // Soruları getir - Memoized
   const fetchQuestions = useCallback(async () => {
     if (!category) {
-      setError("Kategori bulunamadı");
-      return;
+      setError("Kategori bulunamadı")
+      return
     }
 
     try {
@@ -50,81 +61,89 @@ function QuizContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category }),
         cache: 'no-store'
-      });
+      })
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error?.message || "Sorular alınamadı");
+        const data = await response.json()
+        throw new Error(data.error?.message || "Sorular alınamadı")
       }
 
-      const data = await response.json();
-      setQuestions(data.data.questions);
+      const data = await response.json()
+      setQuestions(data.data.questions)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sorular alınamadı");
+      setError(err instanceof Error ? err.message : "Sorular alınamadı")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [category]);
+  }, [category])
 
+  // İlk yüklemede soruları getir
   useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
+    fetchQuestions()
+  }, [fetchQuestions])
 
-  const currentQuestion = useMemo(() => questions[currentQuestionIndex], [questions, currentQuestionIndex]);
+  // Mevcut soruyu al - Memoized
+  const currentQuestion = useMemo(
+    () => questions[currentQuestionIndex], 
+    [questions, currentQuestionIndex]
+  )
 
+  // Cevap işleme - Memoized
   const handleAnswer = useCallback(async (selectedOption: string) => {
-    if (isAnswerSubmitting) return;
+    if (isAnswerSubmitting) return
     
-    setIsAnswerSubmitting(true);
-    setSelectedOption(selectedOption);
+    setIsAnswerSubmitting(true)
+    setSelectedOption(selectedOption)
 
-    const isCorrect = selectedOption === currentQuestion.correct_option;
+    const isCorrect = selectedOption === currentQuestion.correct_option
 
-    const updatedQuestions = [...questions];
+    // Soruları güncelle
+    const updatedQuestions = [...questions]
     updatedQuestions[currentQuestionIndex] = {
       ...currentQuestion,
       userAnswer: selectedOption,
       isCorrect
-    };
-    setQuestions(updatedQuestions);
+    }
+    setQuestions(updatedQuestions)
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500))
 
+    // Son soru kontrolü
     if (currentQuestionIndex === questions.length - 1) {
-      const finalResults = updatedQuestions.reduce((acc, q) => {
-        if (q.isCorrect) {
-          acc.correct++;
-        } else {
-          acc.incorrect++;
-        }
-        return acc;
-      }, { correct: 0, incorrect: 0 });
+      const finalResults = updatedQuestions.reduce(
+        (acc, q) => {
+          if (q.isCorrect) acc.correct++
+          else acc.incorrect++
+          return acc
+        }, 
+        { correct: 0, incorrect: 0 }
+      )
 
-      localStorage.setItem('aiQuizQuestions', JSON.stringify(updatedQuestions));
+      // Sonuçları kaydet ve yönlendir
+      localStorage.setItem('aiQuizQuestions', JSON.stringify(updatedQuestions))
       
       router.push(
         `/play/ai/result?mode=aiplus&category=${encodeURIComponent(category || "")}&score=${Math.round((finalResults.correct / questions.length) * 100)}&correct=${finalResults.correct}&incorrect=${finalResults.incorrect}`
-      );
+      )
     } else {
-      if (isCorrect) {
-        setCorrectCount(prev => prev + 1);
-      } else {
-        setIncorrectCount(prev => prev + 1);
-      }
+      // Sonraki soruya geç
+      if (isCorrect) setCorrectCount(prev => prev + 1)
+      else setIncorrectCount(prev => prev + 1)
       
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setCurrentQuestionIndex(prev => prev + 1);
-      setSelectedOption(null);
+      await new Promise(resolve => setTimeout(resolve, 300))
+      setCurrentQuestionIndex(prev => prev + 1)
+      setSelectedOption(null)
     }
     
-    setIsAnswerSubmitting(false);
-  }, [currentQuestionIndex, questions, isAnswerSubmitting, category, router]);
+    setIsAnswerSubmitting(false)
+  }, [currentQuestionIndex, questions, isAnswerSubmitting, category, router, currentQuestion])
 
+  // Seçenekleri render et - Memoized
   const renderOptions = useMemo(() => {
-    if (!currentQuestion) return null;
+    if (!currentQuestion) return null
 
     return Object.entries(currentQuestion.options).map(([key, value]) => {
-      const isSelected = selectedOption === key;
+      const isSelected = selectedOption === key
       
       return (
         <motion.button
@@ -164,14 +183,14 @@ function QuizContent() {
             </span>
           </div>
         </motion.button>
-      );
-    });
-  }, [currentQuestion, selectedOption, isAnswerSubmitting, handleAnswer]);
+      )
+    })
+  }, [currentQuestion, selectedOption, isAnswerSubmitting, handleAnswer])
 
-  if (isLoading) {
-    return <AiLoading />;
-  }
+  // Yükleme durumu
+  if (isLoading) return <AiLoading />
 
+  // Hata durumu
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -179,9 +198,7 @@ function QuizContent() {
           <Card className="bg-red-50 border-red-200 p-6">
             <div className="flex flex-col items-center gap-4">
               <AlertCircle className="w-12 h-12 text-red-500" />
-              <h2 className="text-xl font-semibold text-red-700">
-                Hata Oluştu
-              </h2>
+              <h2 className="text-xl font-semibold text-red-700">Hata Oluştu</h2>
               <p className="text-red-600 mb-4">{error}</p>
               <Link href="/play/aiplus">
                 <Button variant="outline" className="bg-white hover:bg-gray-50">
@@ -192,14 +209,15 @@ function QuizContent() {
           </Card>
         </div>
       </div>
-    );
+    )
   }
 
-  if (!currentQuestion) return null;
+  if (!currentQuestion) return null
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+        {/* Üst Bilgi Kartı */}
         <Card className="max-w-3xl mx-auto bg-gradient-to-br from-purple-600 to-pink-500 text-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
@@ -219,7 +237,9 @@ function QuizContent() {
           </div>
         </Card>
 
+        {/* Soru Kartı */}
         <Card className="max-w-3xl mx-auto bg-white/80 backdrop-blur-sm rounded-lg shadow-lg">
+          {/* İlerleme Çubuğu */}
           <div className="h-1.5 sm:h-2 bg-gray-100 rounded-t-lg overflow-hidden">
             <motion.div 
               className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
@@ -232,12 +252,13 @@ function QuizContent() {
           </div>
 
           <div className="p-4 sm:p-6 md:p-8">
+            {/* Soru Metni */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestionIndex}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={ANIMATION_VARIANTS.initial}
+                animate={ANIMATION_VARIANTS.animate}
+                exit={ANIMATION_VARIANTS.exit}
                 transition={{ duration: 0.3 }}
                 className="mb-6 sm:mb-8"
               >
@@ -247,6 +268,7 @@ function QuizContent() {
               </motion.div>
             </AnimatePresence>
 
+            {/* Seçenekler */}
             <div className="space-y-3 sm:space-y-4">
               {renderOptions}
             </div>
@@ -254,13 +276,14 @@ function QuizContent() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
 
+// Ana bileşen
 export default function AiPlusQuizPage() {
   return (
     <Suspense fallback={<AiLoading />}>
       <QuizContent />
     </Suspense>
-  );
+  )
 }
