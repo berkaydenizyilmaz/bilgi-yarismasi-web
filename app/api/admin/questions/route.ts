@@ -6,7 +6,13 @@ import { checkAdminRole } from "@/lib/auth";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
-// Validasyon şeması
+/**
+ * Soru validasyon şeması
+ * questionText: Soru metni (zorunlu)
+ * optionA/B/C/D: Şıklar (zorunlu)
+ * correctOption: Doğru cevap (A,B,C,D)
+ * categoryId: Kategori ID (pozitif sayı)
+ */
 const questionSchema = z.object({
   questionText: z.string().min(1, "Soru metni gereklidir"),
   optionA: z.string().min(1, "A şıkkı gereklidir"),
@@ -17,19 +23,31 @@ const questionSchema = z.object({
   categoryId: z.number().positive()
 });
 
-// Soruları listeleme (GET)
+/**
+ * GET /api/admin/questions
+ * Soruları listeler (sayfalama, arama ve kategori filtresi ile)
+ * 
+ * Query Parametreleri:
+ * - page: Sayfa numarası (varsayılan: 1)
+ * - search: Soru metninde arama
+ * - category: Kategori ID'sine göre filtreleme
+ * 
+ * Veritabanı İşlemleri:
+ * - Question tablosundan filtrelenmiş ve sayfalı veri çeker
+ * - İlgili kategori bilgilerini include eder
+ * - Yeni eklenen sorular başta olacak şekilde sıralar
+ */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "1");
+  const search = searchParams.get("search") || "";
+  const category = searchParams.get("category");
   
   try {
-    // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
-    const limit = 10;
+    const limit = 10; // Sayfa başına soru sayısı
     const offset = (page - 1) * limit;
-    const search = searchParams.get("search") || "";
-    const category = searchParams.get("category");
 
     // Filtreleme koşulları
     const where = {
@@ -44,27 +62,23 @@ export async function GET(request: NextRequest) {
       })
     };
 
-    // Toplam soru sayısı
-    const total = await prisma.question.count({ where });
-
-    // Soruları getir
-    const questions = await prisma.question.findMany({
-      where,
-      take: limit,
-      skip: offset,
-      include: {
-        category: {
-          select: {
-            name: true
+    // Soruları ve toplam sayıyı paralel olarak çek
+    const [questions, total] = await Promise.all([
+      prisma.question.findMany({
+        where,
+        take: limit,
+        skip: offset,
+        include: {
+          category: {
+            select: { name: true }
           }
-        }
-      },
-      orderBy: {
-        id: 'desc'
-      }
-    });
+        },
+        orderBy: { id: 'desc' }
+      }),
+      prisma.question.count({ where })
+    ]);
 
-    // Yanıt formatını düzenle
+    // Response formatını düzenle
     const formattedQuestions = questions.map(q => ({
       id: q.id,
       questionText: q.question_text,
@@ -77,6 +91,14 @@ export async function GET(request: NextRequest) {
       categoryName: q.category.name
     }));
 
+    // Başarılı listeleme logu
+    logger.info('question', 'list', 'Sorular listelendi', {
+      total,
+      page,
+      search: search || undefined,
+      categoryFilter: category || undefined
+    });
+
     return apiResponse.success({
       questions: formattedQuestions,
       totalPages: Math.ceil(total / limit),
@@ -87,9 +109,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('question', error as Error, {
       action: 'list_attempt',
-      search: searchParams.get("search"),
-      category: searchParams.get("category"),
-      page: page
+      search,
+      category,
+      page
     });
 
     if (error instanceof APIError) {
@@ -101,7 +123,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Soru ekleme (POST)
+/**
+ * POST /api/admin/questions
+ * Yeni soru ekler
+ * 
+ * Veritabanı İşlemleri:
+ * - Önce kategori varlığını kontrol eder
+ * - Question tablosuna yeni kayıt ekler
+ */
 export async function POST(request: NextRequest) {
   let categoryName = '';
   
@@ -111,7 +140,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = questionSchema.parse(body);
 
-    // Önce kategoriyi bulalım (log için kategori adını almak üzere)
+    // Kategori kontrolü
     const category = await prisma.category.findUnique({
       where: { id: validatedData.categoryId },
       select: { name: true }
@@ -136,13 +165,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Soru ekleme logu
+    // Başarılı oluşturma logu
     logger.questionCreated(question.id, categoryName);
 
     return apiResponse.success(question);
 
   } catch (error) {
-    // Hata durumunda log
     logger.error('question', error as Error, {
       action: 'create',
       categoryName,

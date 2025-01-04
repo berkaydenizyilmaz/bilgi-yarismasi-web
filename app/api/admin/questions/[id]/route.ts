@@ -6,6 +6,9 @@ import { checkAdminRole } from "@/lib/auth";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
+/**
+ * Soru güncelleme validasyon şeması
+ */
 const questionSchema = z.object({
   questionText: z.string().min(1, "Soru metni gereklidir"),
   optionA: z.string().min(1, "A şıkkı gereklidir"),
@@ -16,24 +19,35 @@ const questionSchema = z.object({
   categoryId: z.number().positive()
 });
 
-// Soru güncelleme (PUT)
+/**
+ * PUT /api/admin/questions/[id]
+ * Soru bilgilerini günceller
+ * 
+ * Veritabanı İşlemleri:
+ * - Önce sorunun varlığını kontrol eder
+ * - Question tablosunda güncelleme yapar
+ * - Kategori değişikliğini takip eder
+ */
 export async function PUT(
   request: NextRequest,
-  context: any
+  context: { params: { id: string } }
 ) {
   let categoryName = '';
   let oldCategoryName = '';
   
   try {
     await checkAdminRole(request);
-    const body = await request.json();
 
+    // ID ve body validasyonu
     const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
 
-    // Güncellemeden önce mevcut soru bilgilerini alalım
+    const body = await request.json();
+    const validatedData = questionSchema.parse(body);
+
+    // Mevcut soru kontrolü
     const existingQuestion = await prisma.question.findUnique({
       where: { id },
       include: {
@@ -48,8 +62,6 @@ export async function PUT(
     }
 
     oldCategoryName = existingQuestion.category.name;
-
-    const validatedData = questionSchema.parse(body);
 
     // Soruyu güncelle
     const question = await prisma.question.update({
@@ -70,10 +82,10 @@ export async function PUT(
 
     categoryName = question.category.name;
 
-    // Yeni helper metodu kullanalım
+    // Başarılı güncelleme logu
     logger.questionUpdated(question.id, categoryName);
 
-    const formattedQuestion = {
+    return apiResponse.success({
       id: question.id,
       questionText: question.question_text,
       optionA: question.option_a,
@@ -83,9 +95,7 @@ export async function PUT(
       correctOption: question.correct_option.toLowerCase(),
       categoryId: question.category_id,
       categoryName: question.category.name
-    };
-
-    return apiResponse.success(formattedQuestion);
+    });
 
   } catch (error) {
     logger.error('question', error as Error, {
@@ -97,9 +107,7 @@ export async function PUT(
     });
 
     if (error instanceof z.ZodError) {
-      return apiResponse.error(
-        new ValidationError(error.errors[0].message)
-      );
+      return apiResponse.error(new ValidationError(error.errors[0].message));
     }
     if (error instanceof APIError) {
       return apiResponse.error(error);
@@ -110,21 +118,29 @@ export async function PUT(
   }
 }
 
-// Soru silme (DELETE)
+/**
+ * DELETE /api/admin/questions/[id]
+ * Soruyu siler
+ * 
+ * Veritabanı İşlemleri:
+ * - Önce sorunun varlığını kontrol eder
+ * - Question tablosundan kaydı siler
+ */
 export async function DELETE(
   request: NextRequest,
-  context: any
+  context: { params: { id: string } }
 ) {
   let categoryName = '';
   
   try {
     await checkAdminRole(request);
+
     const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz soru ID'si");
     }
 
-    // Silmeden önce soru ve kategori bilgisini alalım
+    // Silinecek soruyu bul
     const question = await prisma.question.findUnique({
       where: { id },
       include: {
@@ -145,7 +161,7 @@ export async function DELETE(
       where: { id }
     });
 
-    // Yeni helper metodu kullanalım
+    // Başarılı silme logu
     logger.questionDeleted(id, categoryName);
 
     return apiResponse.success({
