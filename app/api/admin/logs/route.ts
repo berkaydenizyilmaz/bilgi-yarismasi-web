@@ -23,17 +23,17 @@ export async function GET(request: NextRequest) {
     // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
-    // Sayfalama parametrelerini al
+    // Sayfalama parametrelerini al ve doğrula
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1")); // En az 1 olmalı
+    const pageSize = Math.max(1, Math.min(50, parseInt(searchParams.get("pageSize") || "10"))); // 1-50 arası
     const skip = (page - 1) * pageSize;
 
     // Logları ve toplam sayıyı paralel olarak çek
     const [logs, total] = await Promise.all([
       prisma.log.findMany({
         orderBy: { timestamp: "desc" },
-        skip,
+        skip: Math.max(0, skip), // Negatif değer olamaz
         take: pageSize,
         include: {
           user: {

@@ -110,7 +110,7 @@ export default function LogsPage() {
         if (!response.ok) throw new Error(data.error?.message || "Loglar yüklenemedi")
 
         setLogs(data.data.logs || [])
-        setTotalPages(Math.ceil((data.data.total || 0) / PAGE_SIZE))
+        setTotalPages(data.data.pagination.totalPages || 1)
       } catch (error) {
         toast({
           title: "Hata",
@@ -118,6 +118,7 @@ export default function LogsPage() {
           variant: "destructive"
         })
         setLogs([])
+        setTotalPages(1)
       } finally {
         setIsLoading(false)
       }
@@ -230,12 +231,12 @@ export default function LogsPage() {
             <ChevronLeft className="h-4 w-4 mr-2" /> Önceki
           </Button>
           <span className="text-sm text-gray-600">
-            Sayfa {page} / {totalPages}
+            Sayfa {page} / {totalPages || 1}
           </span>
           <Button
             variant="outline"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
+            disabled={page === totalPages || totalPages === 0}
             className="w-full sm:w-auto"
           >
             Sonraki <ChevronRight className="h-4 w-4 ml-2" />

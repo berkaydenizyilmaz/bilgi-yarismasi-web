@@ -74,13 +74,6 @@ export async function GET(request: NextRequest) {
       throw new AuthenticationError("Kullanıcı bulunamadı");
     }
 
-    // Başarılı oturum kontrolü logu
-    logger.info('auth', 'auth', 'Oturum doğrulandı', {
-      userId: user.id,
-      email: user.email,
-      role: user.role
-    });
-
     return apiResponse.success({ user });
 
   } catch (error) {
