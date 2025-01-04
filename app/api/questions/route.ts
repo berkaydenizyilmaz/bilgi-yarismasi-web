@@ -7,14 +7,29 @@ import { logger } from "@/lib/logger";
 
 const QUESTIONS_PER_QUIZ = 10;
 
+/**
+ * GET /api/questions
+ * Quiz için soru listesi getirir
+ * 
+ * Query Parametreleri:
+ * - categoryId: Kategori ID'si
+ * 
+ * Veritabanı İşlemleri:
+ * 1. Kategori kontrolü
+ * 2. Kullanıcının daha önce çözmediği soruları filtreler
+ * 3. Belirtilen kategoriden QUESTIONS_PER_QUIZ kadar soru seçer
+ * 4. ID'ye göre artan sırada sıralar
+ * 
+ * İlişkiler:
+ * - user_interactions: Kullanıcının soru etkileşimleri
+ * - category: Sorunun kategorisi
+ */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   try {
-
-    // URL parametrelerini al ve kontrol et
+    // URL parametrelerini kontrol et
     const categoryId = searchParams.get("categoryId");
-
     if (!categoryId) {
       throw new ValidationError("Kategori ID'si belirtilmedi");
     }
@@ -110,6 +125,13 @@ export async function GET(request: NextRequest) {
         errorContext: 'fetch_questions'
       });
       throw new APIError("Sorular alınamadı", 500, "DATABASE_ERROR");
+    });
+
+    // Başarılı sorgu logu
+    logger.info('question', 'list', 'Quiz soruları getirildi', {
+      categoryId,
+      userId,
+      questionCount: questions.length
     });
 
     return apiResponse.success(questions);
