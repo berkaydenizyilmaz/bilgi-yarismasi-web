@@ -130,7 +130,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   let categoryName = '';
   
