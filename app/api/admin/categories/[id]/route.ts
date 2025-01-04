@@ -25,14 +25,14 @@ const categorySchema = z.object({
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
     // ID parametresini doğrula
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -64,7 +64,7 @@ export async function PUT(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'update',
-      categoryId: params.id,
+      categoryId: context.params.id,
       errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
 
@@ -92,14 +92,14 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
     // ID parametresini doğrula
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
@@ -128,7 +128,7 @@ export async function DELETE(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'delete',
-      categoryId: params.id
+      categoryId: context.params.id
     });
 
     if (error instanceof APIError) {
