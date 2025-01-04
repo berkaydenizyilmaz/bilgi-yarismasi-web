@@ -56,12 +56,12 @@ export async function GET(request: NextRequest) {
 
     // Boş kontrol
     if (!Array.isArray(leaderboard) || leaderboard.length === 0) {
-      logger.info('leaderboard', 'list', 'Boş liderlik tablosu döndürüldü');
+      logger.info('system', 'list', 'Boş liderlik tablosu döndürüldü');
       return apiResponse.success({ data: [] });
     }
 
     // Başarılı listeleme logu
-    logger.info('leaderboard', 'list', 'Liderlik tablosu getirildi', {
+    logger.info('system', 'list', 'Liderlik tablosu getirildi', {
       userCount: leaderboard.length,
       topScore: leaderboard[0]?.total_score || 0
     });
@@ -69,10 +69,11 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(leaderboard);
 
   } catch (error) {
-    logger.error('leaderboard', error as Error, {
+    logger.error('system', error as Error, {
       action: 'list',
       path: request.url,
-      errorType: error instanceof APIError ? 'DATABASE_ERROR' : 'INTERNAL_ERROR'
+      errorType: error instanceof APIError ? 'DATABASE_ERROR' : 'INTERNAL_ERROR',
+      errorContext: 'fetch_leaderboard'
     });
 
     if (error instanceof APIError) {
