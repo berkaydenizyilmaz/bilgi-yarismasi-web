@@ -19,13 +19,13 @@ import { logger } from "@/lib/logger";
 //@ts-ignore
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
     
     if (isNaN(id)) {
-      logger.warn('category', 'list', 'Geçersiz kategori ID', { id: params.id });
+      logger.warn('category', 'list', 'Geçersiz kategori ID', { id: context.params.id });
       throw new APIError("Geçersiz kategori ID", 400);
     }
 
@@ -51,7 +51,7 @@ export async function GET(
   } catch (error) {
     logger.error('category', error as Error, {
       action: 'list',
-      categoryId: params.id,
+      categoryId: context.params.id,
       errorType: error instanceof APIError ? 'NOT_FOUND' : 'DATABASE_ERROR'
     });
 

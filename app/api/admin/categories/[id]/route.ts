@@ -96,7 +96,7 @@ export async function PUT(
 // @ts-ignore
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
     // Admin yetkisi kontrolü

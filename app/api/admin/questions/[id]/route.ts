@@ -32,7 +32,7 @@ const questionSchema = z.object({
 // @ts-ignore
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   let categoryName = '';
   let oldCategoryName = '';
