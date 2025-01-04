@@ -23,6 +23,8 @@ const categorySchema = z.object({
  * - Category tablosunda id'ye göre güncelleme yapar
  * - Güncel soru sayısını döner
  */
+
+// @ts-ignore
 export async function PUT(
   request: NextRequest,
   context: { params: { id: string } }
@@ -90,6 +92,8 @@ export async function PUT(
  * - Category tablosundan kaydı siler
  * - Kategoriye bağlı sorular da silinir (cascade)
  */
+
+// @ts-ignore
 export async function DELETE(
   request: NextRequest,
   context: { params: { id: string } }

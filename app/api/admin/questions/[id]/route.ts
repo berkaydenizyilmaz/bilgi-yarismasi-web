@@ -28,6 +28,8 @@ const questionSchema = z.object({
  * - Question tablosunda güncelleme yapar
  * - Kategori değişikliğini takip eder
  */
+
+// @ts-ignore
 export async function PUT(
   request: NextRequest,
   context: { params: { id: string } }

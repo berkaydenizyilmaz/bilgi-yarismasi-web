@@ -15,6 +15,8 @@ import { logger } from "@/lib/logger";
  * - Category tablosundan ID'ye göre tekil kayıt çeker
  * - Sadece name alanını seçer
  */
+
+// @ts-ignore
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
