@@ -7,16 +7,35 @@ import bcrypt from 'bcrypt';
 import { signJWT } from "@/lib/jwt";
 import { logger } from "@/lib/logger"; 
 
+/**
+ * Giriş validasyon şeması
+ */
 const loginSchema = z.object({
   email: z.string().email("Geçerli bir email adresi giriniz"),
   password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
 });
 
+/**
+ * POST /api/auth/login
+ * Kullanıcı girişi yapar
+ * 
+ * Veritabanı İşlemleri:
+ * 1. Email ile kullanıcıyı bulur
+ * 2. Şifre kontrolü yapar
+ * 3. Son giriş tarihini günceller
+ * 
+ * İşlem Adımları:
+ * 1. Request validasyonu
+ * 2. Kullanıcı kontrolü
+ * 3. Şifre doğrulama
+ * 4. JWT token oluşturma
+ * 5. Son giriş güncelleme
+ */
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof loginSchema> | undefined;
 
   try {
-    
+    // Request body'i al ve doğrula
     try {
       body = await request.json();
     } catch (e) {
@@ -26,6 +45,7 @@ export async function POST(request: NextRequest) {
     loginSchema.parse(body);
     const validatedBody = body as z.infer<typeof loginSchema>;
 
+    // Kullanıcıyı bul
     const user = await prisma.user.findUnique({
       where: { email: validatedBody.email },
       select: {
@@ -44,6 +64,7 @@ export async function POST(request: NextRequest) {
       throw new AuthenticationError("Email veya şifre hatalı");
     }
 
+    // Şifre kontrolü
     const passwordMatch = await bcrypt.compare(validatedBody.password, user.password_hash);
 
     if (!passwordMatch) {
@@ -54,6 +75,7 @@ export async function POST(request: NextRequest) {
       throw new AuthenticationError("Email veya şifre hatalı");
     }
 
+    // JWT token oluştur
     const token = signJWT({
       id: user.id,
       email: user.email,
@@ -61,16 +83,19 @@ export async function POST(request: NextRequest) {
       role: user.role
     });
 
+    // Son giriş tarihini güncelle
     await prisma.user.update({
       where: { id: user.id },
       data: { last_login: new Date() },
     });
 
+    // Başarılı giriş logu
     logger.authLog('login', 'Başarılı giriş', {
       userId: user.id,
       email: user.email
     });
 
+    // Cookie ile yanıt döndür
     return apiResponse.successWithCookie(
       {
         user: {
@@ -88,12 +113,13 @@ export async function POST(request: NextRequest) {
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
-          maxAge: 60 * 60 * 24,
+          maxAge: 60 * 60 * 24, // 24 saat
         }
       }]
     );
 
   } catch (error) {
+    // Hata logu
     logger.error('auth', error as Error, {
       email: body?.email,
       errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'AUTH_ERROR',

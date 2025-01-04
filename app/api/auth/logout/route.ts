@@ -4,12 +4,24 @@ import { APIError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import jwt from 'jsonwebtoken';
 
+/**
+ * JWT token içeriği için tip tanımı
+ */
 interface JWTPayload {
   id: number;
   email: string;
   username: string;
 }
 
+/**
+ * POST /api/auth/logout
+ * Kullanıcı çıkışı yapar
+ * 
+ * İşlem Adımları:
+ * 1. Token kontrolü
+ * 2. Token'dan kullanıcı bilgilerini çıkarma (loglama için)
+ * 3. Cookie'yi temizleme
+ */
 export async function POST(request: NextRequest) {
   try {
     // Token'ı al
@@ -20,13 +32,17 @@ export async function POST(request: NextRequest) {
         // Token'dan kullanıcı bilgilerini al
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
         
+        // Başarılı çıkış logu
         logger.authLog('logout', 'Kullanıcı çıkış yaptı', {
           userId: decoded.id,
           email: decoded.email,
           username: decoded.username
         });
       } catch (error) {
-        console.error('Token decode hatası:', error);
+        // Token decode hatası
+        logger.warn('auth', 'auth', 'Token decode hatası', {
+          error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+        });
       }
     } 
 
@@ -48,8 +64,11 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
+    // Hata logu
     logger.error('auth', error as Error, {
-      path: request.url
+      action: 'logout',
+      path: request.url,
+      errorType: 'LOGOUT_ERROR'
     });
 
     return apiResponse.error(

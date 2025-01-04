@@ -5,6 +5,9 @@ import jwt from 'jsonwebtoken';
 import { APIError, AuthenticationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
+/**
+ * JWT token içeriği için tip tanımı
+ */
 interface JWTPayload {
   id: number;
   email: string;
@@ -12,22 +15,34 @@ interface JWTPayload {
   role: string
 }
 
+/**
+ * GET /api/auth
+ * Kullanıcı oturum kontrolü yapar
+ * 
+ * Veritabanı İşlemleri:
+ * - User tablosundan kullanıcı bilgilerini çeker
+ * - Kullanıcının istatistiklerini de getirir
+ */
 export async function GET(request: NextRequest) {
   try {
-
+    // Token kontrolü
     const token = request.cookies.get("token")?.value;
-
     if (!token) {
       throw new AuthenticationError("Oturum bulunamadı");
     }
 
+    // Token doğrulama
     let decoded: JWTPayload;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     } catch (error) {
+      logger.warn('auth', 'auth', 'Geçersiz token', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      });
       throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
     }
 
+    // Kullanıcı bilgilerini getir
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
@@ -52,12 +67,27 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
+      logger.warn('auth', 'auth', 'Kullanıcı bulunamadı', {
+        userId: decoded.id,
+        email: decoded.email
+      });
       throw new AuthenticationError("Kullanıcı bulunamadı");
     }
+
+    // Başarılı oturum kontrolü logu
+    logger.info('auth', 'auth', 'Oturum doğrulandı', {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    });
 
     return apiResponse.success({ user });
 
   } catch (error) {
+    logger.error('auth', error as Error, {
+      errorType: error instanceof AuthenticationError ? 'AUTH_ERROR' : 'INTERNAL_ERROR',
+      errorContext: 'session_verify'
+    });
 
     if (error instanceof APIError) {
       return apiResponse.error(error);
