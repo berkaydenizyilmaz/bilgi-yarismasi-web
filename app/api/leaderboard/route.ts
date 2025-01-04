@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       },
       take: 100 // İlk 100 kullanıcı
     }).catch((error) => {
-      logger.error('leaderboard', error as Error, {
+      logger.error('system', error as Error, {
         action: 'list',
         errorType: 'DATABASE_ERROR',
         errorContext: 'fetch_leaderboard'
