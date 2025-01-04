@@ -16,10 +16,10 @@ import { logger } from "@/lib/logger";
  * - Sadece name alanını seçer
  */
 
-// @ts-ignore
+//@ts-ignore
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  params: { id: string }
 ) {
   try {
     const id = Number(params.id);
