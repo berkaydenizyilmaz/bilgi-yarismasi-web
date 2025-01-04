@@ -4,14 +4,27 @@ import { apiResponse } from "@/lib/api-response";
 import { APIError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
+/**
+ * API anahtarı kontrolü
+ */
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+/**
+ * JSON yanıtını temizler ve doğrular
+ * - JSON formatını düzeltir
+ * - Gereksiz karakterleri temizler
+ * - Geçerli JSON yapısını kontrol eder
+ */
 const cleanJsonResponse = (text: string): string => {
   try {
+    // JSON bloğunu temizle
     text = text.replace(/```json\s*|\s*```/g, "").trim();
+    
+    // JSON anahtar ve değerlerini düzelt
     text = text.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
     text = text.replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*([,}])/g, ':"$1"$2');
     
+    // JSON içeriğini bul ve doğrula
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("JSON içeriği bulunamadı");
     
@@ -22,6 +35,12 @@ const cleanJsonResponse = (text: string): string => {
   }
 };
 
+/**
+ * Soruları doğrular
+ * - Soru formatını kontrol eder
+ * - Şıkların varlığını kontrol eder
+ * - Doğru cevabın geçerliliğini kontrol eder
+ */
 const validateQuestions = (questions: any[]) => {
   if (!Array.isArray(questions) || questions.length === 0) {
     throw new Error("Geçerli soru listesi bulunamadı");
@@ -45,9 +64,17 @@ const validateQuestions = (questions: any[]) => {
   return questions;
 };
 
-// Prompt cache'i
+/**
+ * Prompt önbelleği
+ * - Aynı kategori için tekrar tekrar prompt oluşturmayı önler
+ */
 const promptCache = new Map();
 
+/**
+ * Kategori için prompt oluşturur
+ * - Önce önbellekten kontrol eder
+ * - Yoksa yeni prompt oluşturur ve önbelleğe ekler
+ */
 const getPrompt = (category: string): string => {
   if (promptCache.has(category)) {
     return promptCache.get(category);
@@ -80,10 +107,24 @@ const getPrompt = (category: string): string => {
         }
       ]
     }`;
+
   promptCache.set(category, prompt);
   return prompt;
 };
 
+/**
+ * POST /api/ai/custom-questions
+ * Özel kategori için AI ile soru üretir
+ * 
+ * Request Body:
+ * - category: Özel kategori adı
+ * 
+ * İşlem Adımları:
+ * 1. Kategori kontrolü
+ * 2. AI prompt hazırlama (önbellekten veya yeni)
+ * 3. Soru üretimi (3 deneme hakkı)
+ * 4. Yanıt doğrulama ve temizleme
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -94,12 +135,12 @@ export async function POST(request: NextRequest) {
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
     const prompt = getPrompt(category);
 
     let retryCount = 0;
     const maxRetries = 3;
 
+    // Soru üretme döngüsü (3 deneme hakkı)
     while (retryCount < maxRetries) {
       try {
         const result = await model.generateContent(prompt);
@@ -110,7 +151,15 @@ export async function POST(request: NextRequest) {
         const jsonData = JSON.parse(cleanedJson);
         const validatedQuestions = validateQuestions(jsonData.questions);
 
+        // Başarılı üretim logu
+        logger.aiInfo(`${validatedQuestions.length} soru üretildi - Kategori: ${category}`, {
+          questionCount: validatedQuestions.length,
+          category,
+          retryCount
+        });
+
         return apiResponse.success({ questions: validatedQuestions });
+
       } catch (error) {
         retryCount++;
 
