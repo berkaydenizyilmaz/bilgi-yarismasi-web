@@ -6,36 +6,53 @@ import { checkAdminRole } from "@/lib/auth";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
-// Kategori şeması
+/**
+ * Kategori şeması - Zod doğrulama
+ * name: Kategori adı (1-100 karakter arası zorunlu)
+ */
 const categorySchema = z.object({
-  name: z.string().min(1, "Kategori adı gereklidir").max(100, "Kategori adı çok uzun")
+  name: z.string()
+    .min(1, "Kategori adı gereklidir")
+    .max(100, "Kategori adı çok uzun")
 });
 
-// Kategorileri listeleme (GET)
+/**
+ * GET /api/admin/categories
+ * Tüm kategorileri listeler
+ * 
+ * Veritabanı İşlemleri:
+ * - Category tablosundan tüm kayıtları çeker
+ * - Her kategori için soru sayısını (_count) hesaplar
+ * - name'e göre alfabetik sıralama yapar
+ */
 export async function GET(request: NextRequest) {
   try {
+    // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
+    // Kategorileri ve soru sayılarını çek
     const categories = await prisma.category.findMany({
       select: {
         id: true,
         name: true,
         _count: {
-          select: {
-            questions: true
-          }
+          select: { questions: true }
         }
       },
-      orderBy: {
-        name: 'asc'
-      }
+      orderBy: { name: 'asc' }
     });
 
+    // Response formatını düzenle
     const formattedCategories = categories.map(category => ({
       id: category.id,
       name: category.name,
       questionCount: category._count.questions
     }));
+
+    // Başarılı işlem logu
+    logger.info('category', 'list', 'Kategoriler başarıyla listelendi', {
+      categoryCount: categories.length
+    });
 
     return apiResponse.success(formattedCategories);
 
@@ -44,6 +61,7 @@ export async function GET(request: NextRequest) {
       action: 'list_attempt',
       path: request.url
     });
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
@@ -53,21 +71,31 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Kategori ekleme
+/**
+ * POST /api/admin/categories
+ * Yeni kategori oluşturur
+ * 
+ * Veritabanı İşlemleri:
+ * - Category tablosuna yeni kayıt ekler
+ * - Benzersiz name constraint'i vardır
+ */
 export async function POST(request: NextRequest) {
   try {
+    // Admin yetkisi kontrolü
     await checkAdminRole(request);
 
+    // Request body'i doğrula
     const body = await request.json();
     const validatedData = categorySchema.parse(body);
 
+    // Kategoriyi oluştur
     const category = await prisma.category.create({
       data: {
         name: validatedData.name,
       }
     });
 
-    // Kategori oluşturma logu
+    // Başarılı oluşturma logu
     logger.categoryCreated(category.name, category.id);
 
     return apiResponse.success({

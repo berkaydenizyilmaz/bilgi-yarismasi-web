@@ -6,46 +6,68 @@ import { checkAdminRole } from "@/lib/auth";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
+/**
+ * Kategori güncelleme şeması
+ */
 const categorySchema = z.object({
-  name: z.string().min(1, "Kategori adı gereklidir").max(100, "Kategori adı çok uzun")
+  name: z.string()
+    .min(1, "Kategori adı gereklidir")
+    .max(100, "Kategori adı çok uzun")
 });
 
-// Kategori güncelleme (PUT)
+/**
+ * PUT /api/admin/categories/[id]
+ * Kategori bilgilerini günceller
+ * 
+ * Veritabanı İşlemleri:
+ * - Category tablosunda id'ye göre güncelleme yapar
+ * - Güncel soru sayısını döner
+ */
 export async function PUT(
   request: NextRequest,
-  context: any
+  context: { params: { id: string } }
 ) {
   try {
+    // Admin yetkisi kontrolü
     await checkAdminRole(request);
-    const id = parseInt(context.params.id); 
+
+    // ID parametresini doğrula
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
     }
 
+    // Request body'i doğrula
     const body = await request.json();
     const validatedData = categorySchema.parse(body);
 
-    // Kategoriyi güncelle
+    // Kategoriyi güncelle ve soru sayısını al
     const category = await prisma.category.update({
       where: { id },
-      data: {
-        name: validatedData.name
-      },
+      data: { name: validatedData.name },
       include: {
         _count: {
-          select: {
-            questions: true
-          }
+          select: { questions: true }
         }
       }
     });
+
+    // Başarılı güncelleme logu
+    logger.categoryUpdated(category.name, category.id);
 
     return apiResponse.success({
       id: category.id,
       name: category.name,
       questionCount: category._count.questions
     });
+
   } catch (error) {
+    logger.error('category', error as Error, {
+      action: 'update',
+      categoryId: context.params.id,
+      errorType: error instanceof z.ZodError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
+    });
+
     if (error instanceof z.ZodError) {
       return apiResponse.error(new ValidationError(error.errors[0].message));
     }
@@ -60,16 +82,35 @@ export async function PUT(
   }
 }
 
-// Kategori silme (DELETE)
+/**
+ * DELETE /api/admin/categories/[id]
+ * Kategoriyi siler
+ * 
+ * Veritabanı İşlemleri:
+ * - Category tablosundan kaydı siler
+ * - Kategoriye bağlı sorular da silinir (cascade)
+ */
 export async function DELETE(
   request: NextRequest,
-  context: any
+  context: { params: { id: string } }
 ) {
   try {
+    // Admin yetkisi kontrolü
     await checkAdminRole(request);
-    const id = parseInt(context.params.id); 
+
+    // ID parametresini doğrula
+    const id = parseInt(context.params.id);
     if (isNaN(id)) {
       throw new ValidationError("Geçersiz kategori ID'si");
+    }
+
+    // Silinecek kategoriyi bul
+    const category = await prisma.category.findUnique({
+      where: { id }
+    });
+
+    if (!category) {
+      throw new APIError("Kategori bulunamadı", 404);
     }
 
     // Kategoriyi sil
@@ -77,10 +118,19 @@ export async function DELETE(
       where: { id }
     });
 
+    // Başarılı silme logu
+    logger.categoryDeleted(category.name, category.id);
+
     return apiResponse.success({
       message: "Kategori başarıyla silindi"
     });
+
   } catch (error) {
+    logger.error('category', error as Error, {
+      action: 'delete',
+      categoryId: context.params.id
+    });
+
     if (error instanceof APIError) {
       return apiResponse.error(error);
     }
