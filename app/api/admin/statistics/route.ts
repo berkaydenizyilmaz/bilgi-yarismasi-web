@@ -2,16 +2,50 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiResponse } from "@/lib/api-response";
 import { APIError } from "@/lib/errors";
+import { checkAdminRole } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
+/**
+ * GET /api/admin/statistics
+ * Admin paneli için istatistikleri getirir
+ * 
+ * Veritabanı İşlemleri:
+ * 1. Genel İstatistikler:
+ *    - Toplam kullanıcı sayısı (User tablosu)
+ *    - Toplam geri bildirim sayısı (Feedback tablosu)
+ *    - Toplam log sayısı (Log tablosu)
+ *    - Toplam quiz sayısı (Quiz tablosu)
+ *    - Toplam soru sayısı (Question tablosu)
+ * 
+ * 2. Quiz İstatistikleri:
+ *    - Tarihe göre quiz çözülme sayıları
+ *    - Quiz tablosundan played_at'e göre gruplandırma
+ * 
+ * 3. Kategori İstatistikleri:
+ *    - Her kategorideki soru sayısı
+ *    - Category ve Question tabloları arası ilişki
+ */
 export async function GET(request: NextRequest) {
   try {
-    const totalUsers = await prisma.user.count();
-    const totalFeedback = await prisma.feedback.count();
-    const totalLogs = await prisma.log.count();
-    const totalQuizzes = await prisma.quiz.count();
+    // Admin yetkisi kontrolü
+    await checkAdminRole(request);
 
-    // Tüm zamanlarda çözülen quizlerin tarihlerini al
+    // Genel istatistikleri paralel olarak çek
+    const [
+      totalUsers,
+      totalFeedback,
+      totalLogs,
+      totalQuizzes,
+      totalQuestions
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.feedback.count(),
+      prisma.log.count(),
+      prisma.quiz.count(),
+      prisma.question.count()
+    ]);
+
+    // Quiz tarih istatistiklerini al
     const quizzesByDate = await prisma.quiz.findMany({
       select: {
         played_at: true,
@@ -21,29 +55,21 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Tarihleri gruplama
+    // Tarihlere göre quiz sayılarını grupla
     const quizzesCountByDate: Record<string, number> = {};
     quizzesByDate.forEach(quiz => {
       const date = quiz.played_at.toISOString().split('T')[0];
       quizzesCountByDate[date] = (quizzesCountByDate[date] || 0) + 1;
     });
 
-    // Bugünün tarihini al
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
-
-    // Tüm tarihleri sıralı bir şekilde al
+    // Tarihleri sırala ve final veriyi oluştur
     const dates = Object.keys(quizzesCountByDate).sort();
-
-    // Final veriyi oluştur
     const finalQuizzesCountByDate = dates.map(date => ({
       date,
       count: quizzesCountByDate[date]
     }));
 
-
-    // Kategorilerdeki toplam soru sayısını al
+    // Kategori bazlı soru sayılarını al
     const categories = await prisma.category.findMany({
       select: {
         id: true,
@@ -62,8 +88,13 @@ export async function GET(request: NextRequest) {
       questionCount: category.questions.length,
     }));
 
-    // Toplam soru sayısını al
-    const totalQuestions = await prisma.question.count();
+    // Başarılı işlem logu
+    logger.info('system', 'list', 'İstatistikler başarıyla çekildi', {
+      totalUsers,
+      totalQuizzes,
+      totalQuestions,
+      categoryCount: categories.length
+    });
 
     return apiResponse.success({
       totalUsers,
@@ -74,7 +105,9 @@ export async function GET(request: NextRequest) {
       quizzesCountByDate: finalQuizzesCountByDate,
       questionsCountByCategory,
     });
+
   } catch (error) {
+    // Hata logu
     logger.error('system', error as Error, {
       errorType: 'DATABASE_ERROR',
       errorContext: 'fetch_statistics',
