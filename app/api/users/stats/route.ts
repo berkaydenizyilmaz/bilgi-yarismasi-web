@@ -6,6 +6,9 @@ import jwt from 'jsonwebtoken';
 import { APIError, ValidationError, AuthenticationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
+/**
+ * İstatistik güncelleme validasyon şeması
+ */
 const statsSchema = z.object({
   totalQuestions: z.number(),
   correctAnswers: z.number(),
@@ -16,21 +19,38 @@ interface JWTPayload {
   id: number;
 }
 
+/**
+ * PUT /api/users/stats
+ * Kullanıcı istatistiklerini günceller
+ * 
+ * Veritabanı İşlemleri:
+ * 1. User tablosunda ilgili alanları artırır:
+ *    - total_play_count: +1
+ *    - total_questions_attempted: +totalQuestions
+ *    - total_correct_answers: +correctAnswers
+ *    - total_score: +score
+ * 
+ * Request Body:
+ * - totalQuestions: Toplam soru sayısı
+ * - correctAnswers: Doğru cevap sayısı
+ * - score: Kazanılan puan
+ */
 export async function PUT(request: NextRequest) {
   let body: z.infer<typeof statsSchema> | undefined;
   let validatedBody: z.infer<typeof statsSchema>;
+  let userId: number | undefined;
   
   try {
-
+    // Token kontrolü
     const token = request.cookies.get("token")?.value;
     if (!token) {
       throw new AuthenticationError();
     }
 
     // Token doğrulama
-    let decoded: JWTPayload;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+      userId = decoded.id;
     } catch (error) {
       throw new AuthenticationError("Geçersiz veya süresi dolmuş oturum");
     }
@@ -55,7 +75,7 @@ export async function PUT(request: NextRequest) {
 
     // İstatistikleri güncelle
     const user = await prisma.user.update({
-      where: { id: decoded.id },
+      where: { id: userId },
       data: {
         total_play_count: { increment: 1 },
         total_questions_attempted: { increment: validatedBody.totalQuestions },
@@ -72,19 +92,31 @@ export async function PUT(request: NextRequest) {
       }
     }).catch((error) => {
       logger.error('user', error as Error, {
-        userId: decoded.id,
+        action: 'update',
+        userId,
         stats: validatedBody,
-        message: 'İstatistikler güncellenirken veritabanı hatası'
+        errorType: 'DATABASE_ERROR',
+        errorContext: 'update_stats'
       });
       throw new APIError("İstatistikler güncellenirken hata oluştu", 500, "DATABASE_ERROR");
+    });
+
+    // Başarılı güncelleme logu
+    logger.info('user', 'update', 'İstatistikler güncellendi', {
+      userId: user.id,
+      username: user.username,
+      newScore: validatedBody.score,
+      totalScore: user.total_score
     });
 
     return apiResponse.success(user, "Kullanıcı istatistikleri güncellendi");
 
   } catch (error) {
     logger.error('user', error as Error, {
-      path: request.url,
-      stats: body
+      action: 'update',
+      userId,
+      stats: body,
+      errorType: error instanceof ValidationError ? 'VALIDATION_ERROR' : 'DATABASE_ERROR'
     });
 
     if (error instanceof APIError) {
