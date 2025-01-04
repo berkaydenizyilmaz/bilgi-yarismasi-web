@@ -27,7 +27,7 @@ const categorySchema = z.object({
 // @ts-ignore
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
     // Admin yetkisi kontrolü

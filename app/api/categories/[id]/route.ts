@@ -19,7 +19,7 @@ import { logger } from "@/lib/logger";
 //@ts-ignore
 export async function GET(
   request: NextRequest,
-  params: any
+  { params }: { params: { id: string } }
 ) {
   try {
     const id = Number(params.id);
