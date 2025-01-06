@@ -8,28 +8,28 @@ import { Brain, Sparkles, Stars, Zap } from "lucide-react"
 const ANIMATIONS = {
   brain: {
     rotate: {
-      animate: { rotate: [0, 15, -15, 0] },
-      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+      animate: { rotate: [0, 20, -20, 0] },
+      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
     },
     scale: {
-      animate: { scale: [1, 1.15, 1] },
+      animate: { scale: [1, 1.2, 0.9, 1] },
       transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
     },
     glow: {
-      animate: { opacity: [0.5, 1, 0.5] },
+      animate: { opacity: [0.1, 0.3, 0.1] },
       transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
     }
   },
   energyRing: {
     animate: { 
       rotate: 360,
-      scale: [1, 1.1, 1],
-      opacity: [0.3, 0.6, 0.3]
+      scale: [1, 1.2, 0.9, 1],
+      opacity: [0.2, 0.8, 0.2]
     },
     transition: { 
-      rotate: { duration: 10, repeat: Infinity, ease: "linear" },
-      scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-      opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+      rotate: { duration: 8, repeat: Infinity, ease: "linear" },
+      scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      opacity: { duration: 2, repeat: Infinity, ease: "easeInOut" }
     }
   },
   particles: (i: number) => ({
@@ -65,13 +65,13 @@ const ANIMATIONS = {
   starParticles: (i: number) => ({
     animate: { 
       rotate: [0, 360],
-      scale: [0, 1, 0],
-      opacity: [0, 1, 0],
+      scale: [0, 1.5, 0],
+      opacity: [0, 0.8, 0],
     },
     transition: { 
-      duration: 2,
+      duration: 1.5 + Math.random(),
       repeat: Infinity,
-      delay: i * 0.1,
+      delay: i * 0.15,
       ease: "easeInOut"
     }
   }),
@@ -173,18 +173,18 @@ export function AiLoading() {
             ))}
             
             {/* Arkaplan parçacıkları */}
-            {[...Array(30)].map((_, i) => (
+            {[...Array(40)].map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute h-40 w-40 bg-white rounded-full blur-3xl"
                 animate={{
-                  x: [Math.random() * 100, Math.random() * 100],
-                  y: [Math.random() * 100, Math.random() * 100],
-                  scale: [1, 1.2, 1],
-                  opacity: [0.1, 0.3, 0.1],
+                  x: [Math.random() * 200 - 100, Math.random() * 200 - 100],
+                  y: [Math.random() * 200 - 100, Math.random() * 200 - 100],
+                  scale: [0.8, 1.4, 0.8],
+                  opacity: [0.05, 0.2, 0.05],
                 }}
                 transition={{
-                  duration: 15 + Math.random() * 10,
+                  duration: 12 + Math.random() * 8,
                   repeat: Infinity,
                   repeatType: "reverse",
                 }}
@@ -230,12 +230,10 @@ export function AiLoading() {
                     className="relative bg-gradient-to-br from-purple-500 to-pink-500 rounded-full p-6"
                     {...ANIMATIONS.brain.scale}
                   >
-                    {/* Yeni: Elektrik efektleri */}
                     <ElectricityEffect />
                     
-                    {/* Parlama efekti */}
                     <motion.div
-                      className="absolute inset-0 bg-white rounded-full blur-md"
+                      className="absolute inset-0 bg-white/20 rounded-full blur-sm"
                       {...ANIMATIONS.brain.glow}
                     />
                     
